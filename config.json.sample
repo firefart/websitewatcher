@@ -1,0 +1,23 @@
+{
+  "mail": {
+    "server": "localhost",
+    "port": 25,
+    "from": "websitewatcher <a@a.com>",
+    "to": "People <b@b.com>",
+    "skiptls": true,
+    "user": "",
+    "pass": ""
+  },
+  "timeout": "1m",
+  "database": "db.db",
+  "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
+  "watches": [{
+      "name": "aaa",
+      "url": "http://aaa.com"
+    },
+    {
+      "name": "bbb",
+      "url": "http://bbb.com"
+    }
+  ]
+}

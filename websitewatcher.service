@@ -1,0 +1,13 @@
+[Unit]
+Description=websitewatcher
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+User=websitewatcher
+SyslogIdentifier=websitewatcher
+ExecStart=/home/websitewatcher/websitewatcher -config /home/websitewatcher/config.json
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

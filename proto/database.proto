@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package database;
+
+option go_package = "internal/pb";
+
+message Database {
+    int64 LastRun = 1;
+    map<string, bytes> Websites = 2;
+}
