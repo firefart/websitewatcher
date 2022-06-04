@@ -40,13 +40,16 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 
 type Configuration struct {
 	Mail struct {
-		Server   string `json:"server"`
-		Port     int    `json:"port"`
-		From     string `json:"rom"`
-		To       string `json:"to"`
-		User     string `json:"user"`
-		Password string `json:"password"`
-		SkipTLS  bool   `json:"skiptls"`
+		Server string `json:"server"`
+		Port   int    `json:"port"`
+		From   struct {
+			Name string `json:"name"`
+			Mail string `json:"mail"`
+		} `json:"from"`
+		To       []string `json:"to"`
+		User     string   `json:"user"`
+		Password string   `json:"password"`
+		SkipTLS  bool     `json:"skiptls"`
 	} `json:"mail"`
 	Useragent string   `json:"useragent"`
 	Timeout   Duration `json:"timeout"`

@@ -2,8 +2,11 @@
   "mail": {
     "server": "localhost",
     "port": 25,
-    "from": "websitewatcher <a@a.com>",
-    "to": "People <b@b.com>",
+    "from": {
+      "name": "websitewatcher",
+      "mail": "a@a.com>"
+    },
+    "to": ["bbb@bbb.com", "cccc@ccc.com"],
     "skiptls": true,
     "user": "",
     "pass": ""
