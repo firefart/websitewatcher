@@ -4,7 +4,7 @@
     "port": 25,
     "from": {
       "name": "websitewatcher",
-      "mail": "a@a.com>"
+      "mail": "a@a.com"
     },
     "to": ["bbb@bbb.com", "ccc@ccc.com"],
     "skiptls": true,
