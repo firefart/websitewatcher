@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/database"
 	"github.com/firefart/websitewatcher/internal/http"
 
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/sirupsen/logrus"
 
 	gomail "gopkg.in/mail.v2"
@@ -25,16 +27,24 @@ func main() {
 	}
 }
 
-func sendEmail(config *config.Configuration, watch config.Watch, subject, body string) error {
+func sendEmail(config *config.Configuration, watch config.Watch, subject, body, text1, text2 string) error {
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(text1, text2, false)
+	htmlDiff := dmp.DiffPrettyHtml(diffs)
+
 	to := config.Mail.To
 	if len(watch.AdditionalTo) > 0 {
 		to = append(to, watch.AdditionalTo...)
 	}
+
+	body = strings.ReplaceAll(body, "\n", "<br>\n")
+	body = fmt.Sprintf("%s<br><br>\n%s", body, htmlDiff)
+
 	m := gomail.NewMessage()
 	m.SetAddressHeader("From", config.Mail.From.Mail, config.Mail.From.Name)
 	m.SetHeader("To", to...)
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", body)
+	m.SetBody("text/html", body)
 	d := gomail.NewDialer(config.Mail.Server, config.Mail.Port, config.Mail.User, config.Mail.Password)
 
 	if config.Mail.SkipTLS {
@@ -97,7 +107,7 @@ func run() error {
 			// send mail to indicate we might have an error
 			subject := fmt.Sprintf("[WEBSITEWATCHER] Invalid response for %s", watch.Name)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-			if err := sendEmail(config, watch, subject, text); err != nil {
+			if err := sendEmail(config, watch, subject, text, string(lastContent), string(body)); err != nil {
 				log.Errorf("[ERROR]: %v", err)
 			}
 		}
@@ -114,7 +124,7 @@ func run() error {
 			} else {
 				subject := fmt.Sprintf("[WEBSITEWATCHER] Detected change on %s", watch.Name)
 				text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-				if err := sendEmail(config, watch, subject, text); err != nil {
+				if err := sendEmail(config, watch, subject, text, string(lastContent), string(body)); err != nil {
 					log.Errorf("[ERROR]: %v", err)
 				}
 			}
