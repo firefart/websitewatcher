@@ -54,10 +54,13 @@ type Configuration struct {
 	Useragent string   `json:"useragent"`
 	Timeout   Duration `json:"timeout"`
 	Database  string   `json:"database"`
-	Watches   []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"watches"`
+	Watches   []Watch  `json:"watches"`
+}
+
+type Watch struct {
+	Name         string   `json:"name"`
+	URL          string   `json:"url"`
+	AdditionalTo []string `json:"additional_to"`
 }
 
 func GetConfig(f string) (*Configuration, error) {

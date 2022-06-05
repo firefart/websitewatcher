@@ -6,7 +6,7 @@
       "name": "websitewatcher",
       "mail": "a@a.com>"
     },
-    "to": ["bbb@bbb.com", "cccc@ccc.com"],
+    "to": ["bbb@bbb.com", "ccc@ccc.com"],
     "skiptls": true,
     "user": "",
     "pass": ""
@@ -16,7 +16,8 @@
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
   "watches": [{
       "name": "aaa",
-      "url": "http://aaa.com"
+      "url": "http://aaa.com",
+      "additional_to": ["ddd@ddd.com", "eee@eee.com"]
     },
     {
       "name": "bbb",

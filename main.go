@@ -25,10 +25,14 @@ func main() {
 	}
 }
 
-func sendEmail(config *config.Configuration, subject, body string) error {
+func sendEmail(config *config.Configuration, watch config.Watch, subject, body string) error {
+	to := config.Mail.To
+	if len(watch.AdditionalTo) > 0 {
+		to = append(to, watch.AdditionalTo...)
+	}
 	m := gomail.NewMessage()
 	m.SetAddressHeader("From", config.Mail.From.Mail, config.Mail.From.Name)
-	m.SetHeader("To", config.Mail.To...)
+	m.SetHeader("To", to...)
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/plain", body)
 	d := gomail.NewDialer(config.Mail.Server, config.Mail.Port, config.Mail.User, config.Mail.Password)
@@ -93,7 +97,7 @@ func run() error {
 			// send mail to indicate we might have an error
 			subject := fmt.Sprintf("[WEBSITEWATCHER] Invalid response for %s", watch.Name)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-			if err := sendEmail(config, subject, text); err != nil {
+			if err := sendEmail(config, watch, subject, text); err != nil {
 				log.Errorf("[ERROR]: %v", err)
 			}
 		}
@@ -110,7 +114,7 @@ func run() error {
 			} else {
 				subject := fmt.Sprintf("[WEBSITEWATCHER] Detected change on %s", watch.Name)
 				text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-				if err := sendEmail(config, subject, text); err != nil {
+				if err := sendEmail(config, watch, subject, text); err != nil {
 					log.Errorf("[ERROR]: %v", err)
 				}
 			}
