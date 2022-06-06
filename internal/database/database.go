@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/pb"
@@ -10,14 +11,42 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func NewDatabase() *pb.Database {
-	return &pb.Database{Websites: make(map[string][]byte)}
+type Database struct {
+	mu sync.RWMutex
+	db *pb.Database
 }
 
-func ReadDatabase(database string) (*pb.Database, error) {
-	// create database if needed
+func (db *Database) GetDatabaseEntry(url string) []byte {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	value, ok := db.db.Websites[url]
+	if !ok {
+		return nil
+	}
+	return value
+}
+
+func (db *Database) SetDatabaseEntry(url string, value []byte) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	db.db.Websites[url] = value
+}
+
+func (db *Database) SetLastRun(lastRun int64) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	db.db.LastRun = lastRun
+}
+
+func ReadDatabase(database string) (*Database, error) {
 	if _, err := os.Stat(database); os.IsNotExist(err) {
-		return NewDatabase(), nil
+		// create database if needed
+		return &Database{
+			db: &pb.Database{Websites: make(map[string][]byte)},
+		}, nil
 	}
 
 	b, err := os.ReadFile(database) // nolint: gosec
@@ -29,11 +58,11 @@ func ReadDatabase(database string) (*pb.Database, error) {
 	if err := proto.Unmarshal(b, db); err != nil {
 		return nil, fmt.Errorf("could not unmarshal database %s: %v", database, err)
 	}
-	return db, nil
+	return &Database{db: db}, nil
 }
 
-func SaveDatabase(database string, r proto.Message) error {
-	b, err := proto.Marshal(r)
+func (db *Database) SaveDatabase(database string) error {
+	b, err := proto.Marshal(db.db)
 	if err != nil {
 		return fmt.Errorf("could not marshal database %s: %v", database, err)
 	}
@@ -44,14 +73,14 @@ func SaveDatabase(database string, r proto.Message) error {
 }
 
 // removes old feeds from database
-func CleanupDatabase(log *logrus.Logger, r *pb.Database, c config.Configuration) {
+func (db *Database) CleanupDatabase(log *logrus.Logger, c config.Configuration) {
 	configURLs := make(map[string]struct{})
 	for _, x := range c.Watches {
 		configURLs[x.URL] = struct{}{}
 	}
 
 	newURLs := make(map[string][]byte)
-	for url, content := range r.Websites {
+	for url, content := range db.db.Websites {
 		_, ok := configURLs[url]
 		if !ok {
 			log.Debugf("Removing entry %s from database", url)
@@ -59,5 +88,7 @@ func CleanupDatabase(log *logrus.Logger, r *pb.Database, c config.Configuration)
 		}
 		newURLs[url] = content
 	}
-	r.Websites = newURLs
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	db.db.Websites = newURLs
 }

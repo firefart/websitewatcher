@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
@@ -77,67 +78,75 @@ func run() error {
 	}
 
 	start := time.Now().UnixNano()
-	r, err := database.ReadDatabase(config.Database)
+	db, err := database.ReadDatabase(config.Database)
 	if err != nil {
 		return err
 	}
 
 	// remove old websites in the database on each run
-	database.CleanupDatabase(log, r, *config)
+	db.CleanupDatabase(log, *config)
 
 	httpClient := http.NewHTTPClient(config.Useragent, config.Timeout.Duration, *debug, log)
-
 	ctx := context.Background()
 
+	var wg sync.WaitGroup
 	for _, watch := range config.Watches {
-		log.Debugf("processing %s: %s", watch.Name, watch.URL)
-		lastContent, ok := r.Websites[watch.URL]
-		// if it's a new website not yet in the database only process new entries and ignore old ones
-		if !ok {
-			lastContent = nil
-		}
-		statusCode, body, err := httpClient.GetRequest(ctx, watch.URL)
-		if err != nil {
-			log.Errorf("[ERROR]: %v", err)
-			continue
-		}
-
-		if statusCode != 200 || len(body) == 0 {
-			// send mail to indicate we might have an error
-			subject := fmt.Sprintf("[WEBSITEWATCHER] Invalid response for %s", watch.Name)
-			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-			if err := sendEmail(config, httpClient, watch, subject, text, string(lastContent), string(body)); err != nil {
-				log.Errorf("[ERROR]: %v", err)
-			}
-			// do not process non 200 responses and save to database
-			continue
-		}
-
-		r.Websites[watch.URL] = body
-
-		if lastContent == nil {
-			// lastContent = nil on new sites not yet processed, so send no email here
-			log.Debugf("new website %s %s detected, not comparing", watch.Name, watch.URL)
-			continue
-		}
-
-		if !bytes.Equal(lastContent, body) {
-			if *debug {
-				log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
-			} else {
-				subject := fmt.Sprintf("[WEBSITEWATCHER] Detected change on %s", watch.Name)
-				text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-				if err := sendEmail(config, httpClient, watch, subject, text, string(lastContent), string(body)); err != nil {
-					log.Errorf("[ERROR]: %v", err)
-				}
-			}
-		}
+		wg.Add(1)
+		go checkSite(ctx, &wg, config, log, httpClient, watch, *debug, db)
 	}
-	r.LastRun = start
-	err = database.SaveDatabase(config.Database, r)
+
+	wg.Wait()
+
+	db.SetLastRun(start)
+	err = db.SaveDatabase(config.Database)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func checkSite(ctx context.Context, wg *sync.WaitGroup, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, debug bool, db *database.Database) {
+	defer wg.Done()
+
+	log.Debugf("processing %s: %s", watch.Name, watch.URL)
+	lastContent := db.GetDatabaseEntry(watch.URL)
+
+	statusCode, body, err := httpClient.GetRequest(ctx, watch.URL)
+	if err != nil {
+		log.Errorf("[ERROR]: %v", err)
+		return
+	}
+
+	if statusCode != 200 || len(body) == 0 {
+		// send mail to indicate we might have an error
+		subject := fmt.Sprintf("[WEBSITEWATCHER] Invalid response for %s", watch.Name)
+		text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
+		if err := sendEmail(config, httpClient, watch, subject, text, string(lastContent), string(body)); err != nil {
+			log.Errorf("[ERROR]: %v", err)
+		}
+		// do not process non 200 responses and save to database
+		return
+	}
+
+	db.SetDatabaseEntry(watch.URL, body)
+
+	// if it's a new website not yet in the database only process new entries and ignore old ones
+	if lastContent == nil {
+		// lastContent = nil on new sites not yet processed, so send no email here
+		log.Debugf("new website %s %s detected, not comparing", watch.Name, watch.URL)
+		return
+	}
+
+	if !bytes.Equal(lastContent, body) {
+		if debug {
+			log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
+		} else {
+			subject := fmt.Sprintf("[WEBSITEWATCHER] Detected change on %s", watch.Name)
+			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
+			if err := sendEmail(config, httpClient, watch, subject, text, string(lastContent), string(body)); err != nil {
+				log.Errorf("[ERROR]: %v", err)
+			}
+		}
+	}
 }
