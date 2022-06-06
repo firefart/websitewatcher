@@ -29,7 +29,7 @@ func main() {
 }
 
 func sendEmail(config *config.Configuration, httpClient *http.HTTPClient, watch config.Watch, subject, body, text1, text2 string) error {
-	htmlDiff, err := diff.DiffAPI(httpClient, text1, text2)
+	css, html, err := diff.DiffAPI(httpClient, text1, text2)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func sendEmail(config *config.Configuration, httpClient *http.HTTPClient, watch 
 	}
 
 	body = strings.ReplaceAll(body, "\n", "<br>\n")
-	body = fmt.Sprintf("%s<br><br>\n%s", body, string(htmlDiff))
+	body = fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", css, body, html)
 
 	m := gomail.NewMessage()
 	m.SetAddressHeader("From", config.Mail.From.Mail, config.Mail.From.Name)
