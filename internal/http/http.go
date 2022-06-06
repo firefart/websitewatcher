@@ -35,13 +35,18 @@ func NewHTTPClient(userAgent string, timeout time.Duration, debug bool, logger *
 	}
 }
 
+func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", c.userAgent)
+	return c.client.Do(req)
+}
+
 func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, []byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return -1, nil, fmt.Errorf("could create get request for %s: %w", url, err)
 	}
-	req.Header.Set("User-Agent", c.userAgent)
-	resp, err := c.client.Do(req)
+
+	resp, err := c.Do(req)
 	if err != nil {
 		return -1, nil, fmt.Errorf("could not get %s: %w", url, err)
 	}
