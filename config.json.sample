@@ -9,7 +9,7 @@
     "to": ["bbb@bbb.com", "ccc@ccc.com"],
     "skiptls": true,
     "user": "",
-    "pass": ""
+    "password": ""
   },
   "timeout": "1m",
   "database": "db.db",
