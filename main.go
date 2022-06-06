@@ -101,8 +101,6 @@ func run() error {
 			continue
 		}
 
-		r.Websites[watch.URL] = body
-
 		if statusCode != 200 || len(body) == 0 {
 			// send mail to indicate we might have an error
 			subject := fmt.Sprintf("[WEBSITEWATCHER] Invalid response for %s", watch.Name)
@@ -110,7 +108,11 @@ func run() error {
 			if err := sendEmail(config, watch, subject, text, string(lastContent), string(body)); err != nil {
 				log.Errorf("[ERROR]: %v", err)
 			}
+			// do not process non 200 responses and save to database
+			continue
 		}
+
+		r.Websites[watch.URL] = body
 
 		if lastContent == nil {
 			// lastContent = nil on new sites not yet processed, so send no email here
