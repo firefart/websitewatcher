@@ -21,7 +21,8 @@
     },
     {
       "name": "bbb",
-      "url": "http://bbb.com"
+      "url": "http://bbb.com",
+      "disabled": true
     }
   ]
 }

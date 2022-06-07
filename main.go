@@ -99,6 +99,10 @@ func run() error {
 
 	var wg sync.WaitGroup
 	for _, watch := range config.Watches {
+		if watch.Disabled {
+			continue
+		}
+
 		wg.Add(1)
 		go checkSite(ctx, &wg, config, log, httpClient, watch, *debug, db)
 	}
