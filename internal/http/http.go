@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -71,4 +72,17 @@ func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, []byte, e
 	}
 
 	return resp.StatusCode, body, nil
+}
+
+func IsSoftError(body []byte) bool {
+	if len(body) == 0 {
+		return false
+	}
+
+	if bytes.Contains(body, []byte("504 - Gateway Time-out")) ||
+		bytes.Contains(body, []byte("404 - Not Found")) {
+		return true
+	}
+
+	return false
 }
