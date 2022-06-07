@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"html"
 	"log"
 	"os"
 	"strings"
@@ -128,7 +129,7 @@ func checkSite(ctx context.Context, wg *sync.WaitGroup, config *config.Configura
 	if statusCode != 200 || len(body) == 0 || http.IsSoftError(body) {
 		// send mail to indicate we might have an error
 		subject := fmt.Sprintf("[WEBSITEWATCHER] Invalid response for %s", watch.Name)
-		text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
+		text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nBody: %s", watch.Name, watch.URL, statusCode, len(body), html.EscapeString(string(body)))
 		htmlContent, err := htmlContent(httpClient, text, false, "", "")
 		if err != nil {
 			log.Errorf("[ERROR]: %v", err)
