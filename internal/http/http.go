@@ -80,7 +80,8 @@ func IsSoftError(body []byte) bool {
 	}
 
 	if bytes.Contains(body, []byte("504 - Gateway Time-out")) ||
-		bytes.Contains(body, []byte("404 - Not Found")) {
+		bytes.Contains(body, []byte("404 - Not Found")) ||
+		bytes.Contains(body, []byte("503 - Service Unavailable")) {
 		return true
 	}
 
