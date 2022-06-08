@@ -9,6 +9,7 @@ import (
 	"html"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -53,7 +54,7 @@ func sendEmail(config *config.Configuration, watch config.Watch, subject, body s
 	m := gomail.NewMessage()
 	m.SetAddressHeader("From", config.Mail.From.Mail, config.Mail.From.Name)
 	m.SetHeader("To", to...)
-	m.SetHeader("Subject", subject)
+	m.SetHeader("Subject", fmt.Sprintf("[WEBSITEWATCHER] %s", subject))
 	m.SetBody("text/html", body)
 	d := gomail.NewDialer(config.Mail.Server, config.Mail.Port, config.Mail.User, config.Mail.Password)
 
@@ -121,29 +122,49 @@ func run() error {
 func checkSite(ctx context.Context, wg *sync.WaitGroup, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, debug bool, db *database.Database) {
 	defer wg.Done()
 
+	if err := checkSiteWorker(ctx, config, log, httpClient, watch, debug, db); err != nil {
+		subject := fmt.Sprintf("error on %s", watch.Name)
+		htmlContent := html.EscapeString(err.Error())
+		if err2 := sendEmail(config, watch, subject, htmlContent); err2 != nil {
+			log.Errorf("[ERROR]: %v", err2)
+		}
+	}
+}
+
+func checkSiteWorker(ctx context.Context, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, debug bool, db *database.Database) error {
 	log.Debugf("processing %s: %s", watch.Name, watch.URL)
 	lastContent := db.GetDatabaseEntry(watch.URL)
 
 	statusCode, body, err := httpClient.GetRequest(ctx, watch.URL)
 	if err != nil {
-		log.Errorf("[ERROR]: %v", err)
-		return
+		return fmt.Errorf("error on get request: %w", err)
 	}
 
 	if statusCode != 200 || len(body) == 0 || http.IsSoftError(body) {
 		// send mail to indicate we might have an error
-		subject := fmt.Sprintf("[WEBSITEWATCHER] Invalid response for %s", watch.Name)
+		subject := fmt.Sprintf("Invalid response for %s", watch.Name)
 		text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nBody: %s", watch.Name, watch.URL, statusCode, len(body), html.EscapeString(string(body)))
 		htmlContent, err := htmlContent(httpClient, text, false, "", "")
 		if err != nil {
-			log.Errorf("[ERROR]: %v", err)
-			return
-		}
-		if err := sendEmail(config, watch, subject, htmlContent); err != nil {
-			log.Errorf("[ERROR]: %v", err)
+			return fmt.Errorf("error on creating htmlcontent: %w", err)
 		}
 		// do not process non 200 responses and save to database
-		return
+		if err := sendEmail(config, watch, subject, htmlContent); err != nil {
+			return fmt.Errorf("error on sending email: %w", err)
+		}
+	}
+
+	// extract content
+	if watch.Pattern != "" {
+		re, err := regexp.Compile(watch.Pattern)
+		if err != nil {
+			return fmt.Errorf("could not compile pattern %s: %w", watch.Pattern, err)
+		}
+		match := re.FindSubmatch(body)
+		if len(match) < 2 {
+			return fmt.Errorf("pattern %s did not match %s", watch.Pattern, string(body))
+		}
+		body = match[1]
 	}
 
 	// if it's a new website not yet in the database only process new entries and ignore old ones
@@ -151,26 +172,27 @@ func checkSite(ctx context.Context, wg *sync.WaitGroup, config *config.Configura
 		// lastContent = nil on new sites not yet processed, so send no email here
 		log.Debugf("new website %s %s detected, not comparing", watch.Name, watch.URL)
 		db.SetDatabaseEntry(watch.URL, body)
-		return
+		return nil
 	}
 
 	if !bytes.Equal(lastContent, body) {
 		if debug {
 			log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
 		} else {
-			subject := fmt.Sprintf("[WEBSITEWATCHER] Detected change on %s", watch.Name)
+			subject := fmt.Sprintf("Detected change on %s", watch.Name)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
 			htmlContent, err := htmlContent(httpClient, text, true, string(lastContent), string(body))
 			if err != nil {
-				log.Errorf("[ERROR]: %v", err)
-				return
+				return fmt.Errorf("error on creating htmlcontent: %w", err)
 			}
 			if err := sendEmail(config, watch, subject, htmlContent); err != nil {
-				log.Errorf("[ERROR]: %v", err)
+				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}
 	}
 
 	// update database entry if we did not have any errors
 	db.SetDatabaseEntry(watch.URL, body)
+
+	return nil
 }

@@ -22,7 +22,8 @@
     {
       "name": "bbb",
       "url": "http://bbb.com",
-      "disabled": true
+      "disabled": true,
+      "pattern": "test = (.+)"
     }
   ]
 }

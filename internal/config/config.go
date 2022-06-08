@@ -62,6 +62,7 @@ type Watch struct {
 	URL          string   `json:"url"`
 	AdditionalTo []string `json:"additional_to"`
 	Disabled     bool     `json:"disabled"`
+	Pattern      string   `json:"pattern"`
 }
 
 func GetConfig(f string) (*Configuration, error) {
