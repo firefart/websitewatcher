@@ -23,7 +23,17 @@
       "name": "bbb",
       "url": "http://bbb.com",
       "disabled": true,
-      "pattern": "test = (.+)"
+      "pattern": "test = (.+)",
+      "replaces": [
+        {
+          "pattern": "test .+",
+          "replace_with": "test124"
+        },
+        {
+          "pattern": "",
+          "replace_with": ""
+        }
+      ]
     }
   ]
 }

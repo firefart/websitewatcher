@@ -167,6 +167,14 @@ func checkSiteWorker(ctx context.Context, config *config.Configuration, log *log
 		body = match[1]
 	}
 
+	for _, replace := range watch.Replaces {
+		re, err := regexp.Compile(replace.Pattern)
+		if err != nil {
+			return fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
+		}
+		body = re.ReplaceAll(body, []byte(replace.ReplaceWith))
+	}
+
 	// if it's a new website not yet in the database only process new entries and ignore old ones
 	if lastContent == nil {
 		// lastContent = nil on new sites not yet processed, so send no email here

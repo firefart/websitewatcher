@@ -58,11 +58,17 @@ type Configuration struct {
 }
 
 type Watch struct {
-	Name         string   `json:"name"`
-	URL          string   `json:"url"`
-	AdditionalTo []string `json:"additional_to"`
-	Disabled     bool     `json:"disabled"`
-	Pattern      string   `json:"pattern"`
+	Name         string    `json:"name"`
+	URL          string    `json:"url"`
+	AdditionalTo []string  `json:"additional_to"`
+	Disabled     bool      `json:"disabled"`
+	Pattern      string    `json:"pattern"`
+	Replaces     []Replace `json:"replaces"`
+}
+
+type Replace struct {
+	Pattern     string `json:"pattern"`
+	ReplaceWith string `json:"replace_with"`
 }
 
 func GetConfig(f string) (*Configuration, error) {
