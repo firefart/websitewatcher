@@ -74,15 +74,15 @@ func (db *Database) SaveDatabase(database string) error {
 
 // removes old feeds from database
 func (db *Database) CleanupDatabase(log *logrus.Logger, c config.Configuration) {
-	configURLs := make(map[string]struct{})
+	configURLs := make(map[string]bool)
 	for _, x := range c.Watches {
-		configURLs[x.URL] = struct{}{}
+		configURLs[x.URL] = x.Disabled
 	}
 
 	newURLs := make(map[string][]byte)
 	for url, content := range db.db.Websites {
-		_, ok := configURLs[url]
-		if !ok {
+		disabled, ok := configURLs[url]
+		if !ok || disabled {
 			log.Debugf("Removing entry %s from database", url)
 			continue
 		}
