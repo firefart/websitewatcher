@@ -152,6 +152,7 @@ func checkSiteWorker(ctx context.Context, config *config.Configuration, log *log
 		if err := sendEmail(config, watch, subject, htmlContent); err != nil {
 			return fmt.Errorf("error on sending email: %w", err)
 		}
+		return nil
 	}
 
 	// extract content
