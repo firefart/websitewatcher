@@ -139,7 +139,7 @@ func run() error {
 }
 
 func checkSite(ctx context.Context, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, testMode bool, db *database.Database) error {
-	log.Debugf("processing %s: %s", watch.Name, watch.URL)
+	log.Infof("processing %s: %s", watch.Name, watch.URL)
 	lastContent := db.GetDatabaseEntry(watch.URL)
 
 	statusCode, body, err := httpClient.GetRequest(ctx, watch.URL)
