@@ -18,6 +18,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/database"
 	"github.com/firefart/websitewatcher/internal/diff"
 	"github.com/firefart/websitewatcher/internal/http"
+	"golang.org/x/sync/semaphore"
 
 	"github.com/sirupsen/logrus"
 
@@ -73,6 +74,7 @@ func run() error {
 
 	configFile := flag.String("config", "", "config file to use")
 	debug := flag.Bool("debug", false, "Print debug output")
+	testMode := flag.Bool("test", false, "use test mode (no email sending)")
 	flag.Parse()
 
 	log.SetOutput(os.Stdout)
@@ -81,37 +83,54 @@ func run() error {
 		log.SetLevel(logrus.DebugLevel)
 	}
 
-	config, err := config.GetConfig(*configFile)
+	configuration, err := config.GetConfig(*configFile)
 	if err != nil {
 		return err
 	}
 
 	start := time.Now().UnixNano()
-	db, err := database.ReadDatabase(config.Database)
+	db, err := database.ReadDatabase(configuration.Database)
 	if err != nil {
 		return err
 	}
 
 	// remove old websites in the database on each run
-	db.CleanupDatabase(log, *config)
+	db.CleanupDatabase(log, *configuration)
 
-	httpClient := http.NewHTTPClient(config.Useragent, config.Timeout.Duration, *debug, log)
+	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration, *debug, log)
 	ctx := context.Background()
 
 	var wg sync.WaitGroup
-	for _, watch := range config.Watches {
+	sem := semaphore.NewWeighted(configuration.ParallelChecks)
+	for _, watch := range configuration.Watches {
 		if watch.Disabled {
 			continue
 		}
 
+		if err := sem.Acquire(ctx, 1); err != nil {
+			log.Errorf("[ERROR]: %v", err)
+			continue
+		}
 		wg.Add(1)
-		go checkSite(ctx, &wg, config, log, httpClient, watch, *debug, db)
+
+		go func(watch config.Watch) {
+			defer sem.Release(1)
+			defer wg.Done()
+
+			if err := checkSite(ctx, configuration, log, httpClient, watch, *testMode, db); err != nil {
+				subject := fmt.Sprintf("error on %s", watch.Name)
+				htmlContent := html.EscapeString(err.Error())
+				if err2 := sendEmail(configuration, watch, subject, htmlContent); err2 != nil {
+					log.Errorf("[ERROR]: %v", err2)
+				}
+			}
+		}(watch)
 	}
 
 	wg.Wait()
 
 	db.SetLastRun(start)
-	err = db.SaveDatabase(config.Database)
+	err = db.SaveDatabase(configuration.Database)
 	if err != nil {
 		return err
 	}
@@ -119,19 +138,7 @@ func run() error {
 	return nil
 }
 
-func checkSite(ctx context.Context, wg *sync.WaitGroup, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, debug bool, db *database.Database) {
-	defer wg.Done()
-
-	if err := checkSiteWorker(ctx, config, log, httpClient, watch, debug, db); err != nil {
-		subject := fmt.Sprintf("error on %s", watch.Name)
-		htmlContent := html.EscapeString(err.Error())
-		if err2 := sendEmail(config, watch, subject, htmlContent); err2 != nil {
-			log.Errorf("[ERROR]: %v", err2)
-		}
-	}
-}
-
-func checkSiteWorker(ctx context.Context, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, debug bool, db *database.Database) error {
+func checkSite(ctx context.Context, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, testMode bool, db *database.Database) error {
 	log.Debugf("processing %s: %s", watch.Name, watch.URL)
 	lastContent := db.GetDatabaseEntry(watch.URL)
 
@@ -185,7 +192,7 @@ func checkSiteWorker(ctx context.Context, config *config.Configuration, log *log
 	}
 
 	if !bytes.Equal(lastContent, body) {
-		if debug {
+		if testMode {
 			log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", watch.Name)

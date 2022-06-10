@@ -2,7 +2,7 @@
 
 .PHONY: update
 update: protoc
-	go get -u
+	go get -u -t
 	go mod tidy
 
 .PHONY: build
