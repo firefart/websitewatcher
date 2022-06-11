@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"html"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -26,9 +25,15 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
-		log.Fatalf("[ERROR] %v", err)
+	log := logrus.New()
+	if err := run(log); err != nil {
+		logError(log, err)
+		os.Exit(1)
 	}
+}
+
+func logError(log *logrus.Logger, err error) {
+	log.Errorf("[ERROR] %v", err)
 }
 
 func htmlContent(httpClient *http.HTTPClient, body string, includeDiff bool, text1, text2 string) (string, error) {
@@ -69,9 +74,7 @@ func sendEmail(config *config.Configuration, watch config.Watch, subject, body s
 	return nil
 }
 
-func run() error {
-	log := logrus.New()
-
+func run(log *logrus.Logger) error {
 	configFile := flag.String("config", "", "config file to use")
 	debug := flag.Bool("debug", false, "Print debug output")
 	testMode := flag.Bool("test", false, "use test mode (no email sending)")
@@ -104,11 +107,12 @@ func run() error {
 	sem := semaphore.NewWeighted(configuration.ParallelChecks)
 	for _, watch := range configuration.Watches {
 		if watch.Disabled {
+			log.Infof("skipping %s: %s", watch.Name, watch.URL)
 			continue
 		}
 
 		if err := sem.Acquire(ctx, 1); err != nil {
-			log.Errorf("[ERROR]: %v", err)
+			logError(log, err)
 			continue
 		}
 		wg.Add(1)
@@ -118,10 +122,11 @@ func run() error {
 			defer wg.Done()
 
 			if err := checkSite(ctx, configuration, log, httpClient, watch, *testMode, db); err != nil {
+				logError(log, fmt.Errorf("error on %s: %w", watch.Name, err))
 				subject := fmt.Sprintf("error on %s", watch.Name)
 				htmlContent := html.EscapeString(err.Error())
 				if err2 := sendEmail(configuration, watch, subject, htmlContent); err2 != nil {
-					log.Errorf("[ERROR]: %v", err2)
+					logError(log, err2)
 				}
 			}
 		}(watch)
@@ -196,6 +201,7 @@ func checkSite(ctx context.Context, config *config.Configuration, log *logrus.Lo
 			log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", watch.Name)
+			log.Infof(subject)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
 			htmlContent, err := htmlContent(httpClient, text, true, string(lastContent), string(body))
 			if err != nil {
