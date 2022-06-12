@@ -84,7 +84,11 @@ func GetConfig(f string) (*Configuration, error) {
 	reader := bytes.NewReader(b)
 
 	decoder := json.NewDecoder(reader)
-	c := Configuration{}
+
+	// set some defaults
+	c := Configuration{
+		ParallelChecks: 1,
+	}
 	if err = decoder.Decode(&c); err != nil {
 		return nil, err
 	}
