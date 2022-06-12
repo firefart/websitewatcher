@@ -206,6 +206,7 @@ func (app *app) checkSite(ctx context.Context, watch config.Watch) error {
 	}
 
 	for _, replace := range watch.Replaces {
+		app.log.Debugf("replacing %s", replace.Pattern)
 		re, err := regexp.Compile(replace.Pattern)
 		if err != nil {
 			return fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
