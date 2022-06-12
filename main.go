@@ -24,23 +24,34 @@ import (
 	gomail "gopkg.in/mail.v2"
 )
 
+type app struct {
+	log        *logrus.Logger
+	config     *config.Configuration
+	httpClient *http.HTTPClient
+	testMode   bool
+	db         *database.Database
+}
+
 func main() {
 	log := logrus.New()
-	if err := run(log); err != nil {
-		logError(log, err)
+	app := app{
+		log: log,
+	}
+	if err := app.run(); err != nil {
+		app.logError(err)
 		os.Exit(1)
 	}
 }
 
-func logError(log *logrus.Logger, err error) {
-	log.Errorf("[ERROR] %v", err)
+func (app *app) logError(err error) {
+	app.log.Errorf("[ERROR] %v", err)
 }
 
-func htmlContent(httpClient *http.HTTPClient, body string, includeDiff bool, text1, text2 string) (string, error) {
+func (app *app) htmlContent(body string, includeDiff bool, text1, text2 string) (string, error) {
 	body = strings.ReplaceAll(body, "\n", "<br>\n")
 
 	if includeDiff {
-		css, html, err := diff.DiffAPI(httpClient, text1, text2)
+		css, html, err := diff.DiffAPI(app.httpClient, text1, text2)
 		if err != nil {
 			return "", err
 		}
@@ -51,20 +62,20 @@ func htmlContent(httpClient *http.HTTPClient, body string, includeDiff bool, tex
 	return body, nil
 }
 
-func sendEmail(config *config.Configuration, watch config.Watch, subject, body string) error {
-	to := config.Mail.To
+func (app *app) sendEmail(watch config.Watch, subject, body string) error {
+	to := app.config.Mail.To
 	if len(watch.AdditionalTo) > 0 {
 		to = append(to, watch.AdditionalTo...)
 	}
 
 	m := gomail.NewMessage()
-	m.SetAddressHeader("From", config.Mail.From.Mail, config.Mail.From.Name)
+	m.SetAddressHeader("From", app.config.Mail.From.Mail, app.config.Mail.From.Name)
 	m.SetHeader("To", to...)
 	m.SetHeader("Subject", fmt.Sprintf("[WEBSITEWATCHER] %s", subject))
 	m.SetBody("text/html", body)
-	d := gomail.NewDialer(config.Mail.Server, config.Mail.Port, config.Mail.User, config.Mail.Password)
+	d := gomail.NewDialer(app.config.Mail.Server, app.config.Mail.Port, app.config.Mail.User, app.config.Mail.Password)
 
-	if config.Mail.SkipTLS {
+	if app.config.Mail.SkipTLS {
 		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
@@ -74,16 +85,16 @@ func sendEmail(config *config.Configuration, watch config.Watch, subject, body s
 	return nil
 }
 
-func run(log *logrus.Logger) error {
+func (app *app) run() error {
 	configFile := flag.String("config", "", "config file to use")
 	debug := flag.Bool("debug", false, "Print debug output")
 	testMode := flag.Bool("test", false, "use test mode (no email sending)")
 	flag.Parse()
 
-	log.SetOutput(os.Stdout)
-	log.SetLevel(logrus.InfoLevel)
+	app.log.SetOutput(os.Stdout)
+	app.log.SetLevel(logrus.InfoLevel)
 	if *debug {
-		log.SetLevel(logrus.DebugLevel)
+		app.log.SetLevel(logrus.DebugLevel)
 	}
 
 	configuration, err := config.GetConfig(*configFile)
@@ -98,21 +109,27 @@ func run(log *logrus.Logger) error {
 	}
 
 	// remove old websites in the database on each run
-	db.CleanupDatabase(log, *configuration)
+	db.CleanupDatabase(app.log, *configuration)
 
-	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration, *debug, log)
+	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration, *debug, app.log)
+
+	app.config = configuration
+	app.httpClient = httpClient
+	app.testMode = *testMode
+	app.db = db
+
 	ctx := context.Background()
 
 	var wg sync.WaitGroup
 	sem := semaphore.NewWeighted(configuration.ParallelChecks)
 	for _, watch := range configuration.Watches {
 		if watch.Disabled {
-			log.Infof("skipping %s: %s", watch.Name, watch.URL)
+			app.log.Infof("skipping %s: %s", watch.Name, watch.URL)
 			continue
 		}
 
 		if err := sem.Acquire(ctx, 1); err != nil {
-			logError(log, err)
+			app.logError(err)
 			continue
 		}
 		wg.Add(1)
@@ -121,12 +138,12 @@ func run(log *logrus.Logger) error {
 			defer sem.Release(1)
 			defer wg.Done()
 
-			if err := checkSite(ctx, configuration, log, httpClient, watch, *testMode, db); err != nil {
-				logError(log, fmt.Errorf("error on %s: %w", watch.Name, err))
+			if err := app.checkSite(ctx, watch); err != nil {
+				app.logError(fmt.Errorf("error on %s: %w", watch.Name, err))
 				subject := fmt.Sprintf("error on %s", watch.Name)
 				htmlContent := html.EscapeString(err.Error())
-				if err2 := sendEmail(configuration, watch, subject, htmlContent); err2 != nil {
-					logError(log, err2)
+				if err2 := app.sendEmail(watch, subject, htmlContent); err2 != nil {
+					app.logError(err2)
 				}
 			}
 		}(watch)
@@ -143,11 +160,19 @@ func run(log *logrus.Logger) error {
 	return nil
 }
 
-func checkSite(ctx context.Context, config *config.Configuration, log *logrus.Logger, httpClient *http.HTTPClient, watch config.Watch, testMode bool, db *database.Database) error {
-	log.Infof("processing %s: %s", watch.Name, watch.URL)
-	lastContent := db.GetDatabaseEntry(watch.URL)
+func formatHeaders(header map[string][]string) string {
+	var sb strings.Builder
+	for key, value := range header {
+		sb.WriteString(fmt.Sprintf("%s: %s\n", key, strings.Join(value, ", ")))
+	}
+	return sb.String()
+}
 
-	statusCode, body, err := httpClient.GetRequest(ctx, watch.URL)
+func (app *app) checkSite(ctx context.Context, watch config.Watch) error {
+	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
+	lastContent := app.db.GetDatabaseEntry(watch.URL)
+
+	statusCode, header, body, err := app.httpClient.GetRequest(ctx, watch.URL)
 	if err != nil {
 		return fmt.Errorf("error on get request: %w", err)
 	}
@@ -155,13 +180,13 @@ func checkSite(ctx context.Context, config *config.Configuration, log *logrus.Lo
 	if statusCode != 200 || len(body) == 0 || http.IsSoftError(body) {
 		// send mail to indicate we might have an error
 		subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-		text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nBody: %s", watch.Name, watch.URL, statusCode, len(body), html.EscapeString(string(body)))
-		htmlContent, err := htmlContent(httpClient, text, false, "", "")
+		text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, statusCode, len(body), html.EscapeString(formatHeaders(header)), html.EscapeString(string(body)))
+		htmlContent, err := app.htmlContent(text, false, "", "")
 		if err != nil {
 			return fmt.Errorf("error on creating htmlcontent: %w", err)
 		}
 		// do not process non 200 responses and save to database
-		if err := sendEmail(config, watch, subject, htmlContent); err != nil {
+		if err := app.sendEmail(watch, subject, htmlContent); err != nil {
 			return fmt.Errorf("error on sending email: %w", err)
 		}
 		return nil
@@ -191,30 +216,30 @@ func checkSite(ctx context.Context, config *config.Configuration, log *logrus.Lo
 	// if it's a new website not yet in the database only process new entries and ignore old ones
 	if lastContent == nil {
 		// lastContent = nil on new sites not yet processed, so send no email here
-		log.Debugf("new website %s %s detected, not comparing", watch.Name, watch.URL)
-		db.SetDatabaseEntry(watch.URL, body)
+		app.log.Debugf("new website %s %s detected, not comparing", watch.Name, watch.URL)
+		app.db.SetDatabaseEntry(watch.URL, body)
 		return nil
 	}
 
 	if !bytes.Equal(lastContent, body) {
-		if testMode {
-			log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
+		if app.testMode {
+			app.log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", watch.Name)
-			log.Infof(subject)
+			app.log.Infof(subject)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-			htmlContent, err := htmlContent(httpClient, text, true, string(lastContent), string(body))
+			htmlContent, err := app.htmlContent(text, true, string(lastContent), string(body))
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)
 			}
-			if err := sendEmail(config, watch, subject, htmlContent); err != nil {
+			if err := app.sendEmail(watch, subject, htmlContent); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}
 	}
 
 	// update database entry if we did not have any errors
-	db.SetDatabaseEntry(watch.URL, body)
+	app.db.SetDatabaseEntry(watch.URL, body)
 
 	return nil
 }

@@ -41,37 +41,37 @@ func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
-func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, []byte, error) {
+func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[string][]string, []byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return -1, nil, fmt.Errorf("could create get request for %s: %w", url, err)
+		return -1, nil, nil, fmt.Errorf("could create get request for %s: %w", url, err)
 	}
 
 	resp, err := c.Do(req)
 	if err != nil {
-		return -1, nil, fmt.Errorf("could not get %s: %w", url, err)
+		return -1, nil, nil, fmt.Errorf("could not get %s: %w", url, err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return -1, nil, fmt.Errorf("could not read body from %s: %w", url, err)
+		return -1, nil, nil, fmt.Errorf("could not read body from %s: %w", url, err)
 	}
 
 	if c.debug {
 		reqDump, err := httputil.DumpRequestOut(req, true)
 		if err != nil {
-			return -1, nil, fmt.Errorf("error on req debug dump: %w", err)
+			return -1, nil, nil, fmt.Errorf("error on req debug dump: %w", err)
 		}
 		respDump, err := httputil.DumpResponse(resp, false)
 		if err != nil {
-			return -1, nil, fmt.Errorf("error on resp debug dump: %w", err)
+			return -1, nil, nil, fmt.Errorf("error on resp debug dump: %w", err)
 		}
 		c.logger.Debugf("Request:\n%s", string(reqDump))
 		c.logger.Debugf("Response:\n%s", string(respDump))
 	}
 
-	return resp.StatusCode, body, nil
+	return resp.StatusCode, resp.Header, body, nil
 }
 
 func IsSoftError(body []byte) bool {
