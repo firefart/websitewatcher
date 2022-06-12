@@ -211,6 +211,7 @@ func (app *app) checkSite(ctx context.Context, watch config.Watch) error {
 			return fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
 		}
 		body = re.ReplaceAll(body, []byte(replace.ReplaceWith))
+		app.log.Debugf("After %s:\n%s\n\n", replace.Pattern, string(body))
 	}
 
 	// if it's a new website not yet in the database only process new entries and ignore old ones
