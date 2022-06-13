@@ -51,12 +51,12 @@ func ReadDatabase(database string) (*Database, error) {
 
 	b, err := os.ReadFile(database) // nolint: gosec
 	if err != nil {
-		return nil, fmt.Errorf("could not read database %s: %v", database, err)
+		return nil, fmt.Errorf("could not read database %s: %w", database, err)
 	}
 
 	db := &pb.Database{}
 	if err := proto.Unmarshal(b, db); err != nil {
-		return nil, fmt.Errorf("could not unmarshal database %s: %v", database, err)
+		return nil, fmt.Errorf("could not unmarshal database %s: %w", database, err)
 	}
 	return &Database{db: db}, nil
 }
@@ -64,10 +64,10 @@ func ReadDatabase(database string) (*Database, error) {
 func (db *Database) SaveDatabase(database string) error {
 	b, err := proto.Marshal(db.db)
 	if err != nil {
-		return fmt.Errorf("could not marshal database %s: %v", database, err)
+		return fmt.Errorf("could not marshal database %s: %w", database, err)
 	}
 	if err := os.WriteFile(database, b, 0666); err != nil {
-		return fmt.Errorf("could not write database %s: %v", database, err)
+		return fmt.Errorf("could not write database %s: %w", database, err)
 	}
 	return nil
 }
