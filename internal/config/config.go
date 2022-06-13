@@ -51,6 +51,7 @@ type Configuration struct {
 		Password string   `json:"password"`
 		SkipTLS  bool     `json:"skiptls"`
 	} `json:"mail"`
+	Retries        int      `json:"retries"`
 	ParallelChecks int64    `json:"parallel_checks"`
 	Useragent      string   `json:"useragent"`
 	Timeout        Duration `json:"timeout"`
@@ -88,6 +89,7 @@ func GetConfig(f string) (*Configuration, error) {
 	// set some defaults
 	c := Configuration{
 		ParallelChecks: 1,
+		Retries:        3,
 	}
 	if err = decoder.Decode(&c); err != nil {
 		return nil, err

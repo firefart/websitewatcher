@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"flag"
 	"fmt"
 	"html"
@@ -32,6 +33,16 @@ type app struct {
 	db         *database.Database
 }
 
+type invalidResponseError struct {
+	statusCode int
+	header     map[string][]string
+	body       []byte
+}
+
+func (err *invalidResponseError) Error() string {
+	return fmt.Sprintf("got invalid response on http request: status: %d, bodylen: %d", err.statusCode, len(err.body))
+}
+
 func main() {
 	log := logrus.New()
 	app := app{
@@ -47,7 +58,7 @@ func (app *app) logError(err error) {
 	app.log.Errorf("[ERROR] %v", err)
 }
 
-func (app *app) htmlContent(body string, includeDiff bool, text1, text2 string) (string, error) {
+func (app *app) generateHTMLContentForEmail(body string, includeDiff bool, text1, text2 string) (string, error) {
 	body = strings.ReplaceAll(body, "\n", "<br>\n")
 
 	if includeDiff {
@@ -60,6 +71,14 @@ func (app *app) htmlContent(body string, includeDiff bool, text1, text2 string) 
 		body = fmt.Sprintf("<html><body>%s</body></html>", body)
 	}
 	return body, nil
+}
+
+func formatHeaders(header map[string][]string) string {
+	var sb strings.Builder
+	for key, value := range header {
+		sb.WriteString(fmt.Sprintf("%s: %s\n", key, strings.Join(value, ", ")))
+	}
+	return sb.String()
 }
 
 func (app *app) sendEmail(watch config.Watch, subject, body string) error {
@@ -138,13 +157,38 @@ func (app *app) run() error {
 			defer sem.Release(1)
 			defer wg.Done()
 
-			if err := app.checkSite(ctx, watch); err != nil {
+			if err := app.processWatch(ctx, watch); err != nil {
+				var invalidErr *invalidResponseError
+				if errors.As(err, &invalidErr) {
+					// send mail to indicate we might have an error
+					subject := fmt.Sprintf("Invalid response for %s", watch.Name)
+					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.statusCode, len(invalidErr.body), html.EscapeString(formatHeaders(invalidErr.header)), html.EscapeString(string(invalidErr.body)))
+					htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
+					if err != nil {
+						app.logError(fmt.Errorf("error on creating htmlcontent: %w", err))
+						return
+					}
+					if err := app.sendEmail(watch, subject, htmlContent); err != nil {
+						app.logError(fmt.Errorf("error on sending email: %w", err))
+						return
+					}
+					return
+				}
+
+				// all other errors
 				app.logError(fmt.Errorf("error on %s: %w", watch.Name, err))
 				subject := fmt.Sprintf("error on %s", watch.Name)
-				htmlContent := html.EscapeString(err.Error())
+				errText := err.Error()
+				if os.IsTimeout(err) {
+					// overwrite timeout errors to be more meaningful for non go people
+					errText = "timeout occurred"
+				}
+				htmlContent := html.EscapeString(errText)
 				if err2 := app.sendEmail(watch, subject, htmlContent); err2 != nil {
 					app.logError(err2)
+					return
 				}
+				return
 			}
 		}(watch)
 	}
@@ -160,36 +204,49 @@ func (app *app) run() error {
 	return nil
 }
 
-func formatHeaders(header map[string][]string) string {
-	var sb strings.Builder
-	for key, value := range header {
-		sb.WriteString(fmt.Sprintf("%s: %s\n", key, strings.Join(value, ", ")))
-	}
-	return sb.String()
-}
-
-func (app *app) checkSite(ctx context.Context, watch config.Watch) error {
-	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
-	lastContent := app.db.GetDatabaseEntry(watch.URL)
-
+func (app *app) fetchURL(ctx context.Context, watch config.Watch) (int, []byte, error) {
 	statusCode, header, body, err := app.httpClient.GetRequest(ctx, watch.URL)
 	if err != nil {
-		return fmt.Errorf("error on get request: %w", err)
+		return -1, nil, fmt.Errorf("error on get request: %w", err)
 	}
 
 	if statusCode != 200 || len(body) == 0 || http.IsSoftError(body) {
-		// send mail to indicate we might have an error
-		subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-		text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, statusCode, len(body), html.EscapeString(formatHeaders(header)), html.EscapeString(string(body)))
-		htmlContent, err := app.htmlContent(text, false, "", "")
-		if err != nil {
-			return fmt.Errorf("error on creating htmlcontent: %w", err)
+		return -1, nil, &invalidResponseError{
+			statusCode: statusCode,
+			header:     header,
+			body:       body,
 		}
-		// do not process non 200 responses and save to database
-		if err := app.sendEmail(watch, subject, htmlContent); err != nil {
-			return fmt.Errorf("error on sending email: %w", err)
+	}
+	return statusCode, body, nil
+}
+
+func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
+	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
+	lastContent := app.db.GetDatabaseEntry(watch.URL)
+
+	var statusCode int
+	var body []byte
+	var err error
+	// check with retries
+	for i := 1; i <= app.config.Retries; i++ {
+		app.log.Debugf("try #%d for %s", i, watch.Name)
+		statusCode, body, err = app.fetchURL(ctx, watch)
+		if err == nil {
+			// break out on success
+			break
 		}
-		return nil
+
+		// if we reach here, we have an error, retry
+		if i == app.config.Retries {
+			// break out to not print the rety message on the last try
+			break
+		}
+		app.logError(fmt.Errorf("got error on try %d, %s, retrying: %w", i, watch.Name, err))
+	}
+
+	// last error still set, bail out
+	if err != nil {
+		return err
 	}
 
 	// extract content
@@ -230,7 +287,7 @@ func (app *app) checkSite(ctx context.Context, watch config.Watch) error {
 			subject := fmt.Sprintf("Detected change on %s", watch.Name)
 			app.log.Infof(subject)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
-			htmlContent, err := app.htmlContent(text, true, string(lastContent), string(body))
+			htmlContent, err := app.generateHTMLContentForEmail(text, true, string(lastContent), string(body))
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)
 			}
