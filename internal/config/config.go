@@ -51,12 +51,13 @@ type Configuration struct {
 		Password string   `json:"password"`
 		SkipTLS  bool     `json:"skiptls"`
 	} `json:"mail"`
-	Retries        int      `json:"retries"`
-	ParallelChecks int64    `json:"parallel_checks"`
-	Useragent      string   `json:"useragent"`
-	Timeout        Duration `json:"timeout"`
-	Database       string   `json:"database"`
-	Watches        []Watch  `json:"watches"`
+	Retries        int       `json:"retries"`
+	RetryDelay     *Duration `json:"retry_delay"`
+	ParallelChecks int64     `json:"parallel_checks"`
+	Useragent      string    `json:"useragent"`
+	Timeout        Duration  `json:"timeout"`
+	Database       string    `json:"database"`
+	Watches        []Watch   `json:"watches"`
 }
 
 type Watch struct {

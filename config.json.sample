@@ -14,6 +14,7 @@
   "timeout": "1m",
   "parallel_checks": 5,
   "retries": 3,
+  "retry_delay": "10s",
   "database": "db.db",
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
   "watches": [{
