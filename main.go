@@ -160,6 +160,7 @@ func (app *app) run() error {
 			if err := app.processWatch(ctx, watch); err != nil {
 				var invalidErr *invalidResponseError
 				if errors.As(err, &invalidErr) {
+					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.statusCode, string(invalidErr.body)))
 					// send mail to indicate we might have an error
 					subject := fmt.Sprintf("Invalid response for %s", watch.Name)
 					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.statusCode, len(invalidErr.body), html.EscapeString(formatHeaders(invalidErr.header)), html.EscapeString(string(invalidErr.body)))
