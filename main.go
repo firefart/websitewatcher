@@ -243,14 +243,14 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 		}
 
 		if app.config.RetryDelay != nil {
-			app.logError(fmt.Errorf("got error on try %d, %s, retrying after %s: %w", i, watch.Name, app.config.RetryDelay.Duration, err))
+			app.logError(fmt.Errorf("got error on try #%d, %s, retrying after %s: %w", i, watch.Name, app.config.RetryDelay.Duration, err))
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-time.After(app.config.RetryDelay.Duration):
 			}
 		} else {
-			app.logError(fmt.Errorf("got error on try %d, %s, retrying: %w", i, watch.Name, err))
+			app.logError(fmt.Errorf("got error on try #%d, %s, retrying: %w", i, watch.Name, err))
 		}
 	}
 
