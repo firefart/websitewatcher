@@ -33,16 +33,6 @@ type app struct {
 	db         *database.Database
 }
 
-type invalidResponseError struct {
-	statusCode int
-	header     map[string][]string
-	body       []byte
-}
-
-func (err *invalidResponseError) Error() string {
-	return fmt.Sprintf("got invalid response on http request: status: %d, bodylen: %d", err.statusCode, len(err.body))
-}
-
 func main() {
 	log := logrus.New()
 	app := app{
@@ -130,7 +120,7 @@ func (app *app) run() error {
 	// remove old websites in the database on each run
 	db.CleanupDatabase(app.log, *configuration)
 
-	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration, *debug, app.log)
+	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Retries, configuration.RetryDelay.Duration, configuration.Timeout.Duration, app.log)
 
 	app.config = configuration
 	app.httpClient = httpClient
@@ -158,12 +148,12 @@ func (app *app) run() error {
 			defer wg.Done()
 
 			if err := app.processWatch(ctx, watch); err != nil {
-				var invalidErr *invalidResponseError
+				var invalidErr *http.InvalidResponseError
 				if errors.As(err, &invalidErr) {
-					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.statusCode, string(invalidErr.body)))
+					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body)))
 					// send mail to indicate we might have an error
 					subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.statusCode, len(invalidErr.body), html.EscapeString(formatHeaders(invalidErr.header)), html.EscapeString(string(invalidErr.body)))
+					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
 					htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
 					if err != nil {
 						app.logError(fmt.Errorf("error on creating htmlcontent: %w", err))
@@ -205,57 +195,11 @@ func (app *app) run() error {
 	return nil
 }
 
-func (app *app) fetchURL(ctx context.Context, watch config.Watch) (int, []byte, error) {
-	statusCode, header, body, err := app.httpClient.GetRequest(ctx, watch.URL)
-	if err != nil {
-		return -1, nil, fmt.Errorf("error on get request: %w", err)
-	}
-
-	if statusCode != 200 || len(body) == 0 || http.IsSoftError(body) {
-		return -1, nil, &invalidResponseError{
-			statusCode: statusCode,
-			header:     header,
-			body:       body,
-		}
-	}
-	return statusCode, body, nil
-}
-
 func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
 	lastContent := app.db.GetDatabaseEntry(watch.URL)
 
-	var statusCode int
-	var body []byte
-	var err error
-	// check with retries
-	for i := 1; i <= app.config.Retries; i++ {
-		app.log.Debugf("try #%d for %s", i, watch.Name)
-		statusCode, body, err = app.fetchURL(ctx, watch)
-		if err == nil {
-			// break out on success
-			break
-		}
-
-		// if we reach here, we have an error, retry
-		if i == app.config.Retries {
-			// break out to not print the rety message on the last try
-			break
-		}
-
-		if app.config.RetryDelay != nil {
-			app.logError(fmt.Errorf("got error on try #%d, %s, retrying after %s: %w", i, watch.Name, app.config.RetryDelay.Duration, err))
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(app.config.RetryDelay.Duration):
-			}
-		} else {
-			app.logError(fmt.Errorf("got error on try #%d, %s, retrying: %w", i, watch.Name, err))
-		}
-	}
-
-	// last error still set, bail out
+	statusCode, _, body, err := app.httpClient.GetRequest(ctx, watch.URL)
 	if err != nil {
 		return err
 	}
