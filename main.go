@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"html"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -148,6 +149,7 @@ func (app *app) run() error {
 			defer wg.Done()
 
 			if err := app.processWatch(ctx, watch); err != nil {
+				app.log.Debugf("[ERROR-DEBUG] %#v", err)
 				var invalidErr *http.InvalidResponseError
 				if errors.As(err, &invalidErr) {
 					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body)))
@@ -170,9 +172,10 @@ func (app *app) run() error {
 				app.logError(fmt.Errorf("error on %s: %w", watch.Name, err))
 				subject := fmt.Sprintf("error on %s", watch.Name)
 				errText := err.Error()
-				if os.IsTimeout(err) || errors.Is(context.DeadlineExceeded, err) {
+				var urlErr *url.Error
+				if errors.As(err, &urlErr) && urlErr.Timeout() {
 					// overwrite timeout errors to be more meaningful for non go people
-					errText = "timeout occurred"
+					errText = fmt.Sprintf("%s - %s: timeout occurred", watch.Name, watch.URL)
 				}
 				htmlContent := html.EscapeString(errText)
 				if err2 := app.sendEmail(watch, subject, htmlContent); err2 != nil {

@@ -91,6 +91,7 @@ func GetConfig(f string) (*Configuration, error) {
 	c := Configuration{
 		ParallelChecks: 1,
 		Retries:        3,
+		RetryDelay:     &Duration{Duration: 3 * time.Second},
 	}
 	if err = decoder.Decode(&c); err != nil {
 		return nil, err
