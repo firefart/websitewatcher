@@ -180,7 +180,7 @@ func (app *app) run() error {
 				app.logError(fmt.Errorf("error on %s: %w", watch.Name, err))
 				subject := fmt.Sprintf("error on %s", watch.Name)
 				errText := err.Error()
-				if os.IsTimeout(err) {
+				if os.IsTimeout(err) || errors.Is(context.DeadlineExceeded, err) {
 					// overwrite timeout errors to be more meaningful for non go people
 					errText = "timeout occurred"
 				}
