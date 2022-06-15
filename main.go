@@ -153,9 +153,15 @@ func (app *app) run() error {
 				var invalidErr *http.InvalidResponseError
 				if errors.As(err, &invalidErr) {
 					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body)))
+
+					if invalidErr.StatusCode == 504 {
+						// no custom email on gateway timeouts
+						return
+					}
+
 					// send mail to indicate we might have an error
 					subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
+					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylren: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
 					htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
 					if err != nil {
 						app.logError(fmt.Errorf("error on creating htmlcontent: %w", err))
@@ -170,14 +176,15 @@ func (app *app) run() error {
 
 				// all other errors
 				app.logError(fmt.Errorf("error on %s: %w", watch.Name, err))
-				subject := fmt.Sprintf("error on %s", watch.Name)
-				errText := err.Error()
+
 				var urlErr *url.Error
 				if errors.As(err, &urlErr) && urlErr.Timeout() {
-					// overwrite timeout errors to be more meaningful for non go people
-					errText = fmt.Sprintf("%s - %s: timeout occurred", watch.Name, watch.URL)
+					// no email on timeouts
+					return
 				}
-				htmlContent := html.EscapeString(errText)
+
+				subject := fmt.Sprintf("error on %s", watch.Name)
+				htmlContent := html.EscapeString(err.Error())
 				if err2 := app.sendEmail(watch, subject, htmlContent); err2 != nil {
 					app.logError(err2)
 					return
