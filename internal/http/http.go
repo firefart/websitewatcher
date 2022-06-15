@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/firefart/websitewatcher/internal/logger"
 )
 
 type HTTPClient struct {
@@ -17,7 +17,7 @@ type HTTPClient struct {
 	retries    int
 	retryDelay time.Duration
 	client     *http.Client
-	logger     *logrus.Logger
+	logger     logger.Logger
 }
 
 type InvalidResponseError struct {
@@ -30,7 +30,7 @@ func (err *InvalidResponseError) Error() string {
 	return fmt.Sprintf("got invalid response on http request: status: %d, bodylen: %d", err.StatusCode, len(err.Body))
 }
 
-func NewHTTPClient(userAgent string, retries int, retryDelay time.Duration, timeout time.Duration, logger *logrus.Logger) *HTTPClient {
+func NewHTTPClient(userAgent string, retries int, retryDelay time.Duration, timeout time.Duration, logger logger.Logger) *HTTPClient {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}

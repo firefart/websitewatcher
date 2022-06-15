@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/firefart/websitewatcher/internal/config"
+	"github.com/firefart/websitewatcher/internal/logger"
 	"github.com/firefart/websitewatcher/internal/pb"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -73,7 +73,7 @@ func (db *Database) SaveDatabase(database string) error {
 }
 
 // removes old feeds from database
-func (db *Database) CleanupDatabase(log *logrus.Logger, c config.Configuration) {
+func (db *Database) CleanupDatabase(log logger.Logger, c config.Configuration) {
 	configURLs := make(map[string]bool)
 	for _, x := range c.Watches {
 		configURLs[x.URL] = x.Disabled
