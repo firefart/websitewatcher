@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -19,17 +18,17 @@ import (
 	"github.com/firefart/websitewatcher/internal/database"
 	"github.com/firefart/websitewatcher/internal/diff"
 	"github.com/firefart/websitewatcher/internal/http"
+	"github.com/firefart/websitewatcher/internal/mail"
 	"golang.org/x/sync/semaphore"
 
 	"github.com/sirupsen/logrus"
-
-	gomail "gopkg.in/mail.v2"
 )
 
 type app struct {
 	log        *logrus.Logger
 	config     *config.Configuration
 	httpClient *http.HTTPClient
+	mailer     *mail.Mail
 	testMode   bool
 	db         *database.Database
 }
@@ -72,29 +71,6 @@ func formatHeaders(header map[string][]string) string {
 	return sb.String()
 }
 
-func (app *app) sendEmail(watch config.Watch, subject, body string) error {
-	to := app.config.Mail.To
-	if len(watch.AdditionalTo) > 0 {
-		to = append(to, watch.AdditionalTo...)
-	}
-
-	m := gomail.NewMessage()
-	m.SetAddressHeader("From", app.config.Mail.From.Mail, app.config.Mail.From.Name)
-	m.SetHeader("To", to...)
-	m.SetHeader("Subject", fmt.Sprintf("[WEBSITEWATCHER] %s", subject))
-	m.SetBody("text/html", body)
-	d := gomail.NewDialer(app.config.Mail.Server, app.config.Mail.Port, app.config.Mail.User, app.config.Mail.Password)
-
-	if app.config.Mail.SkipTLS {
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-
-	if err := d.DialAndSend(m); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (app *app) run() error {
 	configFile := flag.String("config", "", "config file to use")
 	debug := flag.Bool("debug", false, "Print debug output")
@@ -122,11 +98,13 @@ func (app *app) run() error {
 	db.CleanupDatabase(app.log, *configuration)
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Retries, configuration.RetryDelay.Duration, configuration.Timeout.Duration, app.log)
+	mailer := mail.NewMail(configuration)
 
 	app.config = configuration
 	app.httpClient = httpClient
 	app.testMode = *testMode
 	app.db = db
+	app.mailer = mailer
 
 	ctx := context.Background()
 
@@ -167,7 +145,7 @@ func (app *app) run() error {
 						app.logError(fmt.Errorf("error on creating htmlcontent: %w", err))
 						return
 					}
-					if err := app.sendEmail(watch, subject, htmlContent); err != nil {
+					if err := app.mailer.SendHTMLEmail(watch, subject, htmlContent); err != nil {
 						app.logError(fmt.Errorf("error on sending email: %w", err))
 						return
 					}
@@ -183,9 +161,7 @@ func (app *app) run() error {
 					return
 				}
 
-				subject := fmt.Sprintf("error on %s", watch.Name)
-				htmlContent := html.EscapeString(err.Error())
-				if err2 := app.sendEmail(watch, subject, htmlContent); err2 != nil {
+				if err2 := app.mailer.SendErrorEmail(watch, err); err2 != nil {
 					app.logError(err2)
 					return
 				}
@@ -256,7 +232,7 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)
 			}
-			if err := app.sendEmail(watch, subject, htmlContent); err != nil {
+			if err := app.mailer.SendHTMLEmail(watch, subject, htmlContent); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}
