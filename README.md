@@ -4,7 +4,7 @@ This tool can be used to monitor websites for changes and trigger an email with 
 
 It also supports extracting only a particular content from the website via regex and capture groups and also to replace content based on a regex (for example to patch out CSRF tokens before comparing).
 
-Se the `config.json.sample` file for all possible configuration options.
+See the `config.json.sample` file for all possible configuration options.
 
 Usage:
 
