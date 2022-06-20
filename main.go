@@ -139,7 +139,7 @@ func (app *app) run() error {
 
 					// send mail to indicate we might have an error
 					subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylren: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
+					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
 					htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
 					if err != nil {
 						app.logError(fmt.Errorf("error on creating htmlcontent: %w", err))
