@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	http2 "github.com/firefart/websitewatcher/internal/http"
@@ -58,7 +58,7 @@ func DiffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, err
 		return "", "", fmt.Errorf("error on diff http: %w", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", "", fmt.Errorf("error on diff body read: %w", err)
 	}
