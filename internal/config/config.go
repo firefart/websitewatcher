@@ -94,7 +94,19 @@ func GetConfig(f string) (*Configuration, error) {
 		RetryDelay:     &Duration{Duration: 3 * time.Second},
 	}
 	if err = decoder.Decode(&c); err != nil {
-		return nil, err
+		var syntaxErr *json.SyntaxError
+		var unmarshalErr *json.UnmarshalTypeError
+		switch {
+		case errors.As(err, &syntaxErr):
+			custom := fmt.Sprintf("%q <-", string(b[syntaxErr.Offset-20:syntaxErr.Offset]))
+			return nil, fmt.Errorf("could not parse JSON: %v: %s", syntaxErr.Error(), custom)
+		case errors.As(err, &unmarshalErr):
+			custom := fmt.Sprintf("%q <-", string(b[unmarshalErr.Offset-20:unmarshalErr.Offset]))
+			return nil, fmt.Errorf("could not parse JSON: type %v cannot be converted into %v (%s.%v): %v: %s", unmarshalErr.Value, unmarshalErr.Type.Name(), unmarshalErr.Struct, unmarshalErr.Field, unmarshalErr.Error(), custom)
+		default:
+			return nil, err
+		}
 	}
+
 	return &c, nil
 }
