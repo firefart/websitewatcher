@@ -132,7 +132,7 @@ func (app *app) run() error {
 				if errors.As(err, &invalidErr) {
 					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body)))
 
-					if invalidErr.StatusCode == 504 || invalidErr.StatusCode == 503 {
+					if invalidErr.StatusCode == 504 || invalidErr.StatusCode == 503 || invalidErr.StatusCode == 502 {
 						// no custom email on gateway timeouts
 						return
 					}
