@@ -132,9 +132,16 @@ func (app *app) run() error {
 				if errors.As(err, &invalidErr) {
 					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body)))
 
-					if invalidErr.StatusCode == 504 || invalidErr.StatusCode == 503 || invalidErr.StatusCode == 502 {
-						// no custom email on gateway timeouts
-						return
+					for _, ignore := range configuration.HTTPErrorsToIgnore {
+						if invalidErr.StatusCode == ignore {
+							return
+						}
+					}
+
+					for _, ignore := range watch.AdditionalHTTPErrorsToIgnore {
+						if invalidErr.StatusCode == ignore {
+							return
+						}
 					}
 
 					// send mail to indicate we might have an error
