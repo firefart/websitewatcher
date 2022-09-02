@@ -192,7 +192,7 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
 	lastContent := app.db.GetDatabaseEntry(watch.URL)
 
-	statusCode, _, body, err := app.httpClient.GetRequest(ctx, watch.URL)
+	statusCode, _, requestDuration, body, err := app.httpClient.GetRequest(ctx, watch.URL)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", watch.Name)
 			app.log.Infof(subject)
-			text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, statusCode, len(body))
+			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, requestDuration, statusCode, len(body))
 			htmlContent, err := app.generateHTMLContentForEmail(text, true, string(lastContent), string(body))
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)

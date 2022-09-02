@@ -53,27 +53,28 @@ func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
-func (c *HTTPClient) fetchURL(ctx context.Context, url string) (int, map[string][]string, []byte, error) {
-	start := time.Now()
+func (c *HTTPClient) fetchURL(ctx context.Context, url string) (int, map[string][]string, time.Duration, []byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return -1, nil, nil, fmt.Errorf("could create get request for %s: %w", url, err)
+		return -1, nil, -1, nil, fmt.Errorf("could create get request for %s: %w", url, err)
 	}
 
+	start := time.Now()
 	resp, err := c.Do(req)
 	if err != nil {
-		return -1, nil, nil, fmt.Errorf("could not get %s: %w", url, err)
+		return -1, nil, -1, nil, fmt.Errorf("could not get %s: %w", url, err)
 	}
 	defer resp.Body.Close()
+	duration := time.Since(start)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return -1, nil, nil, fmt.Errorf("could not read body from %s: %w", url, err)
+		return -1, nil, -1, nil, fmt.Errorf("could not read body from %s: %w", url, err)
 	}
 
 	if resp.StatusCode != 200 || len(body) == 0 || isSoftError(body) {
-		duration := time.Since(start)
-		return -1, nil, nil, &InvalidResponseError{
+
+		return -1, nil, duration, nil, &InvalidResponseError{
 			StatusCode:      resp.StatusCode,
 			Header:          resp.Header,
 			Body:            body,
@@ -81,7 +82,7 @@ func (c *HTTPClient) fetchURL(ctx context.Context, url string) (int, map[string]
 		}
 	}
 
-	return resp.StatusCode, resp.Header, body, nil
+	return resp.StatusCode, resp.Header, duration, body, nil
 }
 
 func isSoftError(body []byte) bool {
@@ -98,15 +99,16 @@ func isSoftError(body []byte) bool {
 	return false
 }
 
-func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[string][]string, []byte, error) {
+func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[string][]string, time.Duration, []byte, error) {
 	var statusCode int
+	var requestDuration time.Duration
 	var body []byte
 	var header map[string][]string
 	var err error
 	// check with retries
 	for i := 1; i <= c.retries; i++ {
 		c.logger.Debugf("try #%d for %s", i, url)
-		statusCode, header, body, err = c.fetchURL(ctx, url)
+		statusCode, header, requestDuration, body, err = c.fetchURL(ctx, url)
 		if err == nil {
 			// break out on success
 			break
@@ -122,7 +124,7 @@ func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[strin
 			c.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying after %s: %w", i, url, c.retryDelay, err))
 			select {
 			case <-ctx.Done():
-				return -1, nil, nil, ctx.Err()
+				return -1, nil, -1, nil, ctx.Err()
 			case <-time.After(c.retryDelay):
 			}
 		} else {
@@ -132,8 +134,8 @@ func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[strin
 
 	// last error still set, bail out
 	if err != nil {
-		return -1, nil, nil, err
+		return -1, nil, -1, nil, err
 	}
 
-	return statusCode, header, body, nil
+	return statusCode, header, requestDuration, body, nil
 }
