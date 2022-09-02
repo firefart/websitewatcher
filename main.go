@@ -130,7 +130,7 @@ func (app *app) run() error {
 				app.log.Debugf("[ERROR-DEBUG] %#v", err)
 				var invalidErr *http.InvalidResponseError
 				if errors.As(err, &invalidErr) {
-					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body)))
+					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s, duration: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.RequestDuration))
 
 					for _, ignore := range configuration.HTTPErrorsToIgnore {
 						if invalidErr.StatusCode == ignore {
@@ -146,7 +146,7 @@ func (app *app) run() error {
 
 					// send mail to indicate we might have an error
 					subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-					text := fmt.Sprintf("Name: %s\nURL: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
+					text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.RequestDuration, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
 					htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
 					if err != nil {
 						app.logError(fmt.Errorf("error on creating htmlcontent: %w", err))

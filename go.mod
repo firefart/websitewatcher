@@ -1,6 +1,6 @@
 module github.com/firefart/websitewatcher
 
-go 1.18
+go 1.19
 
 require (
 	github.com/sergi/go-diff v1.2.0

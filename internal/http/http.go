@@ -21,9 +21,10 @@ type HTTPClient struct {
 }
 
 type InvalidResponseError struct {
-	StatusCode int
-	Header     map[string][]string
-	Body       []byte
+	StatusCode      int
+	Header          map[string][]string
+	Body            []byte
+	RequestDuration time.Duration
 }
 
 func (err *InvalidResponseError) Error() string {
@@ -53,6 +54,7 @@ func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (c *HTTPClient) fetchURL(ctx context.Context, url string) (int, map[string][]string, []byte, error) {
+	start := time.Now()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return -1, nil, nil, fmt.Errorf("could create get request for %s: %w", url, err)
@@ -70,10 +72,12 @@ func (c *HTTPClient) fetchURL(ctx context.Context, url string) (int, map[string]
 	}
 
 	if resp.StatusCode != 200 || len(body) == 0 || isSoftError(body) {
+		duration := time.Since(start)
 		return -1, nil, nil, &InvalidResponseError{
-			StatusCode: resp.StatusCode,
-			Header:     resp.Header,
-			Body:       body,
+			StatusCode:      resp.StatusCode,
+			Header:          resp.Header,
+			Body:            body,
+			RequestDuration: duration,
 		}
 	}
 
