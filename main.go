@@ -127,47 +127,7 @@ func (app *app) run() error {
 			defer wg.Done()
 
 			if err := app.processWatch(ctx, watch); err != nil {
-				app.log.Debugf("[ERROR-DEBUG] %#v", err)
-				var invalidErr *http.InvalidResponseError
-				if errors.As(err, &invalidErr) {
-					app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s, duration: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.RequestDuration))
-
-					for _, ignore := range configuration.HTTPErrorsToIgnore {
-						if invalidErr.StatusCode == ignore {
-							return
-						}
-					}
-
-					for _, ignore := range watch.AdditionalHTTPErrorsToIgnore {
-						if invalidErr.StatusCode == ignore {
-							return
-						}
-					}
-
-					// send mail to indicate we might have an error
-					subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-					text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, invalidErr.RequestDuration, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
-					htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
-					if err != nil {
-						app.logError(fmt.Errorf("error on creating htmlcontent: %w", err))
-						return
-					}
-					if err := app.mailer.SendHTMLEmail(watch, subject, htmlContent); err != nil {
-						app.logError(fmt.Errorf("error on sending email: %w", err))
-						return
-					}
-					return
-				}
-
-				// all other errors
 				app.logError(fmt.Errorf("error on %s: %w", watch.Name, err))
-
-				var urlErr *url.Error
-				if errors.As(err, &urlErr) && urlErr.Timeout() {
-					// no email on timeouts
-					return
-				}
-
 				if err2 := app.mailer.SendErrorEmail(watch, err); err2 != nil {
 					app.logError(err2)
 					return
@@ -194,7 +154,44 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 
 	statusCode, _, requestDuration, body, err := app.httpClient.GetRequest(ctx, watch.URL)
 	if err != nil {
-		return err
+		var invalidErr *http.InvalidResponseError
+		var urlErr *url.Error
+		switch {
+		case errors.As(err, &invalidErr):
+			app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s, duration: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body), requestDuration))
+
+			for _, ignore := range app.config.HTTPErrorsToIgnore {
+				if invalidErr.StatusCode == ignore {
+					// status is ignored, bail out
+					return nil
+				}
+			}
+
+			for _, ignore := range watch.AdditionalHTTPErrorsToIgnore {
+				if invalidErr.StatusCode == ignore {
+					// status is ignored, bail out
+					return nil
+				}
+			}
+
+			// send mail to indicate we might have an error
+			subject := fmt.Sprintf("Invalid response for %s", watch.Name)
+			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, requestDuration, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
+			htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
+			if err != nil {
+				return fmt.Errorf("error on creating htmlcontent: %w", err)
+			}
+			if err := app.mailer.SendHTMLEmail(watch, subject, htmlContent); err != nil {
+				return fmt.Errorf("error on sending email: %w", err)
+			}
+			return nil
+		case errors.As(err, &urlErr) && urlErr.Timeout():
+			// ignore timeout errors so outer mail will not send emails on them
+			return nil
+		default:
+			// no custom handled error, return it so outer loop can handle it
+			return err
+		}
 	}
 
 	// extract content

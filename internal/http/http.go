@@ -21,10 +21,9 @@ type HTTPClient struct {
 }
 
 type InvalidResponseError struct {
-	StatusCode      int
-	Header          map[string][]string
-	Body            []byte
-	RequestDuration time.Duration
+	StatusCode int
+	Header     map[string][]string
+	Body       []byte
 }
 
 func (err *InvalidResponseError) Error() string {
@@ -75,10 +74,9 @@ func (c *HTTPClient) fetchURL(ctx context.Context, url string) (int, map[string]
 	if resp.StatusCode != 200 || len(body) == 0 || isSoftError(body) {
 
 		return -1, nil, duration, nil, &InvalidResponseError{
-			StatusCode:      resp.StatusCode,
-			Header:          resp.Header,
-			Body:            body,
-			RequestDuration: duration,
+			StatusCode: resp.StatusCode,
+			Header:     resp.Header,
+			Body:       body,
 		}
 	}
 
