@@ -176,7 +176,7 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 
 			// send mail to indicate we might have an error
 			subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, requestDuration, invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
+			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, requestDuration.Round(time.Millisecond), invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
 			htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)
@@ -231,7 +231,7 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", watch.Name)
 			app.log.Infof(subject)
-			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, requestDuration, statusCode, len(body))
+			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, requestDuration.Round(time.Millisecond), statusCode, len(body))
 			htmlContent, err := app.generateHTMLContentForEmail(text, true, string(lastContent), string(body))
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)
