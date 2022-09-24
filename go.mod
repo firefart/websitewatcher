@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.9.0
-	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
+	golang.org/x/sync v0.0.0-20220923202941-7f9b1623fab7
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/mail.v2 v2.3.1
 )
