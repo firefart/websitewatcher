@@ -15,6 +15,10 @@ build: test
 run: build
 	./websitewatcher
 
+.PHONY: dev
+dev: build
+	./websitewatcher -debug -test -config config.json
+
 .PHONY: lint
 lint:
 	"$$(go env GOPATH)/bin/golangci-lint" run ./...
