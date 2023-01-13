@@ -3,7 +3,7 @@ module github.com/firefart/websitewatcher
 go 1.19
 
 require (
-	github.com/sergi/go-diff v1.2.0
+	github.com/sergi/go-diff v1.3.1
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/sync v0.1.0
 	google.golang.org/protobuf v1.28.1
