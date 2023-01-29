@@ -62,13 +62,14 @@ type Configuration struct {
 }
 
 type Watch struct {
-	Name                         string    `json:"name"`
-	URL                          string    `json:"url"`
-	AdditionalTo                 []string  `json:"additional_to"`
-	AdditionalHTTPErrorsToIgnore []int     `json:"additional_http_errors_to_ignore"`
-	Disabled                     bool      `json:"disabled"`
-	Pattern                      string    `json:"pattern"`
-	Replaces                     []Replace `json:"replaces"`
+	Name                         string            `json:"name"`
+	URL                          string            `json:"url"`
+	Header                       map[string]string `json:"header"`
+	AdditionalTo                 []string          `json:"additional_to"`
+	AdditionalHTTPErrorsToIgnore []int             `json:"additional_http_errors_to_ignore"`
+	Disabled                     bool              `json:"disabled"`
+	Pattern                      string            `json:"pattern"`
+	Replaces                     []Replace         `json:"replaces"`
 }
 
 type Replace struct {

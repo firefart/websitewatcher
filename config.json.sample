@@ -27,6 +27,9 @@
     {
       "name": "bbb",
       "url": "http://bbb.com",
+      "header": {
+        "X-Auth-Key": "1234"
+      },
       "disabled": true,
       "pattern": "test = (.+)",
       "replaces": [

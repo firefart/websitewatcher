@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/logger"
 )
 
@@ -52,23 +53,27 @@ func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
-func (c *HTTPClient) fetchURL(ctx context.Context, url string) (int, map[string][]string, time.Duration, []byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+func (c *HTTPClient) fetchURL(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, watch.URL, nil)
 	if err != nil {
-		return -1, nil, -1, nil, fmt.Errorf("could create get request for %s: %w", url, err)
+		return -1, nil, -1, nil, fmt.Errorf("could create get request for %s: %w", watch.URL, err)
+	}
+
+	for name, value := range watch.Header {
+		req.Header.Set(name, value)
 	}
 
 	start := time.Now()
 	resp, err := c.Do(req)
 	if err != nil {
-		return -1, nil, -1, nil, fmt.Errorf("could not get %s: %w", url, err)
+		return -1, nil, -1, nil, fmt.Errorf("could not get %s: %w", watch.URL, err)
 	}
 	defer resp.Body.Close()
 	duration := time.Since(start)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return -1, nil, -1, nil, fmt.Errorf("could not read body from %s: %w", url, err)
+		return -1, nil, -1, nil, fmt.Errorf("could not read body from %s: %w", watch.URL, err)
 	}
 
 	if resp.StatusCode != 200 || len(body) == 0 || isSoftError(body) {
@@ -97,7 +102,7 @@ func isSoftError(body []byte) bool {
 	return false
 }
 
-func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[string][]string, time.Duration, []byte, error) {
+func (c *HTTPClient) GetRequest(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
 	var statusCode int
 	var requestDuration time.Duration
 	var body []byte
@@ -105,8 +110,8 @@ func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[strin
 	var err error
 	// check with retries
 	for i := 1; i <= c.retries; i++ {
-		c.logger.Debugf("try #%d for %s", i, url)
-		statusCode, header, requestDuration, body, err = c.fetchURL(ctx, url)
+		c.logger.Debugf("try #%d for %s", i, watch.URL)
+		statusCode, header, requestDuration, body, err = c.fetchURL(ctx, watch)
 		if err == nil {
 			// break out on success
 			break
@@ -119,14 +124,14 @@ func (c *HTTPClient) GetRequest(ctx context.Context, url string) (int, map[strin
 		}
 
 		if c.retryDelay > 0 {
-			c.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying after %s: %w", i, url, c.retryDelay, err))
+			c.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying after %s: %w", i, watch.URL, c.retryDelay, err))
 			select {
 			case <-ctx.Done():
 				return -1, nil, -1, nil, ctx.Err()
 			case <-time.After(c.retryDelay):
 			}
 		} else {
-			c.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying: %w", i, url, err))
+			c.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying: %w", i, watch.URL, err))
 		}
 	}
 

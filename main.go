@@ -152,7 +152,7 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
 	lastContent := app.db.GetDatabaseEntry(watch.URL)
 
-	statusCode, _, requestDuration, body, err := app.httpClient.GetRequest(ctx, watch.URL)
+	statusCode, _, requestDuration, body, err := app.httpClient.GetRequest(ctx, watch)
 	if err != nil {
 		var invalidErr *http.InvalidResponseError
 		var urlErr *url.Error
