@@ -51,7 +51,7 @@ As we are only interested in the latest version, we use the global `pattern` to 
 
 After the body is extracted we clean up the content by removing the content we are not interested part by part. The last 2 `replace` sections remove trailing and leading spaces and double newlines.
 
-The resulting content (see below) is then checked against the last stored version every time the binary runs.
+The resulting content (see below) is then checked against the last stored version every time the binary runs. To test your config you can run `./websitewatcher -config config.json -debug -test` which will print out the results after each replace so it's easier to debug faulty regexes.
 
 ```json
 {
