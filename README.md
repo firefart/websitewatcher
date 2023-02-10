@@ -42,6 +42,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | watches.pattern | the pattern is a regex and must contain one match group. The group is used as the body. This is used to extract the relevant body in big html sites. If left empty the whole body is used |
 | watches.replaces.pattern | regex pattern to match in the body |
 | watches.replaces.replace_with | replacement string for the regex match |
+| watches.retry_on_match | retry request up to retry.count if the response body matches the provided regex |
 
 ## Example
 
