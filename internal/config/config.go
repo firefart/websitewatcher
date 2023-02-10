@@ -51,14 +51,16 @@ type Configuration struct {
 		Password string   `json:"password"`
 		SkipTLS  bool     `json:"skiptls"`
 	} `json:"mail"`
-	Retries            int       `json:"retries"`
-	RetryDelay         *Duration `json:"retry_delay"`
-	ParallelChecks     int64     `json:"parallel_checks"`
-	Useragent          string    `json:"useragent"`
-	Timeout            Duration  `json:"timeout"`
-	Database           string    `json:"database"`
-	HTTPErrorsToIgnore []int     `json:"http_errors_to_ignore"`
-	Watches            []Watch   `json:"watches"`
+	Retry struct {
+		Count int       `json:"count"`
+		Delay *Duration `json:"delay"`
+	} `json:"retry"`
+	ParallelChecks     int64    `json:"parallel_checks"`
+	Useragent          string   `json:"useragent"`
+	Timeout            Duration `json:"timeout"`
+	Database           string   `json:"database"`
+	HTTPErrorsToIgnore []int    `json:"http_errors_to_ignore"`
+	Watches            []Watch  `json:"watches"`
 }
 
 type Watch struct {
@@ -70,6 +72,7 @@ type Watch struct {
 	Disabled                     bool              `json:"disabled"`
 	Pattern                      string            `json:"pattern"`
 	Replaces                     []Replace         `json:"replaces"`
+	RetryOnMatch                 string            `json:"retry_on_match"`
 }
 
 type Replace struct {
@@ -89,13 +92,15 @@ func GetConfig(f string) (*Configuration, error) {
 	reader := bytes.NewReader(b)
 
 	decoder := json.NewDecoder(reader)
+	decoder.DisallowUnknownFields()
 
 	// set some defaults
 	c := Configuration{
 		ParallelChecks: 1,
-		Retries:        3,
-		RetryDelay:     &Duration{Duration: 3 * time.Second},
 	}
+	c.Retry.Count = 3
+	c.Retry.Delay = &Duration{Duration: 3 * time.Second}
+
 	if err = decoder.Decode(&c); err != nil {
 		var syntaxErr *json.SyntaxError
 		var unmarshalErr *json.UnmarshalTypeError

@@ -10,15 +10,11 @@ import (
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
-	"github.com/firefart/websitewatcher/internal/logger"
 )
 
 type HTTPClient struct {
-	userAgent  string
-	retries    int
-	retryDelay time.Duration
-	client     *http.Client
-	logger     logger.Logger
+	userAgent string
+	client    *http.Client
 }
 
 type InvalidResponseError struct {
@@ -31,7 +27,7 @@ func (err *InvalidResponseError) Error() string {
 	return fmt.Sprintf("got invalid response on http request: status: %d, bodylen: %d", err.StatusCode, len(err.Body))
 }
 
-func NewHTTPClient(userAgent string, retries int, retryDelay time.Duration, timeout time.Duration, logger logger.Logger) *HTTPClient {
+func NewHTTPClient(userAgent string, timeout time.Duration) *HTTPClient {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -40,11 +36,8 @@ func NewHTTPClient(userAgent string, retries int, retryDelay time.Duration, time
 		Transport: tr,
 	}
 	return &HTTPClient{
-		userAgent:  userAgent,
-		retries:    retries,
-		retryDelay: retryDelay,
-		client:     &httpClient,
-		logger:     logger,
+		userAgent: userAgent,
+		client:    &httpClient,
 	}
 }
 
@@ -53,7 +46,7 @@ func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
-func (c *HTTPClient) fetchURL(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
+func (c *HTTPClient) CheckWatch(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, watch.URL, nil)
 	if err != nil {
 		return -1, nil, -1, nil, fmt.Errorf("could create get request for %s: %w", watch.URL, err)
@@ -77,7 +70,6 @@ func (c *HTTPClient) fetchURL(ctx context.Context, watch config.Watch) (int, map
 	}
 
 	if resp.StatusCode != 200 || len(body) == 0 || isSoftError(body) {
-
 		return -1, nil, duration, nil, &InvalidResponseError{
 			StatusCode: resp.StatusCode,
 			Header:     resp.Header,
@@ -100,45 +92,4 @@ func isSoftError(body []byte) bool {
 	}
 
 	return false
-}
-
-func (c *HTTPClient) GetRequest(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
-	var statusCode int
-	var requestDuration time.Duration
-	var body []byte
-	var header map[string][]string
-	var err error
-	// check with retries
-	for i := 1; i <= c.retries; i++ {
-		c.logger.Debugf("try #%d for %s", i, watch.URL)
-		statusCode, header, requestDuration, body, err = c.fetchURL(ctx, watch)
-		if err == nil {
-			// break out on success
-			break
-		}
-
-		// if we reach here, we have an error, retry
-		if i == c.retries {
-			// break out to not print the rety message on the last try
-			break
-		}
-
-		if c.retryDelay > 0 {
-			c.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying after %s: %w", i, watch.URL, c.retryDelay, err))
-			select {
-			case <-ctx.Done():
-				return -1, nil, -1, nil, ctx.Err()
-			case <-time.After(c.retryDelay):
-			}
-		} else {
-			c.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying: %w", i, watch.URL, err))
-		}
-	}
-
-	// last error still set, bail out
-	if err != nil {
-		return -1, nil, -1, nil, err
-	}
-
-	return statusCode, header, requestDuration, body, nil
 }

@@ -28,8 +28,8 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | mail.password | smtp password |
 | timeout | timeout for http requests |
 | parallel_checks | number of parallel checks of watches |
-| retries | number of retries on http errors |
-| retry_delay | time to sleep between retries |
+| retry.count | number of retries on http errors |
+| retry.delay | time to sleep between retries |
 | database | filename of the database |
 | http_errors_to_ignore | http status codes that should be ignored on all watches |
 | useragent | useragent header to use for outgoing http requests |
