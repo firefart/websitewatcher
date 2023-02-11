@@ -69,7 +69,9 @@ The resulting content (see below) is then checked against the last stored versio
     "password": "pass"
   },
   "timeout": "60s",
-  "retries": 1,
+  "retry": {
+    "count": 1
+  },
   "parallel_checks": 5,
   "database": "db.db",
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
