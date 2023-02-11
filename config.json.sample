@@ -13,8 +13,10 @@
   },
   "timeout": "1m",
   "parallel_checks": 5,
-  "retries": 3,
-  "retry_delay": "10s",
+  "retry": {
+    "count": 3,
+    "delay": "10s"
+  },
   "database": "db.db",
   "http_errors_to_ignore": [502,503,504],
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
@@ -22,7 +24,8 @@
       "name": "aaa",
       "url": "http://aaa.com",
       "additional_to": ["ddd@ddd.com", "eee@eee.com"],
-      "additional_http_errors_to_ignore": [500]
+      "additional_http_errors_to_ignore": [500],
+      "retry_on_match": "error"
     },
     {
       "name": "bbb",

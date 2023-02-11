@@ -97,7 +97,7 @@ func (app *app) run() error {
 	// remove old websites in the database on each run
 	db.CleanupDatabase(app.log, *configuration)
 
-	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Retries, configuration.RetryDelay.Duration, configuration.Timeout.Duration, app.log)
+	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration)
 	mailer := mail.NewMail(configuration)
 
 	app.config = configuration
@@ -148,11 +148,65 @@ func (app *app) run() error {
 	return nil
 }
 
+func (app *app) checkWatch(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
+	var statusCode int
+	var requestDuration time.Duration
+	var body []byte
+	var header map[string][]string
+	var err error
+	// check with retries
+	for i := 1; i <= app.config.Retry.Count; i++ {
+		app.log.Debugf("try #%d for %s", i, watch.URL)
+		statusCode, header, requestDuration, body, err = app.httpClient.CheckWatch(ctx, watch)
+		if err == nil {
+			// first check if our body matches the retry pattern and retry
+			if watch.RetryOnMatch != "" {
+				re, err := regexp.Compile(watch.RetryOnMatch)
+				if err != nil {
+					return -1, nil, -1, nil, fmt.Errorf("could not compile pattern %s: %w", watch.Pattern, err)
+				}
+				if re.Match(body) {
+					// retry the request as the body matches
+					app.log.Debugf("retrying %s because body matches retry pattern", watch.URL)
+					continue
+				}
+			}
+
+			// no error and no retry pattern matched, so we count it as success --> break out
+			break
+		}
+
+		if i >= app.config.Retry.Count {
+			// break out to not print the rety message on the last try
+			break
+		}
+
+		// if we reach here, we have an error, retry
+		if app.config.Retry.Delay.Duration > 0 {
+			app.log.Error(fmt.Errorf("got error on try #%d for %s, retrying after %s: %w", i, watch.URL, app.config.Retry.Delay.Duration, err))
+			select {
+			case <-ctx.Done():
+				return -1, nil, -1, nil, ctx.Err()
+			case <-time.After(app.config.Retry.Delay.Duration):
+			}
+		} else {
+			app.log.Error(fmt.Errorf("got error on try #%d for %s, retrying: %w", i, watch.URL, err))
+		}
+	}
+
+	// last error still set, bail out
+	if err != nil {
+		return -1, nil, -1, nil, err
+	}
+
+	return statusCode, header, requestDuration, body, nil
+}
+
 func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
 	lastContent := app.db.GetDatabaseEntry(watch.URL)
 
-	statusCode, _, requestDuration, body, err := app.httpClient.GetRequest(ctx, watch)
+	statusCode, _, requestDuration, body, err := app.checkWatch(ctx, watch)
 	if err != nil {
 		var invalidErr *http.InvalidResponseError
 		var urlErr *url.Error
