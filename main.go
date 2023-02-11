@@ -156,7 +156,7 @@ func (app *app) checkWatch(ctx context.Context, watch config.Watch) (int, map[st
 	var err error
 	// check with retries
 	for i := 1; i <= app.config.Retry.Count; i++ {
-		app.log.Debugf("try #%d for %s", i, watch.URL)
+		app.log.Infof("try #%d for %s", i, watch.URL)
 		statusCode, header, requestDuration, body, err = app.httpClient.CheckWatch(ctx, watch)
 		if err == nil {
 			// first check if our body matches the retry pattern and retry
@@ -167,7 +167,7 @@ func (app *app) checkWatch(ctx context.Context, watch config.Watch) (int, map[st
 				}
 				if re.Match(body) {
 					// retry the request as the body matches
-					app.log.Debugf("retrying %s because body matches retry pattern", watch.URL)
+					app.log.Infof("retrying %s because body matches retry pattern", watch.URL)
 					continue
 				}
 			}
