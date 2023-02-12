@@ -35,6 +35,8 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | useragent | useragent header to use for outgoing http requests |
 | watches.name | friendly name of the watch |
 | watches.url | the url to check |
+| watches.method | http method to use. Defaults to GET |
+| watches.body | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed |
 | watches.additional_to | array of additional emails for this watch. The email will be sent to the global ones and this list |
 | watches.addtional_http_errors_to_ignore | additional http errors to ignore for this watch. The global option is merged with this one |
 | watches.header | additional http headers to add |

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
@@ -47,7 +48,17 @@ func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (c *HTTPClient) CheckWatch(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, watch.URL, nil)
+	method := http.MethodGet
+	if watch.Method != "" {
+		method = strings.ToUpper(watch.Method)
+	}
+
+	var requestBody io.Reader
+	if watch.Body != "" {
+		requestBody = strings.NewReader(watch.Body)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, watch.URL, requestBody)
 	if err != nil {
 		return -1, nil, -1, nil, fmt.Errorf("could create get request for %s: %w", watch.URL, err)
 	}

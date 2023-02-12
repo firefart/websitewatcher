@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 )
@@ -66,6 +67,8 @@ type Configuration struct {
 type Watch struct {
 	Name                         string            `json:"name"`
 	URL                          string            `json:"url"`
+	Method                       string            `json:"method"`
+	Body                         string            `json:"body"`
 	Header                       map[string]string `json:"header"`
 	AdditionalTo                 []string          `json:"additional_to"`
 	AdditionalHTTPErrorsToIgnore []int             `json:"additional_http_errors_to_ignore"`
@@ -113,6 +116,13 @@ func GetConfig(f string) (*Configuration, error) {
 			return nil, fmt.Errorf("could not parse JSON: type %v cannot be converted into %v (%s.%v): %v: %s", unmarshalErr.Value, unmarshalErr.Type.Name(), unmarshalErr.Struct, unmarshalErr.Field, unmarshalErr.Error(), custom)
 		default:
 			return nil, err
+		}
+	}
+
+	// set some defaults for watches if not set in json
+	for i, watch := range c.Watches {
+		if watch.Method == "" {
+			c.Watches[i].Method = http.MethodGet
 		}
 	}
 
