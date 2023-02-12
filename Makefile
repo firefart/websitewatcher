@@ -17,7 +17,7 @@ run: build
 
 .PHONY: dev
 dev: build
-	./websitewatcher -debug -test -config config.json
+	./websitewatcher -debug -dry-run -config config.json
 
 .PHONY: lint
 lint:

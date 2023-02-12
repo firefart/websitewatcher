@@ -29,7 +29,7 @@ type app struct {
 	config     *config.Configuration
 	httpClient *http.HTTPClient
 	mailer     *mail.Mail
-	testMode   bool
+	dryRun     bool
 	db         *database.Database
 }
 
@@ -74,7 +74,7 @@ func formatHeaders(header map[string][]string) string {
 func (app *app) run() error {
 	configFile := flag.String("config", "", "config file to use")
 	debug := flag.Bool("debug", false, "Print debug output")
-	testMode := flag.Bool("test", false, "use test mode (no email sending)")
+	dryRun := flag.Bool("dry-run", false, "dry-run - send no emails")
 	flag.Parse()
 
 	app.log.SetOutput(os.Stdout)
@@ -102,7 +102,7 @@ func (app *app) run() error {
 
 	app.config = configuration
 	app.httpClient = httpClient
-	app.testMode = *testMode
+	app.dryRun = *dryRun
 	app.db = db
 	app.mailer = mailer
 
@@ -280,8 +280,8 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 	}
 
 	if !bytes.Equal(lastContent, body) {
-		if app.testMode {
-			app.log.Debugf("Website %s %s differ! Would send email in prod", watch.Name, watch.URL)
+		if app.dryRun {
+			app.log.Debugf("Dry Run: Website %s %s differ", watch.Name, watch.URL)
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", watch.Name)
 			app.log.Infof(subject)
