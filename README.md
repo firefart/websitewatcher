@@ -182,3 +182,7 @@ go1.20.windows-arm64.zip
 go1.20.windows-arm64.msi
 3b520f5ef57fb8e0032eeeec5da1665644daa6499234412e91ab1eb44b05881a
 ```
+
+Example E-Mail:
+
+![screenshot](screenshot.png "Screenshot")
