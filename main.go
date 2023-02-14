@@ -19,6 +19,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/diff"
 	"github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/mail"
+	"github.com/firefart/websitewatcher/internal/watch"
 	"golang.org/x/sync/semaphore"
 
 	"github.com/sirupsen/logrus"
@@ -110,9 +111,9 @@ func (app *app) run() error {
 
 	var wg sync.WaitGroup
 	sem := semaphore.NewWeighted(configuration.ParallelChecks)
-	for _, watch := range configuration.Watches {
-		if watch.Disabled {
-			app.log.Infof("skipping %s: %s", watch.Name, watch.URL)
+	for _, wc := range configuration.Watches {
+		if wc.Disabled {
+			app.log.Infof("skipping %s: %s", wc.Name, wc.URL)
 			continue
 		}
 
@@ -122,19 +123,21 @@ func (app *app) run() error {
 		}
 		wg.Add(1)
 
-		go func(watch config.Watch) {
+		w := watch.New(wc, app.log, httpClient)
+
+		go func(w2 watch.Watch) {
 			defer sem.Release(1)
 			defer wg.Done()
 
-			if err := app.processWatch(ctx, watch); err != nil {
-				app.logError(fmt.Errorf("error on %s: %w", watch.Name, err))
-				if err2 := app.mailer.SendErrorEmail(watch, err); err2 != nil {
+			if err := app.processWatch(ctx, w2); err != nil {
+				app.logError(fmt.Errorf("error on %s: %w", w2.Name, err))
+				if err2 := app.mailer.SendErrorEmail(w2, err); err2 != nil {
 					app.logError(err2)
 					return
 				}
 				return
 			}
-		}(watch)
+		}(w)
 	}
 
 	wg.Wait()
@@ -148,71 +151,19 @@ func (app *app) run() error {
 	return nil
 }
 
-func (app *app) checkWatch(ctx context.Context, watch config.Watch) (int, map[string][]string, time.Duration, []byte, error) {
-	var statusCode int
-	var requestDuration time.Duration
-	var body []byte
-	var header map[string][]string
-	var err error
-	// check with retries
-	for i := 1; i <= app.config.Retry.Count; i++ {
-		app.log.Infof("try #%d for %s", i, watch.URL)
-		statusCode, header, requestDuration, body, err = app.httpClient.CheckWatch(ctx, watch)
-		if err == nil {
-			// first check if our body matches the retry pattern and retry
-			if watch.RetryOnMatch != "" {
-				re, err := regexp.Compile(watch.RetryOnMatch)
-				if err != nil {
-					return -1, nil, -1, nil, fmt.Errorf("could not compile pattern %s: %w", watch.Pattern, err)
-				}
-				if re.Match(body) {
-					// retry the request as the body matches
-					app.log.Infof("retrying %s because body matches retry pattern", watch.URL)
-					continue
-				}
-			}
+func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
+	app.log.Infof("processing %s: %s", w.Name, w.URL)
+	lastContent := app.db.GetDatabaseEntry(w.URL)
 
-			// no error and no retry pattern matched, so we count it as success --> break out
-			break
-		}
-
-		if i >= app.config.Retry.Count {
-			// break out to not print the rety message on the last try
-			break
-		}
-
-		// if we reach here, we have an error, retry
-		if app.config.Retry.Delay.Duration > 0 {
-			app.log.Error(fmt.Errorf("got error on try #%d for %s, retrying after %s: %w", i, watch.URL, app.config.Retry.Delay.Duration, err))
-			select {
-			case <-ctx.Done():
-				return -1, nil, -1, nil, ctx.Err()
-			case <-time.After(app.config.Retry.Delay.Duration):
-			}
-		} else {
-			app.log.Error(fmt.Errorf("got error on try #%d for %s, retrying: %w", i, watch.URL, err))
-		}
-	}
-
-	// last error still set, bail out
-	if err != nil {
-		return -1, nil, -1, nil, err
-	}
-
-	return statusCode, header, requestDuration, body, nil
-}
-
-func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
-	app.log.Infof("processing %s: %s", watch.Name, watch.URL)
-	lastContent := app.db.GetDatabaseEntry(watch.URL)
-
-	statusCode, _, requestDuration, body, err := app.checkWatch(ctx, watch)
+	retries := app.config.Retry.Count
+	retryDelay := app.config.Retry.Delay.Duration
+	statusCode, _, requestDuration, body, err := w.CheckWithRetries(ctx, retries, retryDelay)
 	if err != nil {
 		var invalidErr *http.InvalidResponseError
 		var urlErr *url.Error
 		switch {
 		case errors.As(err, &invalidErr):
-			app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s, duration: %s", watch.Name, invalidErr.StatusCode, string(invalidErr.Body), requestDuration))
+			app.logError(fmt.Errorf("invalid response for %s - status: %d, body: %s, duration: %s", w.Name, invalidErr.StatusCode, string(invalidErr.Body), requestDuration))
 
 			for _, ignore := range app.config.HTTPErrorsToIgnore {
 				if invalidErr.StatusCode == ignore {
@@ -221,7 +172,7 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 				}
 			}
 
-			for _, ignore := range watch.AdditionalHTTPErrorsToIgnore {
+			for _, ignore := range w.AdditionalHTTPErrorsToIgnore {
 				if invalidErr.StatusCode == ignore {
 					// status is ignored, bail out
 					return nil
@@ -229,13 +180,13 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 			}
 
 			// send mail to indicate we might have an error
-			subject := fmt.Sprintf("Invalid response for %s", watch.Name)
-			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", watch.Name, watch.URL, requestDuration.Round(time.Millisecond), invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
+			subject := fmt.Sprintf("Invalid response for %s", w.Name)
+			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nHeader:\n%s\nBody:\n%s", w.Name, w.URL, requestDuration.Round(time.Millisecond), invalidErr.StatusCode, len(invalidErr.Body), html.EscapeString(formatHeaders(invalidErr.Header)), html.EscapeString(string(invalidErr.Body)))
 			htmlContent, err := app.generateHTMLContentForEmail(text, false, "", "")
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)
 			}
-			if err := app.mailer.SendHTMLEmail(watch, subject, htmlContent); err != nil {
+			if err := app.mailer.SendHTMLEmail(w, subject, htmlContent); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 			return nil
@@ -249,19 +200,19 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 	}
 
 	// extract content
-	if watch.Pattern != "" {
-		re, err := regexp.Compile(watch.Pattern)
+	if w.Pattern != "" {
+		re, err := regexp.Compile(w.Pattern)
 		if err != nil {
-			return fmt.Errorf("could not compile pattern %s: %w", watch.Pattern, err)
+			return fmt.Errorf("could not compile pattern %s: %w", w.Pattern, err)
 		}
 		match := re.FindSubmatch(body)
 		if len(match) < 2 {
-			return fmt.Errorf("pattern %s did not match %s", watch.Pattern, string(body))
+			return fmt.Errorf("pattern %s did not match %s", w.Pattern, string(body))
 		}
 		body = match[1]
 	}
 
-	for _, replace := range watch.Replaces {
+	for _, replace := range w.Replaces {
 		app.log.Debugf("replacing %s", replace.Pattern)
 		re, err := regexp.Compile(replace.Pattern)
 		if err != nil {
@@ -274,30 +225,30 @@ func (app *app) processWatch(ctx context.Context, watch config.Watch) error {
 	// if it's a new website not yet in the database only process new entries and ignore old ones
 	if lastContent == nil {
 		// lastContent = nil on new sites not yet processed, so send no email here
-		app.log.Debugf("new website %s %s detected, not comparing", watch.Name, watch.URL)
-		app.db.SetDatabaseEntry(watch.URL, body)
+		app.log.Debugf("new website %s %s detected, not comparing", w.Name, w.URL)
+		app.db.SetDatabaseEntry(w.URL, body)
 		return nil
 	}
 
 	if !bytes.Equal(lastContent, body) {
 		if app.dryRun {
-			app.log.Debugf("Dry Run: Website %s %s differ", watch.Name, watch.URL)
+			app.log.Debugf("Dry Run: Website %s %s differ", w.Name, w.URL)
 		} else {
-			subject := fmt.Sprintf("Detected change on %s", watch.Name)
+			subject := fmt.Sprintf("Detected change on %s", w.Name)
 			app.log.Infof(subject)
-			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", watch.Name, watch.URL, requestDuration.Round(time.Millisecond), statusCode, len(body))
+			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", w.Name, w.URL, requestDuration.Round(time.Millisecond), statusCode, len(body))
 			htmlContent, err := app.generateHTMLContentForEmail(text, true, string(lastContent), string(body))
 			if err != nil {
 				return fmt.Errorf("error on creating htmlcontent: %w", err)
 			}
-			if err := app.mailer.SendHTMLEmail(watch, subject, htmlContent); err != nil {
+			if err := app.mailer.SendHTMLEmail(w, subject, htmlContent); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}
 	}
 
 	// update database entry if we did not have any errors
-	app.db.SetDatabaseEntry(watch.URL, body)
+	app.db.SetDatabaseEntry(w.URL, body)
 
 	return nil
 }

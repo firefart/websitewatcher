@@ -12,3 +12,16 @@ type Logger interface {
 	Error(args ...interface{})
 	Fatal(args ...interface{})
 }
+
+type NilLogger struct{}
+
+func (_ *NilLogger) Debugf(format string, args ...interface{}) {}
+func (_ *NilLogger) Infof(format string, args ...interface{})  {}
+func (_ *NilLogger) Warnf(format string, args ...interface{})  {}
+func (_ *NilLogger) Errorf(format string, args ...interface{}) {}
+func (_ *NilLogger) Fatalf(format string, args ...interface{}) {}
+func (_ *NilLogger) Debug(args ...interface{})                 {}
+func (_ *NilLogger) Info(args ...interface{})                  {}
+func (_ *NilLogger) Warn(args ...interface{})                  {}
+func (_ *NilLogger) Error(args ...interface{})                 {}
+func (_ *NilLogger) Fatal(args ...interface{})                 {}

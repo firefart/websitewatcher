@@ -35,6 +35,10 @@
       },
       "disabled": true,
       "pattern": "test = (.+)",
+      "soft_error_patterns": [
+        "error on calling",
+        "error executing .+ in memory"
+      ]
       "replaces": [
         {
           "pattern": "test .+",

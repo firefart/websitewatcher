@@ -1,4 +1,4 @@
-package http_test
+package watch_test
 
 import (
 	"context"
@@ -9,9 +9,11 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/http"
+	"github.com/firefart/websitewatcher/internal/logger"
+	"github.com/firefart/websitewatcher/internal/watch"
 )
 
-func TestCheckWatch(t *testing.T) {
+func TestCheck(t *testing.T) {
 	tests := map[string]struct {
 		UserAgent     string
 		ServerContent string
@@ -40,12 +42,14 @@ func TestCheckWatch(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			watch := config.Watch{
+
+			client := http.NewHTTPClient(tc.UserAgent, 1*time.Second)
+			w := watch.New(config.WatchConfig{
 				Name: "Test",
 				URL:  server.URL,
-			}
-			client := http.NewHTTPClient(tc.UserAgent, 1*time.Second)
-			statusCode, _, _, content, err := client.CheckWatch(context.TODO(), watch)
+			}, &logger.NilLogger{}, client)
+
+			statusCode, _, _, content, err := w.Check(context.TODO())
 			if err != nil {
 				t.Fatalf("CheckWatch() got err=%s, want nil", err)
 			}

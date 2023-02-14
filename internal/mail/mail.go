@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/firefart/websitewatcher/internal/config"
+	"github.com/firefart/websitewatcher/internal/watch"
 	gomail "gopkg.in/mail.v2"
 )
 
@@ -24,25 +25,25 @@ func NewMail(config *config.Configuration) *Mail {
 	}
 }
 
-func (m *Mail) SendErrorEmail(watch config.Watch, err error) error {
-	subject := fmt.Sprintf("[ERROR] error in websitewatcher on %s", watch.Name)
+func (m *Mail) SendErrorEmail(w watch.Watch, err error) error {
+	subject := fmt.Sprintf("[ERROR] error in websitewatcher on %s", w.Name)
 	body := fmt.Sprintf("%#v", err)
 	return m.send(m.config.Mail.To, subject, body, "text/plain")
 }
 
-func (m *Mail) SendTextEmail(watch config.Watch, subject, body string) error {
+func (m *Mail) SendTextEmail(w watch.Watch, subject, body string) error {
 	to := m.config.Mail.To
-	if len(watch.AdditionalTo) > 0 {
-		to = append(to, watch.AdditionalTo...)
+	if len(w.AdditionalTo) > 0 {
+		to = append(to, w.AdditionalTo...)
 	}
 
 	return m.send(to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), body, "text/plain")
 }
 
-func (m *Mail) SendHTMLEmail(watch config.Watch, subject, htmlBody string) error {
+func (m *Mail) SendHTMLEmail(w watch.Watch, subject, htmlBody string) error {
 	to := m.config.Mail.To
-	if len(watch.AdditionalTo) > 0 {
-		to = append(to, watch.AdditionalTo...)
+	if len(w.AdditionalTo) > 0 {
+		to = append(to, w.AdditionalTo...)
 	}
 
 	return m.send(to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), htmlBody, "text/html")
