@@ -115,7 +115,7 @@ func (w Watch) shouldRetry(ret *ReturnObject, config *config.Configuration) (boo
 
 	if ret.StatusCode != 200 {
 		// non 200 status code, retry
-		return true, "statuscode is not 200", nil
+		return true, fmt.Sprintf("statuscode is %d", ret.StatusCode), nil
 	}
 
 	if len(ret.Body) == 0 {
