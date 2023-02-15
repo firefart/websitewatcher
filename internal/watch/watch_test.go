@@ -48,7 +48,7 @@ func TestCheck(t *testing.T) {
 				URL:  server.URL,
 			}, &logger.NilLogger{}, client)
 
-			ret, err := w.doHTTP(context.TODO())
+			ret, err := w.doHTTP(context.Background())
 			if err != nil {
 				t.Fatalf("CheckWatch() got err=%s, want nil", err)
 			}

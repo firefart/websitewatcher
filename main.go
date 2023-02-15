@@ -131,7 +131,6 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 
 	watchReturn, err := w.Process(ctx, app.config)
 	if err != nil {
-		//TODO: we need to differentiate errors and http errors for the error emails
 		var urlErr *url.Error
 		var invalidErr *watch.InvalidResponseError
 		switch {
