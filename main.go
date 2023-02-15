@@ -104,9 +104,11 @@ func (app *app) run() error {
 
 			if err := app.processWatch(ctx, w2); err != nil {
 				app.logError(fmt.Errorf("error on %s: %w", w2.Name, err))
-				if err2 := app.mailer.SendErrorEmail(w2, err); err2 != nil {
-					app.logError(err2)
-					return
+				if !app.dryRun {
+					if err2 := app.mailer.SendErrorEmail(w2, err); err2 != nil {
+						app.logError(err2)
+						return
+					}
 				}
 				return
 			}
@@ -143,8 +145,10 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			// we still have an error or soft error after all retries
 			app.logger.Errorf("invalid response for %s - status: %d, body: %s, duration: %s", w.Name, invalidErr.StatusCode, string(invalidErr.Body), watchReturn.Duration)
 			// send mail to indicate we might have an error
-			if err := app.mailer.SendWatchError(w, invalidErr); err != nil {
-				return err
+			if !app.dryRun {
+				if err := app.mailer.SendWatchError(w, invalidErr); err != nil {
+					return err
+				}
 			}
 			return nil
 		default:
@@ -163,7 +167,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
 		if app.dryRun {
-			app.logger.Debugf("Dry Run: Website %s %s differ", w.Name, w.URL)
+			app.logger.Debugf("Dry Run: Website %s %s differs", w.Name, w.URL)
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", w.Name)
 			app.logger.Infof(subject)

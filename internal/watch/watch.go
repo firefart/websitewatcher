@@ -272,13 +272,13 @@ func (w *Watch) Process(ctx context.Context, config *config.Configuration) (*Ret
 	}
 
 	for _, replace := range w.Replaces {
-		w.logger.Debugf("replacing %s", replace.Pattern)
+		w.logger.Debugf("replacing %s with %s", replace.Pattern, replace.ReplaceWith)
 		re, err := regexp.Compile(replace.Pattern)
 		if err != nil {
 			return ret, fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
 		}
 		ret.Body = re.ReplaceAll(ret.Body, []byte(replace.ReplaceWith))
-		w.logger.Debugf("After %s:\n%s\n\n", replace.Pattern, string(ret.Body))
+		w.logger.Debugf("After %s --> %s:\n%s\n\n", replace.Pattern, replace.ReplaceWith, string(ret.Body))
 	}
 
 	return ret, nil
