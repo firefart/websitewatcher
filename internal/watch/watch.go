@@ -84,14 +84,14 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 }
 
 func (w Watch) shouldRetry(ret *ReturnObject, config *config.Configuration) (bool, string, error) {
-	softError, err := isSoftError(ret.Body, w)
+	softError, softErrorReason, err := isSoftError(ret.Body, w)
 	if err != nil {
 		return false, "", fmt.Errorf("could not check for soft error on %s: %w", w.URL, err)
 	}
 
 	// if we hit a soft error we should retry the request
 	if softError {
-		return true, "response body is a soft error", nil
+		return true, fmt.Sprintf("response body is a soft error because %s", softErrorReason), nil
 	}
 
 	ignoreStatusCode := false
@@ -140,14 +140,14 @@ func (w Watch) checkWithRetries(ctx context.Context, config *config.Configuratio
 		// no sleep on first try
 		if i > 1 {
 			if retryDelay > 0 {
-				w.logger.Error(fmt.Errorf("[%s] retrying after %s", w.Name, retryDelay))
+				w.logger.Infof("[%s] retrying after %s", w.Name, retryDelay)
 				select {
 				case <-ctx.Done():
 					return nil, ctx.Err()
 				case <-time.After(retryDelay):
 				}
 			} else {
-				w.logger.Error(fmt.Errorf("[%s] retrying without delay", w.Name))
+				w.logger.Infof("[%s] retrying without delay", w.Name)
 			}
 		}
 		w.logger.Infof("try #%d for %s", i, w.Name)
@@ -236,28 +236,28 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	}, nil
 }
 
-func isSoftError(body []byte, w Watch) (bool, error) {
+func isSoftError(body []byte, w Watch) (bool, string, error) {
 	if len(body) == 0 {
-		return false, nil
+		return false, "of zero length body", nil
 	}
 
 	if bytes.Contains(body, []byte("504 - Gateway Time-out")) ||
 		bytes.Contains(body, []byte("404 - Not Found")) ||
 		bytes.Contains(body, []byte("503 - Service Unavailable")) {
-		return true, nil
+		return true, "it matches a hardcoded soft errors", nil
 	}
 
 	for _, p := range w.AdditionalSoftErrorPatterns {
 		re, err := regexp.Compile(p)
 		if err != nil {
-			return false, err
+			return false, "", err
 		}
 		if re.Match(body) {
-			return true, nil
+			return true, fmt.Sprintf("it matches the pattern %s", p), nil
 		}
 	}
 
-	return false, nil
+	return false, "", nil
 }
 
 func (w *Watch) Process(ctx context.Context, config *config.Configuration) (*ReturnObject, error) {
