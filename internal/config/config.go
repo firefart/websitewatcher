@@ -76,7 +76,7 @@ type WatchConfig struct {
 	Disabled                     bool              `json:"disabled"`
 	Pattern                      string            `json:"pattern"`
 	Replaces                     []ReplaceConfig   `json:"replaces"`
-	RetryOnMatch                 string            `json:"retry_on_match"`
+	RetryOnMatch                 []string          `json:"retry_on_match"`
 }
 
 type ReplaceConfig struct {

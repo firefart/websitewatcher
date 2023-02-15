@@ -1,4 +1,4 @@
-package watch_test
+package watch
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/logger"
-	"github.com/firefart/websitewatcher/internal/watch"
 )
 
 func TestCheck(t *testing.T) {
@@ -44,19 +43,19 @@ func TestCheck(t *testing.T) {
 			defer server.Close()
 
 			client := http.NewHTTPClient(tc.UserAgent, 1*time.Second)
-			w := watch.New(config.WatchConfig{
+			w := New(config.WatchConfig{
 				Name: "Test",
 				URL:  server.URL,
 			}, &logger.NilLogger{}, client)
 
-			statusCode, _, _, content, err := w.Check(context.TODO())
+			ret, err := w.doHTTP(context.TODO())
 			if err != nil {
 				t.Fatalf("CheckWatch() got err=%s, want nil", err)
 			}
-			if statusCode != tc.WantStatus {
-				t.Errorf("CheckWatch() got status %d, want %d", statusCode, tc.WantStatus)
+			if ret.StatusCode != tc.WantStatus {
+				t.Errorf("CheckWatch() got status %d, want %d", ret.StatusCode, tc.WantStatus)
 			}
-			contentString := string(content)
+			contentString := string(ret.Body)
 			if contentString != tc.WantContant {
 				t.Errorf("CheckWatch() got content %s, want %s", contentString, tc.WantContant)
 			}

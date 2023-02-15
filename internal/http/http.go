@@ -2,7 +2,6 @@ package http
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -10,16 +9,6 @@ import (
 type HTTPClient struct {
 	userAgent string
 	client    *http.Client
-}
-
-type InvalidResponseError struct {
-	StatusCode int
-	Header     map[string][]string
-	Body       []byte
-}
-
-func (err *InvalidResponseError) Error() string {
-	return fmt.Sprintf("got invalid response on http request: status: %d, bodylen: %d", err.StatusCode, len(err.Body))
 }
 
 func NewHTTPClient(userAgent string, timeout time.Duration) *HTTPClient {

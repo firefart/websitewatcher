@@ -30,12 +30,30 @@ type Watch struct {
 	Disabled                     bool
 	Pattern                      string
 	Replaces                     []Replace
-	RetryOnMatch                 string
+	RetryOnMatch                 []string
 }
 
 type Replace struct {
 	Pattern     string
 	ReplaceWith string
+}
+
+type ReturnObject struct {
+	StatusCode int
+	Body       []byte
+	Duration   time.Duration
+	Header     map[string][]string
+}
+
+type InvalidResponseError struct {
+	StatusCode int
+	Header     map[string][]string
+	Body       []byte
+	Duration   time.Duration
+}
+
+func (err *InvalidResponseError) Error() string {
+	return fmt.Sprintf("got invalid response on http request: status: %d, bodylen: %d", err.StatusCode, len(err.Body))
 }
 
 func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPClient) Watch {
@@ -65,67 +83,109 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 	return w
 }
 
-// CheckWatchWithRetries runs http.CheckWatch in a loop up to x times (configurable) to retry requests on errors
-// it returns the same values as http.CheckWatch
-// if the last request still results in an error the error is returned
-func (w Watch) CheckWithRetries(ctx context.Context, retries int, retryDelay time.Duration) (int, map[string][]string, time.Duration, []byte, error) {
-	var statusCode int
-	var requestDuration time.Duration
-	var body []byte
-	var header map[string][]string
-	var err error
-	// check with retries
-	for i := 1; i <= retries; i++ {
-		w.logger.Infof("try #%d for %s", i, w.URL)
-		statusCode, header, requestDuration, body, err = w.Check(ctx)
-		if err == nil {
-			// first check if our body matches the retry pattern and retry
-			if w.RetryOnMatch != "" {
-				re, err := regexp.Compile(w.RetryOnMatch)
-				if err != nil {
-					return -1, nil, -1, nil, fmt.Errorf("could not compile pattern %s: %w", w.Pattern, err)
-				}
-				if re.Match(body) {
-					// retry the request as the body matches
-					w.logger.Infof("retrying %s because body matches retry pattern", w.URL)
-					continue
-				}
-			}
-
-			// no error and no retry pattern matched, so we count it as success --> break out
-			break
-		}
-
-		if i >= retries {
-			// break out to not print the rety message on the last try
-			break
-		}
-
-		// if we reach here, we have an error, retry
-		if retryDelay > 0 {
-			w.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying after %s: %w", i, w.URL, retryDelay, err))
-			select {
-			case <-ctx.Done():
-				return -1, nil, -1, nil, ctx.Err()
-			case <-time.After(retryDelay):
-			}
-		} else {
-			w.logger.Error(fmt.Errorf("got error on try #%d for %s, retrying: %w", i, w.URL, err))
-		}
-	}
-
-	// last error still set, bail out
+func (w Watch) shouldRetry(ret *ReturnObject, config *config.Configuration) (bool, string, error) {
+	softError, err := isSoftError(ret.Body, w)
 	if err != nil {
-		return -1, nil, -1, nil, err
+		return false, "", fmt.Errorf("could not check for soft error on %s: %w", w.URL, err)
 	}
 
-	return statusCode, header, requestDuration, body, nil
+	// if we hit a soft error we should retry the request
+	if softError {
+		return true, "response body is a soft error", nil
+	}
+
+	ignoreStatusCode := false
+	for _, ignore := range config.HTTPErrorsToIgnore {
+		if ret.StatusCode == ignore {
+			ignoreStatusCode = true
+		}
+	}
+
+	// if we hit an error that we should ignore, bail out
+	for _, ignore := range w.AdditionalHTTPErrorsToIgnore {
+		if ret.StatusCode == ignore {
+			ignoreStatusCode = true
+		}
+	}
+
+	// if statuscode is ignored, do not retry
+	if ignoreStatusCode {
+		return false, "", nil
+	}
+
+	if ret.StatusCode != 200 {
+		// non 200 status code, retry
+		return true, "statuscode is not 200", nil
+	}
+
+	if len(ret.Body) == 0 {
+		// zero length body, retry
+		return true, "of zero length body", nil
+	}
+
+	// nothing else matched, good request, do not retry
+	return false, "", nil
 }
 
-// CheckWatch checks a watch.URL and returns the status code, the response headers, the request duration,
-// the body and an optional error
-// If the request hits an soft error by matching the response body a InvalidResponseError is returned
-func (w Watch) Check(ctx context.Context) (int, map[string][]string, time.Duration, []byte, error) {
+// checkWithRetries runs http.CheckWatch in a loop up to x times (configurable) to retry requests on errors
+// it returns the same values as http.CheckWatch
+// if the last request still results in an error the error is returned
+func (w Watch) checkWithRetries(ctx context.Context, config *config.Configuration) (*ReturnObject, error) {
+	var ret *ReturnObject
+	var err error
+	retries := config.Retry.Count
+	retryDelay := config.Retry.Delay.Duration
+	// check with retries
+	for i := 1; i <= retries; i++ {
+		// no sleep on first try
+		if i > 1 {
+			if retryDelay > 0 {
+				w.logger.Error(fmt.Errorf("[%s] retrying after %s", w.Name, retryDelay))
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(retryDelay):
+				}
+			} else {
+				w.logger.Error(fmt.Errorf("[%s] retrying without delay", w.Name))
+			}
+		}
+		w.logger.Infof("try #%d for %s", i, w.Name)
+		ret, err = w.doHTTP(ctx)
+		if err != nil {
+			w.logger.Errorf("[%s] received error %s", w.Name, err)
+			continue
+		}
+		// check for additional errors like soft errors and status codes here
+		retryResult, cause, err := w.shouldRetry(ret, config)
+		if err != nil {
+			return nil, err
+		}
+
+		if retryResult {
+			w.logger.Infof("[%s] retrying because %s", w.Name, cause)
+			continue
+		}
+
+		// no retry needed, return result
+		return ret, nil
+	}
+
+	// err still set? return the error
+	if err != nil {
+		return nil, err
+	}
+
+	// if we reach here we still have an soft error after all retries
+	return nil, &InvalidResponseError{
+		StatusCode: ret.StatusCode,
+		Body:       ret.Body,
+		Header:     ret.Header,
+		Duration:   ret.Duration,
+	}
+}
+
+func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	method := http.MethodGet
 	if w.Method != "" {
 		method = strings.ToUpper(w.Method)
@@ -138,7 +198,7 @@ func (w Watch) Check(ctx context.Context) (int, map[string][]string, time.Durati
 
 	req, err := http.NewRequestWithContext(ctx, method, w.URL, requestBody)
 	if err != nil {
-		return -1, nil, -1, nil, fmt.Errorf("could create get request for %s: %w", w.URL, err)
+		return nil, fmt.Errorf("could create get request for %s: %w", w.URL, err)
 	}
 
 	for name, value := range w.Header {
@@ -148,30 +208,22 @@ func (w Watch) Check(ctx context.Context) (int, map[string][]string, time.Durati
 	start := time.Now()
 	resp, err := w.httpClient.Do(req)
 	if err != nil {
-		return -1, nil, -1, nil, fmt.Errorf("could not get %s: %w", w.URL, err)
+		return nil, fmt.Errorf("could not get %s: %w", w.URL, err)
 	}
 	defer resp.Body.Close()
 	duration := time.Since(start)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return -1, nil, -1, nil, fmt.Errorf("could not read body from %s: %w", w.URL, err)
+		return nil, fmt.Errorf("could not read body from %s: %w", w.URL, err)
 	}
 
-	softError, err := isSoftError(body, w)
-	if err != nil {
-		return -1, nil, -1, nil, fmt.Errorf("could not check for soft error on %s: %w", w.URL, err)
-	}
-
-	if resp.StatusCode != 200 || len(body) == 0 || softError {
-		return -1, nil, duration, nil, &httpint.InvalidResponseError{
-			StatusCode: resp.StatusCode,
-			Header:     resp.Header,
-			Body:       body,
-		}
-	}
-
-	return resp.StatusCode, resp.Header, duration, body, nil
+	return &ReturnObject{
+		StatusCode: resp.StatusCode,
+		Header:     resp.Header,
+		Duration:   duration,
+		Body:       body,
+	}, nil
 }
 
 func isSoftError(body []byte, w Watch) (bool, error) {
@@ -196,4 +248,38 @@ func isSoftError(body []byte, w Watch) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (w *Watch) Process(ctx context.Context, config *config.Configuration) (*ReturnObject, error) {
+	ret, err := w.checkWithRetries(ctx, config)
+	if err != nil {
+		// if we reach here the last retry resulted in an error
+		// or we have another config error
+		return nil, err
+	}
+
+	// extract content
+	if w.Pattern != "" {
+		re, err := regexp.Compile(w.Pattern)
+		if err != nil {
+			return ret, fmt.Errorf("could not compile pattern %s: %w", w.Pattern, err)
+		}
+		match := re.FindSubmatch(ret.Body)
+		if len(match) < 2 {
+			return ret, fmt.Errorf("pattern %s did not match %s", w.Pattern, string(ret.Body))
+		}
+		ret.Body = match[1]
+	}
+
+	for _, replace := range w.Replaces {
+		w.logger.Debugf("replacing %s", replace.Pattern)
+		re, err := regexp.Compile(replace.Pattern)
+		if err != nil {
+			return ret, fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
+		}
+		ret.Body = re.ReplaceAll(ret.Body, []byte(replace.ReplaceWith))
+		w.logger.Debugf("After %s:\n%s\n\n", replace.Pattern, string(ret.Body))
+	}
+
+	return ret, nil
 }
