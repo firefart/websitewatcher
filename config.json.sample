@@ -25,7 +25,9 @@
       "url": "http://aaa.com",
       "additional_to": ["ddd@ddd.com", "eee@eee.com"],
       "additional_http_errors_to_ignore": [500],
-      "retry_on_match": "error"
+      "retry_on_match": [
+        "error"
+      ]
     },
     {
       "name": "bbb",
