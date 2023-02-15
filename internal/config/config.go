@@ -56,15 +56,15 @@ type Configuration struct {
 		Count int       `json:"count"`
 		Delay *Duration `json:"delay"`
 	} `json:"retry"`
-	ParallelChecks     int64    `json:"parallel_checks"`
-	Useragent          string   `json:"useragent"`
-	Timeout            Duration `json:"timeout"`
-	Database           string   `json:"database"`
-	HTTPErrorsToIgnore []int    `json:"http_errors_to_ignore"`
-	Watches            []Watch  `json:"watches"`
+	ParallelChecks     int64         `json:"parallel_checks"`
+	Useragent          string        `json:"useragent"`
+	Timeout            Duration      `json:"timeout"`
+	Database           string        `json:"database"`
+	HTTPErrorsToIgnore []int         `json:"http_errors_to_ignore"`
+	Watches            []WatchConfig `json:"watches"`
 }
 
-type Watch struct {
+type WatchConfig struct {
 	Name                         string            `json:"name"`
 	URL                          string            `json:"url"`
 	Method                       string            `json:"method"`
@@ -72,13 +72,14 @@ type Watch struct {
 	Header                       map[string]string `json:"header"`
 	AdditionalTo                 []string          `json:"additional_to"`
 	AdditionalHTTPErrorsToIgnore []int             `json:"additional_http_errors_to_ignore"`
+	AdditionalSoftErrorPatterns  []string          `json:"soft_error_patterns"`
 	Disabled                     bool              `json:"disabled"`
 	Pattern                      string            `json:"pattern"`
-	Replaces                     []Replace         `json:"replaces"`
-	RetryOnMatch                 string            `json:"retry_on_match"`
+	Replaces                     []ReplaceConfig   `json:"replaces"`
+	RetryOnMatch                 []string          `json:"retry_on_match"`
 }
 
-type Replace struct {
+type ReplaceConfig struct {
 	Pattern     string `json:"pattern"`
 	ReplaceWith string `json:"replace_with"`
 }
