@@ -120,7 +120,7 @@ func (w Watch) shouldRetry(ret *ReturnObject, config *config.Configuration) (boo
 
 	if len(ret.Body) == 0 {
 		// zero length body, retry
-		return true, "of zero length body", nil
+		return true, "zero length body", nil
 	}
 
 	// nothing else matched, good request, do not retry
@@ -163,8 +163,18 @@ func (w Watch) checkWithRetries(ctx context.Context, config *config.Configuratio
 		}
 
 		if retryResult {
-			w.logger.Infof("[%s] retrying because %s", w.Name, cause)
-			continue
+			w.logger.Infof("[%s] retry check: %s", w.Name, cause)
+			if i != retries {
+				// only continue if it's not the last retry
+				continue
+			}
+			// return error if still a retry response on the last iteration
+			return nil, &InvalidResponseError{
+				StatusCode: ret.StatusCode,
+				Body:       ret.Body,
+				Header:     ret.Header,
+				Duration:   ret.Duration,
+			}
 		}
 
 		// no retry needed, return result
