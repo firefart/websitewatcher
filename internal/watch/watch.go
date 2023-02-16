@@ -273,7 +273,7 @@ func (w *Watch) Process(ctx context.Context, config *config.Configuration) (*Ret
 			return ret, fmt.Errorf("could not compile pattern %s: %w", w.Pattern, err)
 		}
 		match := re.FindSubmatch(ret.Body)
-		if len(match) < 2 {
+		if match == nil || len(match) < 2 {
 			return ret, fmt.Errorf("pattern %s did not match %s", w.Pattern, string(ret.Body))
 		}
 		ret.Body = match[1]
