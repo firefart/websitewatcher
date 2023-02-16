@@ -86,7 +86,7 @@ func (app *app) run() error {
 	sem := semaphore.NewWeighted(configuration.ParallelChecks)
 	for _, wc := range configuration.Watches {
 		if wc.Disabled {
-			app.logger.Infof("skipping %s because it's disabled", wc.Name)
+			app.logger.Infof("[%s] skipping because it's disabled", wc.Name)
 			continue
 		}
 
@@ -103,7 +103,7 @@ func (app *app) run() error {
 			defer wg.Done()
 
 			if err := app.processWatch(ctx, w2); err != nil {
-				app.logError(fmt.Errorf("error on %s: %w", w2.Name, err))
+				app.logError(fmt.Errorf("[%s] error: %w", w2.Name, err))
 				if !app.dryRun {
 					if err2 := app.mailer.SendErrorEmail(w2, err); err2 != nil {
 						app.logError(err2)
@@ -127,8 +127,6 @@ func (app *app) run() error {
 }
 
 func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
-	app.logger.Infof("processing %s", w.Name)
-
 	watchReturn, err := w.Process(ctx, app.config)
 	if err != nil {
 		var urlErr *url.Error
@@ -138,11 +136,11 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			// ignore timeout errors so outer mail will not send emails on them
 			// we also do not update the database so we keep the old, non timeout
 			// content in there
-			app.logger.Infof("%s timed out, ignoring", w.Name)
+			app.logger.Infof("[%s] timed out, ignoring", w.Name)
 			return nil
 		case errors.As(err, &invalidErr):
 			// we still have an error or soft error after all retries
-			app.logger.Errorf("invalid response for %s - status: %d, body: %s, duration: %s", w.Name, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.Duration)
+			app.logger.Errorf("[%s] invalid response - status: %d, body: %s, duration: %s", w.Name, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.Duration)
 			// send mail to indicate we might have an error
 			if !app.dryRun {
 				if err := app.mailer.SendWatchError(w, invalidErr); err != nil {
@@ -159,16 +157,16 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	// if it's a new website not yet in the database only process new entries and ignore old ones
 	if lastContent == nil {
 		// lastContent = nil on new sites not yet processed, so send no email here
-		app.logger.Debugf("new website %s %s detected, not comparing", w.Name, w.URL)
+		app.logger.Infof("[%s] new website detected, not comparing", w.Name)
 		app.db.SetDatabaseEntry(w.URL, watchReturn.Body)
 		return nil
 	}
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
 		if app.dryRun {
-			app.logger.Infof("Dry Run: Website %s %s differs", w.Name, w.URL)
+			app.logger.Infof("[%s] Dry Run: Website differs", w.Name)
 		} else {
-			subject := fmt.Sprintf("Detected change on %s", w.Name)
+			subject := fmt.Sprintf("[%s] change detected", w.Name)
 			app.logger.Infof(subject)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", w.Name, w.URL, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
 			if err := app.mailer.SendDiffEmail(w, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
