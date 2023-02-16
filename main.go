@@ -166,8 +166,8 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		if app.dryRun {
 			app.logger.Infof("[%s] Dry Run: Website differs", w.Name)
 		} else {
-			subject := fmt.Sprintf("[%s] change detected - sending email", w.Name)
-			app.logger.Infof(subject)
+			subject := fmt.Sprintf("[%s] change detected", w.Name)
+			app.logger.Infof("%s - sending email", subject)
 			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", w.Name, w.URL, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
 			if err := app.mailer.SendDiffEmail(w, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
