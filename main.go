@@ -166,7 +166,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
 		if app.dryRun {
-			app.logger.Debugf("Dry Run: Website %s %s differs", w.Name, w.URL)
+			app.logger.Infof("Dry Run: Website %s %s differs", w.Name, w.URL)
 		} else {
 			subject := fmt.Sprintf("Detected change on %s", w.Name)
 			app.logger.Infof(subject)
@@ -175,6 +175,8 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}
+	} else {
+		app.logger.Infof("[%s] no change detected", w.Name)
 	}
 
 	// update database entry if we did not have any errors

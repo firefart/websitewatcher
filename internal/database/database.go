@@ -83,7 +83,7 @@ func (db *Database) CleanupDatabase(log logger.Logger, c config.Configuration) {
 	for url, content := range db.db.Websites {
 		disabled, ok := configURLs[url]
 		if !ok || disabled {
-			log.Debugf("Removing entry %s from database", url)
+			log.Infof("Removing entry %s from database", url)
 			continue
 		}
 		newURLs[url] = content
