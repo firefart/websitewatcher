@@ -81,8 +81,8 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 	return w
 }
 
-func (w Watch) shouldRetry(ret *ReturnObject, config *config.Configuration) (bool, string, error) {
-	softError, softErrorReason, err := isSoftError(ret.Body, w)
+func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool, string, error) {
+	softError, softErrorReason, err := isSoftError(ret.Body, w, config)
 	if err != nil {
 		return false, "", fmt.Errorf("could not check for soft error on %s: %w", w.URL, err)
 	}
@@ -128,7 +128,7 @@ func (w Watch) shouldRetry(ret *ReturnObject, config *config.Configuration) (boo
 // checkWithRetries runs http.CheckWatch in a loop up to x times (configurable) to retry requests on errors
 // it returns the same values as http.CheckWatch
 // if the last request still results in an error the error is returned
-func (w Watch) checkWithRetries(ctx context.Context, config *config.Configuration) (*ReturnObject, error) {
+func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
 	var ret *ReturnObject
 	var err error
 	retries := config.Retry.Count
@@ -234,7 +234,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	}, nil
 }
 
-func isSoftError(body []byte, w Watch) (bool, string, error) {
+func isSoftError(body []byte, w Watch, c config.Configuration) (bool, string, error) {
 	if len(body) == 0 {
 		return false, "of zero length body", nil
 	}
@@ -243,6 +243,16 @@ func isSoftError(body []byte, w Watch) (bool, string, error) {
 		bytes.Contains(body, []byte("404 - Not Found")) ||
 		bytes.Contains(body, []byte("503 - Service Unavailable")) {
 		return true, "it matches a hardcoded soft errors", nil
+	}
+
+	for _, p := range c.RetryOnMatch {
+		re, err := regexp.Compile(p)
+		if err != nil {
+			return false, "", err
+		}
+		if re.Match(body) {
+			return true, fmt.Sprintf("it matches the global pattern %s", p), nil
+		}
 	}
 
 	for _, p := range w.RetryOnMatch {
@@ -258,7 +268,7 @@ func isSoftError(body []byte, w Watch) (bool, string, error) {
 	return false, "", nil
 }
 
-func (w *Watch) Process(ctx context.Context, config *config.Configuration) (*ReturnObject, error) {
+func (w *Watch) Process(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
 	ret, err := w.checkWithRetries(ctx, config)
 	if err != nil {
 		// if we reach here the last retry resulted in an error

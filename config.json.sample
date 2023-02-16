@@ -20,6 +20,9 @@
   "database": "db.db",
   "http_errors_to_ignore": [502,503,504],
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
+  "retry_on_match": [
+    "global error"
+  ],
   "watches": [{
       "name": "aaa",
       "url": "http://aaa.com",

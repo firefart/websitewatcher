@@ -61,6 +61,7 @@ type Configuration struct {
 	Timeout            Duration      `json:"timeout"`
 	Database           string        `json:"database"`
 	HTTPErrorsToIgnore []int         `json:"http_errors_to_ignore"`
+	RetryOnMatch       []string      `json:"retry_on_match"`
 	Watches            []WatchConfig `json:"watches"`
 }
 
@@ -83,14 +84,14 @@ type ReplaceConfig struct {
 	ReplaceWith string `json:"replace_with"`
 }
 
-func GetConfig(f string) (*Configuration, error) {
+func GetConfig(f string) (Configuration, error) {
 	if f == "" {
-		return nil, fmt.Errorf("please provide a valid config file")
+		return Configuration{}, fmt.Errorf("please provide a valid config file")
 	}
 
 	b, err := os.ReadFile(f) // nolint: gosec
 	if err != nil {
-		return nil, err
+		return Configuration{}, err
 	}
 	reader := bytes.NewReader(b)
 
@@ -110,12 +111,12 @@ func GetConfig(f string) (*Configuration, error) {
 		switch {
 		case errors.As(err, &syntaxErr):
 			custom := fmt.Sprintf("%q <-", string(b[syntaxErr.Offset-20:syntaxErr.Offset]))
-			return nil, fmt.Errorf("could not parse JSON: %v: %s", syntaxErr.Error(), custom)
+			return Configuration{}, fmt.Errorf("could not parse JSON: %v: %s", syntaxErr.Error(), custom)
 		case errors.As(err, &unmarshalErr):
 			custom := fmt.Sprintf("%q <-", string(b[unmarshalErr.Offset-20:unmarshalErr.Offset]))
-			return nil, fmt.Errorf("could not parse JSON: type %v cannot be converted into %v (%s.%v): %v: %s", unmarshalErr.Value, unmarshalErr.Type.Name(), unmarshalErr.Struct, unmarshalErr.Field, unmarshalErr.Error(), custom)
+			return Configuration{}, fmt.Errorf("could not parse JSON: type %v cannot be converted into %v (%s.%v): %v: %s", unmarshalErr.Value, unmarshalErr.Type.Name(), unmarshalErr.Struct, unmarshalErr.Field, unmarshalErr.Error(), custom)
 		default:
-			return nil, err
+			return Configuration{}, err
 		}
 	}
 
@@ -126,5 +127,5 @@ func GetConfig(f string) (*Configuration, error) {
 		}
 	}
 
-	return &c, nil
+	return c, nil
 }

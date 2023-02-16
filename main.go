@@ -23,7 +23,7 @@ import (
 
 type app struct {
 	logger     *logrus.Logger
-	config     *config.Configuration
+	config     config.Configuration
 	httpClient *http.HTTPClient
 	mailer     *mail.Mail
 	dryRun     bool
@@ -69,7 +69,7 @@ func (app *app) run() error {
 	}
 
 	// remove old websites in the database on each run
-	db.CleanupDatabase(app.logger, *configuration)
+	db.CleanupDatabase(app.logger, configuration)
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration)
 	mailer := mail.New(configuration, httpClient)

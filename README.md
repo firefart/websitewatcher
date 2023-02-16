@@ -33,6 +33,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | database | filename of the database |
 | http_errors_to_ignore | http status codes that should be ignored on all watches |
 | useragent | useragent header to use for outgoing http requests |
+| retry_on_match | global setting of strings to retry request up to retry.count if the response body matches the provided regex |
 | watches.name | friendly name of the watch |
 | watches.url | the url to check |
 | watches.method | http method to use. Defaults to GET |
