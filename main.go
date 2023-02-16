@@ -86,7 +86,7 @@ func (app *app) run() error {
 	sem := semaphore.NewWeighted(configuration.ParallelChecks)
 	for _, wc := range configuration.Watches {
 		if wc.Disabled {
-			app.logger.Infof("skipping %s: %s", wc.Name, wc.URL)
+			app.logger.Infof("skipping %s because it's disabled", wc.Name)
 			continue
 		}
 
