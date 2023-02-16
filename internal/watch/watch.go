@@ -45,14 +45,15 @@ type ReturnObject struct {
 }
 
 type InvalidResponseError struct {
-	StatusCode int
-	Header     map[string][]string
-	Body       []byte
-	Duration   time.Duration
+	ErrorMessage string
+	StatusCode   int
+	Header       map[string][]string
+	Body         []byte
+	Duration     time.Duration
 }
 
 func (err *InvalidResponseError) Error() string {
-	return fmt.Sprintf("got invalid response on http request: status: %d, bodylen: %d", err.StatusCode, len(err.Body))
+	return fmt.Sprintf("got invalid response on http request: message: %s, status: %d, bodylen: %d", err.ErrorMessage, err.StatusCode, len(err.Body))
 }
 
 func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPClient) Watch {
@@ -168,10 +169,11 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 			}
 			// return error if still a retry response on the last iteration
 			return nil, &InvalidResponseError{
-				StatusCode: ret.StatusCode,
-				Body:       ret.Body,
-				Header:     ret.Header,
-				Duration:   ret.Duration,
+				ErrorMessage: "response error after all retries",
+				StatusCode:   ret.StatusCode,
+				Body:         ret.Body,
+				Header:       ret.Header,
+				Duration:     ret.Duration,
 			}
 		}
 
@@ -186,6 +188,7 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 
 	// if we reach here we still have an soft error after all retries
 	return nil, &InvalidResponseError{
+		ErrorMessage: "response error after all retries",
 		StatusCode: ret.StatusCode,
 		Body:       ret.Body,
 		Header:     ret.Header,
@@ -284,7 +287,15 @@ func (w *Watch) Process(ctx context.Context, config config.Configuration) (*Retu
 		}
 		match := re.FindSubmatch(ret.Body)
 		if match == nil || len(match) < 2 {
-			return ret, fmt.Errorf("pattern %s did not match %s", w.Pattern, string(ret.Body))
+			msg := fmt.Sprintf("pattern %s did not match %s", w.Pattern, string(ret.Body))
+			w.logger.Errorf(msg)
+			return ret, &InvalidResponseError{
+				ErrorMessage: msg,
+				StatusCode:   ret.StatusCode,
+				Header:       ret.Header,
+				Body:         ret.Body,
+				Duration:     ret.Duration,
+			}
 		}
 		ret.Body = match[1]
 	}

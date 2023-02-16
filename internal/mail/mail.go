@@ -56,6 +56,9 @@ func (m *Mail) SendWatchError(w watch.Watch, ret *watch.InvalidResponseError) er
 	if _, err := sb.WriteString(fmt.Sprintf("URL: %s\n", w.URL)); err != nil {
 		return err
 	}
+	if _, err := sb.WriteString(fmt.Sprintf("Error: %s\n", ret.ErrorMessage)); err != nil {
+		return err
+	}
 
 	if _, err := sb.WriteString(fmt.Sprintf("Request Duration: %s\n", ret.Duration.Round(time.Millisecond))); err != nil {
 		return err

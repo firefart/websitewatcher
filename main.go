@@ -140,7 +140,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			return nil
 		case errors.As(err, &invalidErr):
 			// we still have an error or soft error after all retries
-			app.logger.Errorf("[%s] invalid response - status: %d, body: %s, duration: %s", w.Name, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.Duration)
+			app.logger.Errorf("[%s] invalid response - message: %s, status: %d, body: %s, duration: %s", w.Name, invalidErr.ErrorMessage, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.Duration)
 			// send mail to indicate we might have an error
 			if !app.dryRun {
 				if err := app.mailer.SendWatchError(w, invalidErr); err != nil {
