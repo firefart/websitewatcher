@@ -37,7 +37,7 @@
       },
       "disabled": true,
       "pattern": "test = (.+)",
-      "soft_error_patterns": [
+      "retry_on_match": [
         "error on calling",
         "error executing .+ in memory"
       ]

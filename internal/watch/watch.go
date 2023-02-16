@@ -26,7 +26,6 @@ type Watch struct {
 	Header                       map[string]string
 	AdditionalTo                 []string
 	AdditionalHTTPErrorsToIgnore []int
-	AdditionalSoftErrorPatterns  []string
 	Disabled                     bool
 	Pattern                      string
 	Replaces                     []Replace
@@ -67,7 +66,6 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 		Header:                       c.Header,
 		AdditionalTo:                 c.AdditionalTo,
 		AdditionalHTTPErrorsToIgnore: c.AdditionalHTTPErrorsToIgnore,
-		AdditionalSoftErrorPatterns:  c.AdditionalSoftErrorPatterns,
 		Disabled:                     c.Disabled,
 		Pattern:                      c.Pattern,
 		Replaces:                     make([]Replace, len(c.Replaces)),
@@ -247,7 +245,7 @@ func isSoftError(body []byte, w Watch) (bool, string, error) {
 		return true, "it matches a hardcoded soft errors", nil
 	}
 
-	for _, p := range w.AdditionalSoftErrorPatterns {
+	for _, p := range w.RetryOnMatch {
 		re, err := regexp.Compile(p)
 		if err != nil {
 			return false, "", err

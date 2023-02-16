@@ -39,7 +39,6 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | watches.body | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed |
 | watches.additional_to | array of additional emails for this watch. The email will be sent to the global ones and this list |
 | watches.addtional_http_errors_to_ignore | additional http errors to ignore for this watch. The global option is merged with this one |
-| watches.soft_error_patterns| regex patterns to match against the body to also count as an error so the request is retried. For example if you get an http 200 with an error text in the response. |
 | watches.header | additional http headers to add |
 | watches.disabled | used to disable a watch |
 | watches.pattern | the pattern is a regex and must contain one match group. The group is used as the body. This is used to extract the relevant body in big html sites. If left empty the whole body is used |

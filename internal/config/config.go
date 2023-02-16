@@ -72,7 +72,6 @@ type WatchConfig struct {
 	Header                       map[string]string `json:"header"`
 	AdditionalTo                 []string          `json:"additional_to"`
 	AdditionalHTTPErrorsToIgnore []int             `json:"additional_http_errors_to_ignore"`
-	AdditionalSoftErrorPatterns  []string          `json:"soft_error_patterns"`
 	Disabled                     bool              `json:"disabled"`
 	Pattern                      string            `json:"pattern"`
 	Replaces                     []ReplaceConfig   `json:"replaces"`
