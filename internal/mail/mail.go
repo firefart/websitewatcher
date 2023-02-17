@@ -50,24 +50,23 @@ func (m *Mail) SendWatchError(w watch.Watch, ret *watch.InvalidResponseError) er
 	subject := fmt.Sprintf("Invalid response for %s", w.Name)
 
 	var sb strings.Builder
+	if _, err := sb.WriteString(fmt.Sprintf("%s\n\n", html.EscapeString(ret.ErrorMessage))); err != nil {
+		return err
+	}
+
 	if _, err := sb.WriteString(fmt.Sprintf("Name: %s\n", html.EscapeString(w.Name))); err != nil {
 		return err
 	}
 	if _, err := sb.WriteString(fmt.Sprintf("URL: %s\n", html.EscapeString(w.URL))); err != nil {
 		return err
 	}
-	if _, err := sb.WriteString(fmt.Sprintf("Error: %s\n", html.EscapeString(ret.ErrorMessage))); err != nil {
-		return err
-	}
-
-	if _, err := sb.WriteString(fmt.Sprintf("Request Duration: %s\n", ret.Duration.Round(time.Millisecond))); err != nil {
-		return err
-	}
-
 	if _, err := sb.WriteString(fmt.Sprintf("Status: %d\n", ret.StatusCode)); err != nil {
 		return err
 	}
 	if _, err := sb.WriteString(fmt.Sprintf("Bodylen: %d\n", len(ret.Body))); err != nil {
+		return err
+	}
+	if _, err := sb.WriteString(fmt.Sprintf("Request Duration: %s\n", ret.Duration.Round(time.Millisecond))); err != nil {
 		return err
 	}
 	if _, err := sb.WriteString(fmt.Sprintf("Header:\n%s\n", html.EscapeString(formatHeaders(ret.Header)))); err != nil {
