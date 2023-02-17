@@ -254,7 +254,7 @@ func isSoftError(body []byte, w Watch, c config.Configuration) (bool, string, er
 			return false, "", err
 		}
 		if re.Match(body) {
-			return true, fmt.Sprintf("it matches the global pattern %s", p), nil
+			return true, fmt.Sprintf("it matches the global pattern %q", p), nil
 		}
 	}
 
@@ -264,7 +264,7 @@ func isSoftError(body []byte, w Watch, c config.Configuration) (bool, string, er
 			return false, "", err
 		}
 		if re.Match(body) {
-			return true, fmt.Sprintf("it matches the pattern %s", p), nil
+			return true, fmt.Sprintf("it matches the pattern %q", p), nil
 		}
 	}
 
@@ -283,11 +283,11 @@ func (w *Watch) Process(ctx context.Context, config config.Configuration) (*Retu
 	if w.Pattern != "" {
 		re, err := regexp.Compile(w.Pattern)
 		if err != nil {
-			return ret, fmt.Errorf("could not compile pattern %s: %w", w.Pattern, err)
+			return ret, fmt.Errorf("could not compile pattern %q: %w", w.Pattern, err)
 		}
 		match := re.FindSubmatch(ret.Body)
 		if match == nil || len(match) < 2 {
-			msg := fmt.Sprintf("pattern %s did not match %s", w.Pattern, string(ret.Body))
+			msg := fmt.Sprintf("pattern %q did not match %s", w.Pattern, string(ret.Body))
 			w.logger.Errorf(msg)
 			return ret, &InvalidResponseError{
 				ErrorMessage: msg,
