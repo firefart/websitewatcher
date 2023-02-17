@@ -143,6 +143,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			app.logger.Errorf("[%s] invalid response - message: %s, status: %d, body: %s, duration: %s", w.Name, invalidErr.ErrorMessage, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.Duration)
 			// send mail to indicate we might have an error
 			if !app.dryRun {
+				app.logger.Infof("[%s] sending watch error email", w.Name)
 				if err := app.mailer.SendWatchError(w, invalidErr); err != nil {
 					return err
 				}
