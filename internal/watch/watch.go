@@ -85,7 +85,7 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool, string, error) {
 	if ret.StatusCode != 200 {
 		// non 200 status code, retry
-		return true, fmt.Sprintf("statuscode is %d", ret.StatusCode), nil
+		return true, fmt.Sprintf("statuscode is %d - %s", ret.StatusCode, http.StatusText(ret.StatusCode)), nil
 	}
 
 	if len(ret.Body) == 0 {
