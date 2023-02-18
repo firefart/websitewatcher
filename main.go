@@ -141,6 +141,25 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		case errors.As(err, &invalidErr):
 			// we still have an error or soft error after all retries
 			app.logger.Errorf("[%s] invalid response - message: %s, status: %d, body: %s, duration: %s", w.Name, invalidErr.ErrorMessage, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.Duration)
+
+			// do not send error emails on these status codes
+			ignoreStatusCode := false
+			for _, ignore := range app.config.HTTPErrorsToIgnore {
+				if invalidErr.StatusCode == ignore {
+					ignoreStatusCode = true
+				}
+			}
+			// if we hit an error that we should ignore, bail out
+			for _, ignore := range w.AdditionalHTTPErrorsToIgnore {
+				if invalidErr.StatusCode == ignore {
+					ignoreStatusCode = true
+				}
+			}
+			// if statuscode is ignored, do not send email
+			if ignoreStatusCode {
+				return nil
+			}
+
 			// send mail to indicate we might have an error
 			if !app.dryRun {
 				app.logger.Infof("[%s] sending watch error email", w.Name)

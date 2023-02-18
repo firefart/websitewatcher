@@ -31,7 +31,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | retry.count | number of retries on http errors |
 | retry.delay | time to sleep between retries |
 | database | filename of the database |
-| http_errors_to_ignore | http status codes that should be ignored on all watches |
+| http_errors_to_ignore | if we get this status code after all retries do not send an error email|
 | useragent | useragent header to use for outgoing http requests |
 | retry_on_match | global setting of strings to retry request up to retry.count if the response body matches the provided regex |
 | watches.name | friendly name of the watch |
@@ -39,7 +39,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | watches.method | http method to use. Defaults to GET |
 | watches.body | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed |
 | watches.additional_to | array of additional emails for this watch. The email will be sent to the global ones and this list |
-| watches.addtional_http_errors_to_ignore | additional http errors to ignore for this watch. The global option is merged with this one |
+| watches.addtional_http_errors_to_ignore | additional http errors to ignore when sending error emails. The global option is merged with this one |
 | watches.header | additional http headers to add |
 | watches.disabled | used to disable a watch |
 | watches.pattern | the pattern is a regex and must contain one match group. The group is used as the body. This is used to extract the relevant body in big html sites. If left empty the whole body is used |
@@ -49,7 +49,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 
 ## Example
 
-In this example we will monitor https://go.dev/dl for new versions.
+In this example we will monitor [https://go.dev/dl](https://go.dev/dl) for new versions.
 
 As we are only interested in the latest version, we use the global `pattern` to extract the content we want. To play with the regexes head over to [https://regex101.com/](https://regex101.com/) and select `go` on the left hand side. Also check the needed modifiers like g, m, s and so on. To include the modifiers in the regex you can prepend it like `(?s)`. Also be sure to escape your regex in the JSON (double quotes and backslashes).
 

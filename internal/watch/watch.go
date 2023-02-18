@@ -83,43 +83,55 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 }
 
 func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool, string, error) {
-	softError, softErrorReason, err := isSoftError(ret.Body, w, config)
-	if err != nil {
-		return false, "", fmt.Errorf("could not check for soft error on %s: %w", w.URL, err)
-	}
-
-	// if we hit a soft error we should retry the request
-	if softError {
-		return true, fmt.Sprintf("response body is a soft error because %s", softErrorReason), nil
-	}
-
-	ignoreStatusCode := false
-	for _, ignore := range config.HTTPErrorsToIgnore {
-		if ret.StatusCode == ignore {
-			ignoreStatusCode = true
-		}
-	}
-
-	// if we hit an error that we should ignore, bail out
-	for _, ignore := range w.AdditionalHTTPErrorsToIgnore {
-		if ret.StatusCode == ignore {
-			ignoreStatusCode = true
-		}
-	}
-
-	// if statuscode is ignored, do not retry
-	if ignoreStatusCode {
-		return false, "", nil
-	}
-
 	if ret.StatusCode != 200 {
 		// non 200 status code, retry
 		return true, fmt.Sprintf("statuscode is %d", ret.StatusCode), nil
 	}
 
 	if len(ret.Body) == 0 {
-		// zero length body, retry
-		return true, "zero length body", nil
+		return false, "zero length body", nil
+	}
+
+	// https://github.com/nginx/nginx/blob/master/src/http/ngx_http_special_response.c
+	patterns := [...]string{
+		"504 - Gateway Time-out",
+		"404 - Not Found",
+		"503 - Service Unavailable",
+		"<h1>503 Service Unavailable</h1>",
+		"<h1>403 Forbidden</h1>",
+		"<h1>404 Not Found</h1>",
+		"<h1>405 Not Allowed</h1>",
+		"<h1>429 Too Many Requests</h1>",
+		"<h1>500 Internal Server Error</h1>",
+		"<h1>502 Bad Gateway</h1>",
+		"<h1>503 Service Temporarily Unavailable</h1>",
+		"Faithfully yours, nginx.",
+		"<!-- a padding to disable MSIE and Chrome friendly error page -->",
+	}
+	for _, p := range patterns {
+		if bytes.Contains(ret.Body, []byte(p)) {
+			return true, fmt.Sprintf("matches the hardcoded pattern %q", p), nil
+		}
+	}
+
+	for _, p := range config.RetryOnMatch {
+		re, err := regexp.Compile(p)
+		if err != nil {
+			return false, "", err
+		}
+		if re.Match(ret.Body) {
+			return true, fmt.Sprintf("matches the global pattern %q", p), nil
+		}
+	}
+
+	for _, p := range w.RetryOnMatch {
+		re, err := regexp.Compile(p)
+		if err != nil {
+			return false, "", err
+		}
+		if re.Match(ret.Body) {
+			return true, fmt.Sprintf("matches the pattern %q", p), nil
+		}
 	}
 
 	// nothing else matched, good request, do not retry
@@ -235,40 +247,6 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 		Duration:   duration,
 		Body:       body,
 	}, nil
-}
-
-func isSoftError(body []byte, w Watch, c config.Configuration) (bool, string, error) {
-	if len(body) == 0 {
-		return false, "of zero length body", nil
-	}
-
-	if bytes.Contains(body, []byte("504 - Gateway Time-out")) ||
-		bytes.Contains(body, []byte("404 - Not Found")) ||
-		bytes.Contains(body, []byte("503 - Service Unavailable")) {
-		return true, "it matches a hardcoded soft errors", nil
-	}
-
-	for _, p := range c.RetryOnMatch {
-		re, err := regexp.Compile(p)
-		if err != nil {
-			return false, "", err
-		}
-		if re.Match(body) {
-			return true, fmt.Sprintf("it matches the global pattern %q", p), nil
-		}
-	}
-
-	for _, p := range w.RetryOnMatch {
-		re, err := regexp.Compile(p)
-		if err != nil {
-			return false, "", err
-		}
-		if re.Match(body) {
-			return true, fmt.Sprintf("it matches the pattern %q", p), nil
-		}
-	}
-
-	return false, "", nil
 }
 
 func (w *Watch) Process(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
