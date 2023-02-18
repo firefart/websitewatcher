@@ -157,6 +157,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			}
 			// if statuscode is ignored, do not send email
 			if ignoreStatusCode {
+				app.logger.Infof("[%s] not sending error mail because status %d is excluded", w.Name, invalidErr.StatusCode)
 				return nil
 			}
 
