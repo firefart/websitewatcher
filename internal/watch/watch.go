@@ -19,17 +19,17 @@ type Watch struct {
 	httpClient *httpint.HTTPClient
 	logger     logger.Logger
 
-	Name                         string
-	URL                          string
-	Method                       string
-	Body                         string
-	Header                       map[string]string
-	AdditionalTo                 []string
-	AdditionalHTTPErrorsToIgnore []int
-	Disabled                     bool
-	Pattern                      string
-	Replaces                     []Replace
-	RetryOnMatch                 []string
+	Name                    string
+	URL                     string
+	Method                  string
+	Body                    string
+	Header                  map[string]string
+	AdditionalTo            []string
+	NoErrorMailOnStatusCode []int
+	Disabled                bool
+	Pattern                 string
+	Replaces                []Replace
+	RetryOnMatch            []string
 }
 
 type Replace struct {
@@ -58,19 +58,19 @@ func (err *InvalidResponseError) Error() string {
 
 func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPClient) Watch {
 	w := Watch{
-		logger:                       logger,
-		httpClient:                   httpClient,
-		Name:                         c.Name,
-		URL:                          c.URL,
-		Method:                       c.Method,
-		Body:                         c.Body,
-		Header:                       c.Header,
-		AdditionalTo:                 c.AdditionalTo,
-		AdditionalHTTPErrorsToIgnore: c.AdditionalHTTPErrorsToIgnore,
-		Disabled:                     c.Disabled,
-		Pattern:                      c.Pattern,
-		Replaces:                     make([]Replace, len(c.Replaces)),
-		RetryOnMatch:                 c.RetryOnMatch,
+		logger:                  logger,
+		httpClient:              httpClient,
+		Name:                    c.Name,
+		URL:                     c.URL,
+		Method:                  c.Method,
+		Body:                    c.Body,
+		Header:                  c.Header,
+		AdditionalTo:            c.AdditionalTo,
+		NoErrorMailOnStatusCode: c.NoErrorMailOnStatusCode,
+		Disabled:                c.Disabled,
+		Pattern:                 c.Pattern,
+		Replaces:                make([]Replace, len(c.Replaces)),
+		RetryOnMatch:            c.RetryOnMatch,
 	}
 	for i, x := range c.Replaces {
 		r := Replace{
@@ -254,6 +254,7 @@ func (w *Watch) Process(ctx context.Context, config config.Configuration) (*Retu
 	if err != nil {
 		// if we reach here the last retry resulted in an error
 		// or we have another config error
+		// the InvalidResponseError is handled by the calling function
 		return nil, err
 	}
 

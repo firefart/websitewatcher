@@ -31,7 +31,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | retry.count | number of retries on http errors |
 | retry.delay | time to sleep between retries |
 | database | filename of the database |
-| http_errors_to_ignore | if we get this status code after all retries do not send an error email|
+| no_errormail_on_statuscode | if we get this status code after all retries do not send an error email|
 | useragent | useragent header to use for outgoing http requests |
 | retry_on_match | global setting of strings to retry request up to retry.count if the response body matches the provided regex |
 | watches.name | friendly name of the watch |
@@ -39,7 +39,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | watches.method | http method to use. Defaults to GET |
 | watches.body | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed |
 | watches.additional_to | array of additional emails for this watch. The email will be sent to the global ones and this list |
-| watches.addtional_http_errors_to_ignore | additional http errors to ignore when sending error emails. The global option is merged with this one |
+| watches.no_errormail_on_statuscode | additional http errors to ignore when sending error emails. The global option is merged with this one |
 | watches.header | additional http headers to add |
 | watches.disabled | used to disable a watch |
 | watches.pattern | the pattern is a regex and must contain one match group. The group is used as the body. This is used to extract the relevant body in big html sites. If left empty the whole body is used |

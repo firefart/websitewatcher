@@ -56,27 +56,27 @@ type Configuration struct {
 		Count int       `json:"count"`
 		Delay *Duration `json:"delay"`
 	} `json:"retry"`
-	ParallelChecks     int64         `json:"parallel_checks"`
-	Useragent          string        `json:"useragent"`
-	Timeout            Duration      `json:"timeout"`
-	Database           string        `json:"database"`
-	HTTPErrorsToIgnore []int         `json:"http_errors_to_ignore"`
-	RetryOnMatch       []string      `json:"retry_on_match"`
-	Watches            []WatchConfig `json:"watches"`
+	ParallelChecks          int64         `json:"parallel_checks"`
+	Useragent               string        `json:"useragent"`
+	Timeout                 Duration      `json:"timeout"`
+	Database                string        `json:"database"`
+	NoErrorMailOnStatusCode []int         `json:"no_errormail_on_statuscode"`
+	RetryOnMatch            []string      `json:"retry_on_match"`
+	Watches                 []WatchConfig `json:"watches"`
 }
 
 type WatchConfig struct {
-	Name                         string            `json:"name"`
-	URL                          string            `json:"url"`
-	Method                       string            `json:"method"`
-	Body                         string            `json:"body"`
-	Header                       map[string]string `json:"header"`
-	AdditionalTo                 []string          `json:"additional_to"`
-	AdditionalHTTPErrorsToIgnore []int             `json:"additional_http_errors_to_ignore"`
-	Disabled                     bool              `json:"disabled"`
-	Pattern                      string            `json:"pattern"`
-	Replaces                     []ReplaceConfig   `json:"replaces"`
-	RetryOnMatch                 []string          `json:"retry_on_match"`
+	Name                    string            `json:"name"`
+	URL                     string            `json:"url"`
+	Method                  string            `json:"method"`
+	Body                    string            `json:"body"`
+	Header                  map[string]string `json:"header"`
+	AdditionalTo            []string          `json:"additional_to"`
+	NoErrorMailOnStatusCode []int             `json:"no_errormail_on_statuscode"`
+	Disabled                bool              `json:"disabled"`
+	Pattern                 string            `json:"pattern"`
+	Replaces                []ReplaceConfig   `json:"replaces"`
+	RetryOnMatch            []string          `json:"retry_on_match"`
 }
 
 type ReplaceConfig struct {

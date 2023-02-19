@@ -144,13 +144,13 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 
 			// do not send error emails on these status codes
 			ignoreStatusCode := false
-			for _, ignore := range app.config.HTTPErrorsToIgnore {
+			for _, ignore := range app.config.NoErrorMailOnStatusCode {
 				if invalidErr.StatusCode == ignore {
 					ignoreStatusCode = true
 				}
 			}
 			// if we hit an error that we should ignore, bail out
-			for _, ignore := range w.AdditionalHTTPErrorsToIgnore {
+			for _, ignore := range w.NoErrorMailOnStatusCode {
 				if invalidErr.StatusCode == ignore {
 					ignoreStatusCode = true
 				}
