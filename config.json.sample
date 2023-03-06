@@ -60,7 +60,7 @@
       "url": "http://ccc.com",
       "header": {
         "Content-Type": "text/plain;charset=UTF-8"
-      }
+      },
       "method": "POST",
       "body": "{\"page\":1}"
     }
