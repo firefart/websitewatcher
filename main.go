@@ -96,23 +96,22 @@ func (app *app) run() error {
 		}
 		wg.Add(1)
 
-		w := watch.New(wc, app.logger, httpClient)
-
-		go func(w2 watch.Watch) {
+		go func(wc config.WatchConfig) {
 			defer sem.Release(1)
 			defer wg.Done()
 
-			if err := app.processWatch(ctx, w2); err != nil {
-				app.logError(fmt.Errorf("[%s] error: %w", w2.Name, err))
+			w := watch.New(wc, app.logger, httpClient)
+			if err := app.processWatch(ctx, w); err != nil {
+				app.logError(fmt.Errorf("[%s] error: %w", w.Name, err))
 				if !app.dryRun {
-					if err2 := app.mailer.SendErrorEmail(w2, err); err2 != nil {
+					if err2 := app.mailer.SendErrorEmail(w, err); err2 != nil {
 						app.logError(err2)
 						return
 					}
 				}
 				return
 			}
-		}(w)
+		}(wc) // pass wc as a parameter as it's reused on each loop
 	}
 
 	wg.Wait()
