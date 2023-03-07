@@ -249,7 +249,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	}, nil
 }
 
-func (w *Watch) Process(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
+func (w Watch) Process(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
 	ret, err := w.checkWithRetries(ctx, config)
 	if err != nil {
 		// if we reach here the last retry resulted in an error

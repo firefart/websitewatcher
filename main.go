@@ -41,7 +41,7 @@ func main() {
 	}
 }
 
-func (app *app) logError(err error) {
+func (app app) logError(err error) {
 	app.logger.Errorf("[ERROR] %v", err)
 }
 
