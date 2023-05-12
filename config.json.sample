@@ -28,6 +28,7 @@
       "url": "http://aaa.com",
       "additional_to": ["ddd@ddd.com", "eee@eee.com"],
       "no_errormail_on_statuscode": [500],
+      "skip_soft_error_patterns": false,
       "retry_on_match": [
         "error"
       ]

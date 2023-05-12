@@ -77,6 +77,7 @@ type WatchConfig struct {
 	Pattern                 string            `json:"pattern"`
 	Replaces                []ReplaceConfig   `json:"replaces"`
 	RetryOnMatch            []string          `json:"retry_on_match"`
+	SkipSofterrorPatterns   bool              `json:"skip_soft_error_patterns"`
 }
 
 type ReplaceConfig struct {

@@ -30,6 +30,7 @@ type Watch struct {
 	Pattern                 string
 	Replaces                []Replace
 	RetryOnMatch            []string
+	SkipSofterrorPatterns   bool
 }
 
 type Replace struct {
@@ -71,6 +72,7 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 		Pattern:                 c.Pattern,
 		Replaces:                make([]Replace, len(c.Replaces)),
 		RetryOnMatch:            c.RetryOnMatch,
+		SkipSofterrorPatterns:   c.SkipSofterrorPatterns,
 	}
 	for i, x := range c.Replaces {
 		r := Replace{
@@ -92,25 +94,27 @@ func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool
 		return false, "zero length body", nil
 	}
 
-	// https://github.com/nginx/nginx/blob/master/src/http/ngx_http_special_response.c
-	patterns := [...]string{
-		"504 - Gateway Time-out",
-		"404 - Not Found",
-		"503 - Service Unavailable",
-		"<h1>503 Service Unavailable</h1>",
-		"<h1>403 Forbidden</h1>",
-		"<h1>404 Not Found</h1>",
-		"<h1>405 Not Allowed</h1>",
-		"<h1>429 Too Many Requests</h1>",
-		"<h1>500 Internal Server Error</h1>",
-		"<h1>502 Bad Gateway</h1>",
-		"<h1>503 Service Temporarily Unavailable</h1>",
-		"Faithfully yours, nginx.",
-		"<!-- a padding to disable MSIE and Chrome friendly error page -->",
-	}
-	for _, p := range patterns {
-		if bytes.Contains(ret.Body, []byte(p)) {
-			return true, fmt.Sprintf("matches the hardcoded pattern %q", p), nil
+	if !w.SkipSofterrorPatterns {
+		// https://github.com/nginx/nginx/blob/master/src/http/ngx_http_special_response.c
+		patterns := [...]string{
+			"504 - Gateway Time-out",
+			"404 - Not Found",
+			"503 - Service Unavailable",
+			"<h1>503 Service Unavailable</h1>",
+			"<h1>403 Forbidden</h1>",
+			"<h1>404 Not Found</h1>",
+			"<h1>405 Not Allowed</h1>",
+			"<h1>429 Too Many Requests</h1>",
+			"<h1>500 Internal Server Error</h1>",
+			"<h1>502 Bad Gateway</h1>",
+			"<h1>503 Service Temporarily Unavailable</h1>",
+			"Faithfully yours, nginx.",
+			"<!-- a padding to disable MSIE and Chrome friendly error page -->",
+		}
+		for _, p := range patterns {
+			if bytes.Contains(ret.Body, []byte(p)) {
+				return true, fmt.Sprintf("matches the hardcoded pattern %q", p), nil
+			}
 		}
 	}
 

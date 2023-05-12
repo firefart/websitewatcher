@@ -46,6 +46,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | watches.replaces.pattern | regex pattern to match in the body |
 | watches.replaces.replace_with | replacement string for the regex match |
 | watches.retry_on_match | retry request up to retry.count if the response body matches the provided regex |
+| watches.skip_soft_error_patterns | if set there are no checks for soft errors like default error pages |
 
 ## Example
 
