@@ -72,7 +72,7 @@ func (app *app) run() error {
 	db.CleanupDatabase(app.logger, configuration)
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration)
-	mailer := mail.New(configuration, httpClient)
+	mailer := mail.New(configuration, httpClient, app.logger)
 
 	app.config = configuration
 	app.httpClient = httpClient

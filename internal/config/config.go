@@ -51,6 +51,7 @@ type Configuration struct {
 		User     string   `json:"user"`
 		Password string   `json:"password"`
 		SkipTLS  bool     `json:"skiptls"`
+		Retries  int      `json:"retries"`
 	} `json:"mail"`
 	Retry struct {
 		Count int       `json:"count"`
@@ -105,6 +106,7 @@ func GetConfig(f string) (Configuration, error) {
 	}
 	c.Retry.Count = 3
 	c.Retry.Delay = &Duration{Duration: 3 * time.Second}
+	c.Mail.Retries = 3
 
 	if err = decoder.Decode(&c); err != nil {
 		var syntaxErr *json.SyntaxError

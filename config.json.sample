@@ -9,7 +9,8 @@
     "to": ["bbb@bbb.com", "ccc@ccc.com"],
     "skiptls": true,
     "user": "",
-    "password": ""
+    "password": "",
+    "retries": 3
   },
   "timeout": "1m",
   "parallel_checks": 5,

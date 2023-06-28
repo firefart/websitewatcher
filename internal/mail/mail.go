@@ -10,6 +10,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/diff"
 	"github.com/firefart/websitewatcher/internal/http"
+	"github.com/firefart/websitewatcher/internal/logger"
 	"github.com/firefart/websitewatcher/internal/watch"
 	gomail "gopkg.in/mail.v2"
 )
@@ -18,9 +19,10 @@ type Mail struct {
 	config     config.Configuration
 	dialer     *gomail.Dialer
 	httpClient *http.HTTPClient
+	logger     logger.Logger
 }
 
-func New(config config.Configuration, httpClient *http.HTTPClient) *Mail {
+func New(config config.Configuration, httpClient *http.HTTPClient, logger logger.Logger) *Mail {
 	d := gomail.NewDialer(config.Mail.Server, config.Mail.Port, config.Mail.User, config.Mail.Password)
 	if config.Mail.SkipTLS {
 		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -29,6 +31,7 @@ func New(config config.Configuration, httpClient *http.HTTPClient) *Mail {
 		config:     config,
 		dialer:     d,
 		httpClient: httpClient,
+		logger:     logger,
 	}
 }
 
@@ -101,10 +104,14 @@ func (m *Mail) send(to []string, subject, body, contentType string) error {
 	msg.SetHeader("Subject", subject)
 	msg.SetBody(contentType, body)
 
-	if err := m.dialer.DialAndSend(msg); err != nil {
-		return err
+	for i := 1; i <= m.config.Mail.Retries; i++ {
+		err := m.dialer.DialAndSend(msg)
+		if err == nil {
+			return nil
+		}
+		m.logger.Errorf("error on sending email on try %d: %v", i, err)
 	}
-	return nil
+	return fmt.Errorf("could not send mail after %d retries", m.config.Mail.Retries)
 }
 
 func formatHeaders(header map[string][]string) string {
