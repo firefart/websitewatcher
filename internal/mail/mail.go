@@ -104,14 +104,15 @@ func (m *Mail) send(to []string, subject, body, contentType string) error {
 	msg.SetHeader("Subject", subject)
 	msg.SetBody(contentType, body)
 
+	var err error
 	for i := 1; i <= m.config.Mail.Retries; i++ {
-		err := m.dialer.DialAndSend(msg)
+		err = m.dialer.DialAndSend(msg)
 		if err == nil {
 			return nil
 		}
 		m.logger.Errorf("error on sending email on try %d: %v", i, err)
 	}
-	return fmt.Errorf("could not send mail after %d retries", m.config.Mail.Retries)
+	return fmt.Errorf("could not send mail after %d retries. Last error: %w", m.config.Mail.Retries, err)
 }
 
 func formatHeaders(header map[string][]string) string {
