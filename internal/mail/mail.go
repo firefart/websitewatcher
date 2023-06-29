@@ -38,7 +38,12 @@ func New(config config.Configuration, httpClient *http.HTTPClient, logger logger
 func (m *Mail) SendErrorEmail(w watch.Watch, err error) error {
 	subject := fmt.Sprintf("[ERROR] error in websitewatcher on %s", w.Name)
 	body := fmt.Sprintf("%#v", err)
-	return m.send(m.config.Mail.To, subject, body, "text/plain")
+	for _, to := range m.config.Mail.To {
+		if err := m.send(to, subject, body, "text/plain"); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *Mail) SendDiffEmail(w watch.Watch, subject, body, text1, text2 string) error {
@@ -89,18 +94,24 @@ func (m *Mail) SendWatchError(w watch.Watch, ret *watch.InvalidResponseError) er
 }
 
 func (m *Mail) sendHTMLEmail(w watch.Watch, subject, htmlBody string) error {
-	to := m.config.Mail.To
+	tos := m.config.Mail.To
 	if len(w.AdditionalTo) > 0 {
-		to = append(to, w.AdditionalTo...)
+		tos = append(tos, w.AdditionalTo...)
 	}
 
-	return m.send(to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), htmlBody, "text/html")
+	for _, to := range tos {
+		if err := m.send(to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), htmlBody, "text/html"); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (m *Mail) send(to []string, subject, body, contentType string) error {
+func (m *Mail) send(to string, subject, body, contentType string) error {
 	msg := gomail.NewMessage()
 	msg.SetAddressHeader("From", m.config.Mail.From.Mail, m.config.Mail.From.Name)
-	msg.SetHeader("To", to...)
+	msg.SetHeader("To", to)
 	msg.SetHeader("Subject", subject)
 	msg.SetBody(contentType, body)
 
