@@ -121,9 +121,9 @@ func (m *Mail) send(to string, subject, body, contentType string) error {
 		if err == nil {
 			return nil
 		}
-		m.logger.Errorf("error on sending email on try %d: %v", i, err)
+		m.logger.Errorf("error on sending email %q on try %d: %v", subject, i, err)
 	}
-	return fmt.Errorf("could not send mail after %d retries. Last error: %w", m.config.Mail.Retries, err)
+	return fmt.Errorf("could not send mail %q after %d retries. Last error: %w", subject, m.config.Mail.Retries, err)
 }
 
 func formatHeaders(header map[string][]string) string {
