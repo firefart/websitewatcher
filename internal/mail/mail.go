@@ -100,7 +100,7 @@ func (m *Mail) sendHTMLEmail(w watch.Watch, subject, htmlBody string) error {
 	}
 
 	for _, to := range tos {
-		if err := m.send(to, subject, htmlBody, "text/html"); err != nil {
+		if err := m.send(to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), htmlBody, "text/html"); err != nil {
 			return err
 		}
 	}
