@@ -17,8 +17,17 @@ type api struct {
 }
 
 type apiResponse struct {
-	HTML string `json:"html"`
-	CSS  string `json:"css"`
+	HTML  string `json:"html"`
+	CSS   string `json:"css"`
+	Error *struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+	Errors []struct {
+		Message  string `json:"msg"`
+		Param    string `json:"left"`
+		Location string `json:"location"`
+	} `json:"errors"`
 }
 
 func DiffLocal(text1, text2 string) []byte {
@@ -66,6 +75,18 @@ func DiffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, err
 	var jsonResp apiResponse
 	if err := json.Unmarshal(body, &jsonResp); err != nil {
 		return "", "", fmt.Errorf("could not unmarshal: %w", err)
+	}
+
+	if jsonResp.Error != nil {
+		return "", "", fmt.Errorf("Error on calling Diff API: %s - %s", jsonResp.Error.Code, jsonResp.Error.Message)
+	}
+
+	if len(jsonResp.Errors) > 0 {
+		msg := "Error on calling Diff API:"
+		for _, err := range jsonResp.Errors {
+			msg = fmt.Sprintf("%s - Message: %s Location: %s Param: %s", msg, err.Message, err.Location, err.Param)
+		}
+		return "", "", fmt.Errorf(msg)
 	}
 
 	return jsonResp.CSS, jsonResp.HTML, nil
