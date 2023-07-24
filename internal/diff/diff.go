@@ -40,6 +40,10 @@ func DiffLocal(text1, text2 string) []byte {
 	return []byte(htmlDiff)
 }
 
+func LocalDiff() {
+	// git diff --no-index file1.txt file2.txt
+}
+
 func DiffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, error) {
 	// 	curl --location --request POST 'https://api.diffchecker.com/public/text?output_type=html&email=YOUR_EMAIL' \
 	// --header 'Content-Type: application/json' \

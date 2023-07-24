@@ -37,7 +37,7 @@ func New(config config.Configuration, httpClient *http.HTTPClient, logger logger
 
 func (m *Mail) SendErrorEmail(w watch.Watch, err error) error {
 	subject := fmt.Sprintf("[ERROR] error in websitewatcher on %s", w.Name)
-	body := fmt.Sprintf("%#v", err)
+	body := fmt.Sprintf("%s", err)
 	for _, to := range m.config.Mail.To {
 		if err := m.send(to, subject, body, "text/plain"); err != nil {
 			return err
