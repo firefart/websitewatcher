@@ -132,5 +132,13 @@ func GetConfig(f string) (Configuration, error) {
 		}
 	}
 
+	// check some stuff
+	if c.Mail.Server == "" {
+		return Configuration{}, fmt.Errorf("please supply an email server")
+	}
+	if c.DiffMethod != "api" && c.DiffMethod != "local" && c.DiffMethod != "internal" {
+		return Configuration{}, fmt.Errorf("invalid diff method %q", c.DiffMethod)
+	}
+
 	return c, nil
 }
