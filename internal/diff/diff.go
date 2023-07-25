@@ -33,18 +33,96 @@ type apiResponse struct {
 	} `json:"errors"`
 }
 
-func DiffLocal(text1, text2 string) []byte {
+func GenerateHTMLDiffInternal(body string, text1, text2 string) (string, error) {
+	diffHTML := diffInternal(text1, text2)
+	body = strings.ReplaceAll(body, "\n", "<br>\n")
+	body = fmt.Sprintf("<html><head></head><body>%s<br><br>\n%s</body></html>", body, diffHTML)
+	return body, nil
+}
+
+func GenerateHTMLDiffAPI(httpClient *http2.HTTPClient, body string, text1, text2 string) (string, error) {
+	diffCSS, diffHTML, err := diffAPI(httpClient, text1, text2)
+	if err != nil {
+		return "", err
+	}
+	body = strings.ReplaceAll(body, "\n", "<br>\n")
+	body = fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", diffCSS, body, diffHTML)
+	return body, nil
+}
+
+func diffInternal(text1, text2 string) []byte {
 	dmp := diffmatchpatch.New()
 	diffs := dmp.DiffMain(text1, text2, false)
 	htmlDiff := dmp.DiffPrettyHtml(diffs)
 	return []byte(htmlDiff)
 }
 
-func LocalDiff() {
-	// git diff --no-index file1.txt file2.txt
-}
+// func LocalDiff(text1, text2 string) {
+// 	// git diff --no-index file1.txt file2.txt
+// 	// git diff --color=always --no-index --text -w -b --output=out.txt test1.html test2.html
+// 	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("chrome_%s", randStringRunes(10))) // nolint:gomnd
+// 	err := os.Mkdir(tmpdir, os.ModePerm)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("could not create dir %q: %w", tmpdir, err)
+// 	}
+// 	defer os.RemoveAll(tmpdir)
 
-func DiffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, error) {
+// 	ctx, cancel := context.WithTimeout(ctxMain, 1*time.Minute)
+// 	defer cancel()
+
+// 	var out bytes.Buffer
+// 	var stderr bytes.Buffer
+// 	cmd := exec.CommandContext(ctx, chromiumPath, args...)
+// 	cmd.Dir = tmpdir
+// 	cmd.Stdout = &out
+// 	cmd.Stderr = &stderr
+// 	err = cmd.Run()
+// 	if err != nil {
+// 		killChromeProcessIfRunning(cmd)
+// 		return nil, fmt.Errorf("could not execute command %w: %s", err, stderr.String())
+// 	}
+
+// 	log.Debugf("STDOUT: %s", out.String())
+// 	log.Debugf("STDERR: %s", stderr.String())
+
+// 	file, err := ioutil.TempFile("dir", "prefix")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer os.Remove(file.Name())
+// }
+
+// func convertGitDiffToHTML(input string) (string, error) {
+// 	scanner := bufio.NewScanner(strings.NewReader(input))
+// 	// diff starts with the following stuff so strip the first 4 lines
+// 	// 		diff --git a/test1.html b/test2.html
+// 	// 		index 26e2fe9..5a22b42 100644
+// 	// 		--- a/test1.html
+// 	// 		+++ b/test2.html
+// 	builder := strings.Builder{}
+
+// 	for scanner.Scan() {
+// 		text := scanner.Text()
+// 		firstRune, _ := utf8.DecodeRuneInString(text)
+// 		classname := "default"
+// 		if firstRune == '-' {
+// 			classname = "delete"
+// 		} else if firstRune == '+' {
+// 			classname = "add"
+// 		}
+// 		if _, err := builder.WriteString(fmt.Sprintf(`<span class="%s">%s</span>\n`, classname, text)); err != nil {
+// 			return "", err
+// 		}
+// 	}
+
+// 	if err := scanner.Err(); err != nil {
+// 		return "", err
+// 	}
+
+// 	return builder.String(), nil
+// }
+
+func diffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, error) {
 	// 	curl --location --request POST 'https://api.diffchecker.com/public/text?output_type=html&email=YOUR_EMAIL' \
 	// --header 'Content-Type: application/json' \
 	// --data-raw '{

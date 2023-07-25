@@ -46,12 +46,25 @@ func (m *Mail) SendErrorEmail(w watch.Watch, err error) error {
 	return nil
 }
 
-func (m *Mail) SendDiffEmail(w watch.Watch, subject, body, text1, text2 string) error {
-	htmlContent, err := m.generateHTMLDiff(body, text1, text2)
-	if err != nil {
-		return err
+func (m *Mail) SendDiffEmail(w watch.Watch, diffMethod, subject, body, text1, text2 string) error {
+	content := ""
+	switch diffMethod {
+	case "api":
+		htmlContent, err := diff.GenerateHTMLDiffAPI(m.httpClient, body, text1, text2)
+		if err != nil {
+			return err
+		}
+		content = htmlContent
+	case "internal":
+		htmlContent, err := diff.GenerateHTMLDiffInternal(body, text1, text2)
+		if err != nil {
+			return err
+		}
+		content = htmlContent
+	default:
+		return fmt.Errorf("invalid diff method %s", diffMethod)
 	}
-	return m.sendHTMLEmail(w, subject, htmlContent)
+	return m.sendHTMLEmail(w, subject, content)
 }
 
 func (m *Mail) SendWatchError(w watch.Watch, ret *watch.InvalidResponseError) error {
@@ -138,14 +151,4 @@ func generateHTML(body string) string {
 	body = strings.ReplaceAll(body, "\n", "<br>\n")
 	body = fmt.Sprintf("<html><body>%s</body></html>", body)
 	return body
-}
-
-func (m *Mail) generateHTMLDiff(body string, text1, text2 string) (string, error) {
-	diffCSS, diffHTML, err := diff.DiffAPI(m.httpClient, text1, text2)
-	if err != nil {
-		return "", err
-	}
-	body = strings.ReplaceAll(body, "\n", "<br>\n")
-	body = fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", diffCSS, body, diffHTML)
-	return body, nil
 }

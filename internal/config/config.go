@@ -57,6 +57,7 @@ type Configuration struct {
 		Count int       `json:"count"`
 		Delay *Duration `json:"delay"`
 	} `json:"retry"`
+	DiffMethod              string        `json:"diff_method"`
 	ParallelChecks          int64         `json:"parallel_checks"`
 	Useragent               string        `json:"useragent"`
 	Timeout                 Duration      `json:"timeout"`
@@ -107,6 +108,7 @@ func GetConfig(f string) (Configuration, error) {
 	c.Retry.Count = 3
 	c.Retry.Delay = &Duration{Duration: 3 * time.Second}
 	c.Mail.Retries = 3
+	c.DiffMethod = "api"
 
 	if err = decoder.Decode(&c); err != nil {
 		var syntaxErr *json.SyntaxError
