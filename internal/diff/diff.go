@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -98,7 +97,7 @@ func diffLocal(text1, text2 string) ([]byte, error) {
 	}
 	defer os.RemoveAll(tmpdir)
 
-	inputFile1, err := ioutil.TempFile(tmpdir, "")
+	inputFile1, err := os.CreateTemp(tmpdir, "")
 	if err != nil {
 		return nil, fmt.Errorf("could not create inputFile1: %w", err)
 	}
@@ -107,7 +106,7 @@ func diffLocal(text1, text2 string) ([]byte, error) {
 		return nil, fmt.Errorf("could not write inputFile1: %w", err)
 	}
 
-	inputFile2, err := ioutil.TempFile(tmpdir, "")
+	inputFile2, err := os.CreateTemp(tmpdir, "")
 	if err != nil {
 		return nil, fmt.Errorf("could not create inputFile2: %w", err)
 	}
