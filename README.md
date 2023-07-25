@@ -26,6 +26,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | mail.skiptls | no TLS certificate checks on connecting to mailserver |
 | mail.user | smtp username, empty on no authentication |
 | mail.password | smtp password |
+| mail.retries | how often to retry sending emails |
 | timeout | timeout for http requests |
 | parallel_checks | number of parallel checks of watches |
 | retry.count | number of retries on http errors |
