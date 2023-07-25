@@ -13,9 +13,9 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/firefart/websitewatcher/internal/helper"
 	http2 "github.com/firefart/websitewatcher/internal/http"
@@ -80,7 +80,6 @@ func diffInternal(text1, text2 string) []byte {
 }
 
 func diffLocal(text1, text2 string) ([]byte, error) {
-	// git diff --no-color --no-index --text -w -b --output=out.txt test1.html test2.html
 	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", helper.RandStringRunes(10))) // nolint:gomnd
 	err := os.Mkdir(tmpdir, os.ModePerm)
 	if err != nil {
@@ -93,7 +92,7 @@ func diffLocal(text1, text2 string) ([]byte, error) {
 		return nil, fmt.Errorf("could not create inputFile1: %w", err)
 	}
 	defer os.Remove(inputFile1.Name())
-	if _, err := inputFile1.WriteString(text1); err != nil {
+	if _, err := inputFile1.WriteString(fmt.Sprintf("%s\n", text1)); err != nil { // add a newline at the end so git does not complain
 		return nil, fmt.Errorf("could not write inputFile1: %w", err)
 	}
 
@@ -102,7 +101,7 @@ func diffLocal(text1, text2 string) ([]byte, error) {
 		return nil, fmt.Errorf("could not create inputFile2: %w", err)
 	}
 	defer os.Remove(inputFile2.Name())
-	if _, err := inputFile2.WriteString(text2); err != nil {
+	if _, err := inputFile2.WriteString(fmt.Sprintf("%s\n", text2)); err != nil { // add a newline at the end so git does not complain
 		return nil, fmt.Errorf("could not write inputFile2: %w", err)
 	}
 
@@ -150,19 +149,52 @@ func diffLocal(text1, text2 string) ([]byte, error) {
 	return diff, nil
 }
 
+const gitDiffCss = `
+	div {
+		font-family: monospace;
+		padding-left: 0.5em;
+    padding-right: 0.5em;
+	}
+	div.container {
+		display: inline-block;
+	}
+	div.default {}
+	div.add {
+		background-color: #c8f0da;
+	}
+	div.delete {
+		background-color: #ffcbbd;
+	}
+`
+
 func convertGitDiffToHTML(input string) (string, string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	builder := strings.Builder{}
 
+	re := regexp.MustCompile(`^index [A-Fa-f0-9]+\.\.[A-Fa-f0-9]+ [0-9]+$`)
+
 	for scanner.Scan() {
 		text := scanner.Text()
-		firstRune, _ := utf8.DecodeRuneInString(text)
 		classname := "default"
-		if firstRune == '-' {
+		// filter out unneeded stuff like
+		// 		diff --git a/tmp/websitewatcher_SQINZHLunW/538847876 b/tmp/websitewatcher_SQINZHLunW/4036934040
+		// 		index 8d30a96..fed39cb 100644
+		// 		--- a/tmp/websitewatcher_SQINZHLunW/538847876
+		// 		+++ b/tmp/websitewatcher_SQINZHLunW/4036934040
+		if strings.HasPrefix(text, "diff --git") {
+			continue
+		} else if re.MatchString(text) {
+			continue
+		} else if strings.HasPrefix(text, "---") {
+			continue
+		} else if strings.HasPrefix(text, "+++") {
+			continue
+		} else if strings.HasPrefix(text, "-") {
 			classname = "delete"
-		} else if firstRune == '+' {
+		} else if strings.HasPrefix(text, "+") {
 			classname = "add"
 		}
+
 		if _, err := builder.WriteString(fmt.Sprintf(`<div class="%s">%s</div>`, classname, text)); err != nil {
 			return "", "", err
 		}
@@ -172,20 +204,10 @@ func convertGitDiffToHTML(input string) (string, string, error) {
 		return "", "", err
 	}
 
-	css := `
-		div {
-			font-family: monospace;
-		}
-		div.default {}
-		div.add {
-				background-color: #c8f0da;
-		}
-		div.delete {
-				background-color: #ffcbbd;
-		}
-`
+	inner := builder.String()
+	html := fmt.Sprintf(`<div class="container">%s</div>`, inner)
 
-	return css, builder.String(), nil
+	return gitDiffCss, html, nil
 }
 
 func diffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, error) {
