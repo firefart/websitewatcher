@@ -17,19 +17,10 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/firefart/websitewatcher/internal/helper"
 	http2 "github.com/firefart/websitewatcher/internal/http"
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
-
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func randStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
 
 type api struct {
 	Left  string `json:"left"`
@@ -90,7 +81,7 @@ func diffInternal(text1, text2 string) []byte {
 
 func diffLocal(text1, text2 string) ([]byte, error) {
 	// git diff --no-color --no-index --text -w -b --output=out.txt test1.html test2.html
-	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", randStringRunes(10))) // nolint:gomnd
+	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", helper.RandStringRunes(10))) // nolint:gomnd
 	err := os.Mkdir(tmpdir, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("could not create temp dir %q: %w", tmpdir, err)

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/firefart/websitewatcher/internal/helper"
 )
 
 type Duration struct {
@@ -138,6 +140,9 @@ func GetConfig(f string) (Configuration, error) {
 	}
 	if c.DiffMethod != "api" && c.DiffMethod != "local" && c.DiffMethod != "internal" {
 		return Configuration{}, fmt.Errorf("invalid diff method %q", c.DiffMethod)
+	}
+	if c.DiffMethod == "local" && !helper.IsGitInstalled() {
+		return Configuration{}, fmt.Errorf("diff mode local requires git to be installed")
 	}
 
 	return c, nil
