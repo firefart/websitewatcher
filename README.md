@@ -30,6 +30,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | parallel_checks | number of parallel checks of watches |
 | retry.count | number of retries on http errors |
 | retry.delay | time to sleep between retries |
+| diff_mode | Diffing mode to use. Can either be "api" to use an online service, "internal" to use a golang library or "local" to use a localy installed git |
 | database | filename of the database |
 | no_errormail_on_statuscode | if we get this status code after all retries do not send an error email|
 | useragent | useragent header to use for outgoing http requests |

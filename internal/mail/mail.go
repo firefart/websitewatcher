@@ -61,6 +61,12 @@ func (m *Mail) SendDiffEmail(w watch.Watch, diffMethod, subject, body, text1, te
 			return err
 		}
 		content = htmlContent
+	case "local":
+		htmlContent, err := diff.GenerateHTMLDiffLocal(body, text1, text2)
+		if err != nil {
+			return err
+		}
+		content = htmlContent
 	default:
 		return fmt.Errorf("invalid diff method %s", diffMethod)
 	}
