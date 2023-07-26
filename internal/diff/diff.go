@@ -165,6 +165,9 @@ const gitDiffCss = `
 	div.delete {
 		background-color: #ffcbbd;
 	}
+	div.changes {
+		background-color: lightyellow;       
+	}
 `
 
 func convertGitDiffToHTML(input string) (string, string, error) {
@@ -189,6 +192,8 @@ func convertGitDiffToHTML(input string) (string, string, error) {
 			continue
 		} else if strings.HasPrefix(text, "+++") {
 			continue
+		} else if strings.HasPrefix(text, "@@") {
+			classname = "changes"
 		} else if strings.HasPrefix(text, "-") {
 			classname = "delete"
 		} else if strings.HasPrefix(text, "+") {

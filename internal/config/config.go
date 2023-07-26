@@ -110,7 +110,7 @@ func GetConfig(f string) (Configuration, error) {
 	c.Retry.Count = 3
 	c.Retry.Delay = &Duration{Duration: 3 * time.Second}
 	c.Mail.Retries = 3
-	c.DiffMethod = "api"
+	c.DiffMethod = "local"
 
 	if err = decoder.Decode(&c); err != nil {
 		var syntaxErr *json.SyntaxError

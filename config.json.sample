@@ -66,6 +66,13 @@
       },
       "method": "POST",
       "body": "{\"page\":1}"
+    },
+    {
+      "name": "Jokes",
+      "url": "https://icanhazdadjoke.com",
+      "header": {
+        "Accept": "text/plain"
+      }
     }
   ]
 }
