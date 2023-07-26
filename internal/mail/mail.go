@@ -70,6 +70,7 @@ func (m *Mail) SendDiffEmail(w watch.Watch, diffMethod, subject, body, text1, te
 	default:
 		return fmt.Errorf("invalid diff method %s", diffMethod)
 	}
+	m.logger.Debugf("Mail Content: %s", content)
 	return m.sendHTMLEmail(w, subject, content)
 }
 
