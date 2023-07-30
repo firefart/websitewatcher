@@ -110,7 +110,7 @@ func GetConfig(f string) (Configuration, error) {
 	c.Retry.Count = 3
 	c.Retry.Delay = &Duration{Duration: 3 * time.Second}
 	c.Mail.Retries = 3
-	c.DiffMethod = "local"
+	c.DiffMethod = "git"
 
 	if err = decoder.Decode(&c); err != nil {
 		var syntaxErr *json.SyntaxError
@@ -138,11 +138,11 @@ func GetConfig(f string) (Configuration, error) {
 	if c.Mail.Server == "" {
 		return Configuration{}, fmt.Errorf("please supply an email server")
 	}
-	if c.DiffMethod != "api" && c.DiffMethod != "local" && c.DiffMethod != "internal" {
+	if c.DiffMethod != "api" && c.DiffMethod != "git" && c.DiffMethod != "internal" {
 		return Configuration{}, fmt.Errorf("invalid diff method %q", c.DiffMethod)
 	}
-	if c.DiffMethod == "local" && !helper.IsGitInstalled() {
-		return Configuration{}, fmt.Errorf("diff mode local requires git to be installed")
+	if c.DiffMethod == "git" && !helper.IsGitInstalled() {
+		return Configuration{}, fmt.Errorf("diff mode git requires git to be installed")
 	}
 
 	return c, nil

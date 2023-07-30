@@ -48,8 +48,8 @@ func GenerateHTMLDiffInternal(body string, text1, text2 string) (string, error) 
 	return body, nil
 }
 
-func GenerateHTMLDiffLocal(body string, text1, text2 string) (string, error) {
-	diff, err := diffLocal(text1, text2)
+func GenerateHTMLDiffGit(body string, text1, text2 string) (string, error) {
+	diff, err := diffGit(text1, text2)
 	if err != nil {
 		return "", err
 	}
@@ -79,7 +79,7 @@ func diffInternal(text1, text2 string) []byte {
 	return []byte(htmlDiff)
 }
 
-func diffLocal(text1, text2 string) ([]byte, error) {
+func diffGit(text1, text2 string) ([]byte, error) {
 	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", helper.RandStringRunes(10))) // nolint:gomnd
 	err := os.Mkdir(tmpdir, os.ModePerm)
 	if err != nil {
