@@ -188,4 +188,10 @@ go1.20.windows-arm64.msi
 
 Example E-Mail:
 
-![screenshot](screenshot.png "Screenshot")
+API Diff Method:
+
+![screenshot](screenshot.png "api diff mode")
+
+GIT Diff Method:
+![screenshot](screenshot_git.png "git diff mode")
+
