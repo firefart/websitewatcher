@@ -12,8 +12,6 @@ See the `config.json.sample` file for all possible configuration options.
 ./websitewatcher -config config.json
 ```
 
-Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is used for creating the diff so be sure to thank them for their free service 😎
-
 ## Config Options
 
 | Option | Description |
@@ -31,7 +29,7 @@ Currently [https://www.diffchecker.com/](https://www.diffchecker.com/) API is us
 | parallel_checks | number of parallel checks of watches |
 | retry.count | number of retries on http errors |
 | retry.delay | time to sleep between retries |
-| diff_mode | Diffing mode to use. Can either be "api" to use an online service, "internal" to use a golang library or "local" to use a localy installed git |
+| diff_method | Diffing mode to use. Can either be "api" to use diffchecker.com, "internal" to use a golang library or "git" to use a localy installed git. Defaults to git. |
 | database | filename of the database |
 | no_errormail_on_statuscode | if we get this status code after all retries do not send an error email|
 | useragent | useragent header to use for outgoing http requests |
@@ -186,7 +184,7 @@ go1.20.windows-arm64.msi
 3b520f5ef57fb8e0032eeeec5da1665644daa6499234412e91ab1eb44b05881a
 ```
 
-Example E-Mail:
+Example E-Mail vith API diff method:
 
 API Diff Method:
 
