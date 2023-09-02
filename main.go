@@ -61,6 +61,7 @@ func (app *app) run() error {
 	if err != nil {
 		return err
 	}
+	app.logger.Debugf("Got config: %+v", configuration)
 
 	start := time.Now().UnixNano()
 	db, err := database.ReadDatabase(configuration.Database)
@@ -71,7 +72,7 @@ func (app *app) run() error {
 	// remove old websites in the database on each run
 	db.CleanupDatabase(app.logger, configuration)
 
-	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout.Duration)
+	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
 	mailer := mail.New(configuration, httpClient, app.logger)
 
 	app.config = configuration

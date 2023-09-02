@@ -1,149 +1,116 @@
 package config
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/helper"
+	"github.com/knadh/koanf/parsers/json"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/providers/structs"
+	"github.com/knadh/koanf/v2"
 )
 
-type Duration struct {
-	time.Duration
-}
-
-func (d Duration) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.String())
-}
-
-func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v interface{}
-	if err := json.Unmarshal(b, &v); err != nil {
-		return err
-	}
-	switch value := v.(type) {
-	case float64:
-		d.Duration = time.Duration(value)
-		return nil
-	case string:
-		var err error
-		d.Duration, err = time.ParseDuration(value)
-		if err != nil {
-			return err
-		}
-		return nil
-	default:
-		return errors.New("invalid duration")
-	}
-}
-
 type Configuration struct {
-	Mail struct {
-		Server string `json:"server"`
-		Port   int    `json:"port"`
-		From   struct {
-			Name string `json:"name"`
-			Mail string `json:"mail"`
-		} `json:"from"`
-		To       []string `json:"to"`
-		User     string   `json:"user"`
-		Password string   `json:"password"`
-		SkipTLS  bool     `json:"skiptls"`
-		Retries  int      `json:"retries"`
-	} `json:"mail"`
-	Retry struct {
-		Count int       `json:"count"`
-		Delay *Duration `json:"delay"`
-	} `json:"retry"`
-	DiffMethod              string        `json:"diff_method"`
-	ParallelChecks          int64         `json:"parallel_checks"`
-	Useragent               string        `json:"useragent"`
-	Timeout                 Duration      `json:"timeout"`
-	Database                string        `json:"database"`
-	NoErrorMailOnStatusCode []int         `json:"no_errormail_on_statuscode"`
-	RetryOnMatch            []string      `json:"retry_on_match"`
-	Watches                 []WatchConfig `json:"watches"`
+	Mail                    MailConfig    `koanf:"mail"`
+	Retry                   RetryConfig   `koanf:"retry"`
+	DiffMethod              string        `koanf:"diff_method"`
+	ParallelChecks          int64         `koanf:"parallel_checks"`
+	Useragent               string        `koanf:"useragent"`
+	Timeout                 time.Duration `koanf:"timeout"`
+	Database                string        `koanf:"database"`
+	NoErrorMailOnStatusCode []int         `koanf:"no_errormail_on_statuscode"`
+	RetryOnMatch            []string      `koanf:"retry_on_match"`
+	Watches                 []WatchConfig `koanf:"watches"`
+}
+
+type MailConfig struct {
+	Server string `koanf:"server"`
+	Port   int    `koanf:"port"`
+	From   struct {
+		Name string `koanf:"name"`
+		Mail string `koanf:"mail"`
+	} `koanf:"from"`
+	To       []string `koanf:"to"`
+	User     string   `koanf:"user"`
+	Password string   `koanf:"password"`
+	SkipTLS  bool     `koanf:"skiptls"`
+	Retries  int      `koanf:"retries"`
+}
+
+type RetryConfig struct {
+	Count int           `koanf:"count"`
+	Delay time.Duration `koanf:"delay"`
 }
 
 type WatchConfig struct {
-	Name                    string            `json:"name"`
-	URL                     string            `json:"url"`
-	Method                  string            `json:"method"`
-	Body                    string            `json:"body"`
-	Header                  map[string]string `json:"header"`
-	AdditionalTo            []string          `json:"additional_to"`
-	NoErrorMailOnStatusCode []int             `json:"no_errormail_on_statuscode"`
-	Disabled                bool              `json:"disabled"`
-	Pattern                 string            `json:"pattern"`
-	Replaces                []ReplaceConfig   `json:"replaces"`
-	RetryOnMatch            []string          `json:"retry_on_match"`
-	SkipSofterrorPatterns   bool              `json:"skip_soft_error_patterns"`
+	Name                    string            `koanf:"name"`
+	URL                     string            `koanf:"url"`
+	Method                  string            `koanf:"method"`
+	Body                    string            `koanf:"body"`
+	Header                  map[string]string `koanf:"header"`
+	AdditionalTo            []string          `koanf:"additional_to"`
+	NoErrorMailOnStatusCode []int             `koanf:"no_errormail_on_statuscode"`
+	Disabled                bool              `koanf:"disabled"`
+	Pattern                 string            `koanf:"pattern"`
+	Replaces                []ReplaceConfig   `koanf:"replaces"`
+	RetryOnMatch            []string          `koanf:"retry_on_match"`
+	SkipSofterrorPatterns   bool              `koanf:"skip_soft_error_patterns"`
 }
 
 type ReplaceConfig struct {
-	Pattern     string `json:"pattern"`
-	ReplaceWith string `json:"replace_with"`
+	Pattern     string `koanf:"pattern"`
+	ReplaceWith string `koanf:"replace_with"`
+}
+
+var defaultConfig = Configuration{
+	ParallelChecks: 3,
+	Retry: RetryConfig{
+		Count: 3,
+		Delay: 3 * time.Second,
+	},
+	Mail: MailConfig{
+		Retries: 3,
+	},
+	DiffMethod: "git",
 }
 
 func GetConfig(f string) (Configuration, error) {
-	if f == "" {
-		return Configuration{}, fmt.Errorf("please provide a valid config file")
-	}
+	var k = koanf.NewWithConf(koanf.Conf{
+		Delim: ".",
+	})
 
-	b, err := os.ReadFile(f) // nolint: gosec
-	if err != nil {
+	if err := k.Load(structs.Provider(defaultConfig, "koanf"), nil); err != nil {
 		return Configuration{}, err
 	}
-	reader := bytes.NewReader(b)
 
-	decoder := json.NewDecoder(reader)
-	decoder.DisallowUnknownFields()
-
-	// set some defaults
-	c := Configuration{
-		ParallelChecks: 1,
+	if err := k.Load(file.Provider(f), json.Parser()); err != nil {
+		return Configuration{}, err
 	}
-	c.Retry.Count = 3
-	c.Retry.Delay = &Duration{Duration: 3 * time.Second}
-	c.Mail.Retries = 3
-	c.DiffMethod = "git"
 
-	if err = decoder.Decode(&c); err != nil {
-		var syntaxErr *json.SyntaxError
-		var unmarshalErr *json.UnmarshalTypeError
-		switch {
-		case errors.As(err, &syntaxErr):
-			custom := fmt.Sprintf("%q <-", string(b[syntaxErr.Offset-20:syntaxErr.Offset]))
-			return Configuration{}, fmt.Errorf("could not parse JSON: %v: %s", syntaxErr.Error(), custom)
-		case errors.As(err, &unmarshalErr):
-			custom := fmt.Sprintf("%q <-", string(b[unmarshalErr.Offset-20:unmarshalErr.Offset]))
-			return Configuration{}, fmt.Errorf("could not parse JSON: type %v cannot be converted into %v (%s.%v): %v: %s", unmarshalErr.Value, unmarshalErr.Type.Name(), unmarshalErr.Struct, unmarshalErr.Field, unmarshalErr.Error(), custom)
-		default:
-			return Configuration{}, err
-		}
+	var config Configuration
+	if err := k.Unmarshal("", &config); err != nil {
+		return Configuration{}, err
 	}
 
 	// set some defaults for watches if not set in json
-	for i, watch := range c.Watches {
+	for i, watch := range config.Watches {
 		if watch.Method == "" {
-			c.Watches[i].Method = http.MethodGet
+			config.Watches[i].Method = http.MethodGet
 		}
 	}
 
 	// check some stuff
-	if c.Mail.Server == "" {
+	if config.Mail.Server == "" {
 		return Configuration{}, fmt.Errorf("please supply an email server")
 	}
-	if c.DiffMethod != "api" && c.DiffMethod != "git" && c.DiffMethod != "internal" {
-		return Configuration{}, fmt.Errorf("invalid diff method %q", c.DiffMethod)
+	if config.DiffMethod != "api" && config.DiffMethod != "git" && config.DiffMethod != "internal" {
+		return Configuration{}, fmt.Errorf("invalid diff method %q", config.DiffMethod)
 	}
-	if c.DiffMethod == "git" && !helper.IsGitInstalled() {
+	if config.DiffMethod == "git" && !helper.IsGitInstalled() {
 		return Configuration{}, fmt.Errorf("diff mode git requires git to be installed")
 	}
 
-	return c, nil
+	return config, nil
 }

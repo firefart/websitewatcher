@@ -74,6 +74,9 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 		RetryOnMatch:            c.RetryOnMatch,
 		SkipSofterrorPatterns:   c.SkipSofterrorPatterns,
 	}
+	if w.Method == "" {
+		w.Method = http.MethodGet
+	}
 	for i, x := range c.Replaces {
 		r := Replace{
 			Pattern:     x.Pattern,
@@ -149,7 +152,7 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 	var ret *ReturnObject
 	var err error
 	retries := config.Retry.Count
-	retryDelay := config.Retry.Delay.Duration
+	retryDelay := config.Retry.Delay
 	// check with retries
 	for i := 1; i <= retries; i++ {
 		// no sleep on first try
