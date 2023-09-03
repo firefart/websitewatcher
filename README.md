@@ -12,6 +12,12 @@ See the `config.json.sample` file for all possible configuration options.
 ./websitewatcher -config config.json
 ```
 
+This will be a one time run. The first run of a newly added website does not trigger a diff email.
+
+To run this binary regularly you can create a systemd service and a timer. You can find examples in [websitewatcher.service](websitewatcher.service) and [websitewatcher.timer](websitewatcher.timer) which will run the checks each hour. The previous versions are always stored in a local db.
+
+To install the service and the timer modify the files to your needs and copy both to `/etc/systemd/system`. Then run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.timer`.
+
 ## Config Options
 
 | Option | Description |
