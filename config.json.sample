@@ -73,6 +73,11 @@
       "header": {
         "Accept": "text/plain"
       }
+    },
+    {
+      "name": "JSON Example",
+      "url": "https://domain.com/test.json",
+      "jq": ".result | .[] | select(.name==\"test\")"
     }
   ]
 }

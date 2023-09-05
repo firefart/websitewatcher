@@ -186,6 +186,8 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	if !bytes.Equal(lastContent, watchReturn.Body) {
 		if app.dryRun {
 			app.logger.Infof("[%s] Dry Run: Website differs", w.Name)
+			app.logger.Debugf("[%s] Last Body %s", w.Name, lastContent)
+			app.logger.Debugf("[%s] Returned Body %s", w.Name, watchReturn.Body)
 		} else {
 			subject := fmt.Sprintf("[%s] change detected", w.Name)
 			app.logger.Infof("%s - sending email", subject)

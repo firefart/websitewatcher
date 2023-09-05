@@ -3,6 +3,7 @@ package watch
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/config"
 	httpint "github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/logger"
+	"github.com/itchyny/gojq"
 )
 
 type Watch struct {
@@ -31,6 +33,7 @@ type Watch struct {
 	Replaces                []Replace
 	RetryOnMatch            []string
 	SkipSofterrorPatterns   bool
+	JQ                      string
 }
 
 type Replace struct {
@@ -73,6 +76,7 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 		Replaces:                make([]Replace, len(c.Replaces)),
 		RetryOnMatch:            c.RetryOnMatch,
 		SkipSofterrorPatterns:   c.SkipSofterrorPatterns,
+		JQ:                      c.JQ,
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet
@@ -263,6 +267,35 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		// or we have another config error
 		// the InvalidResponseError is handled by the calling function
 		return nil, err
+	}
+
+	// check if we need to do some jq magic
+	if w.JQ != "" {
+		query, err := gojq.Parse(w.JQ)
+		if err != nil {
+			return nil, fmt.Errorf("invalid jq query: %w", err)
+		}
+		var x any
+		if err := json.Unmarshal(ret.Body, &x); err != nil {
+			return nil, fmt.Errorf("supplied a jq query but the body is no valid json: %w", err)
+		}
+		iter := query.Run(x)
+		var newBody []any
+		for {
+			v, ok := iter.Next()
+			if !ok {
+				break
+			}
+			if err, ok := v.(error); ok {
+				return nil, err
+			}
+			newBody = append(newBody, v)
+		}
+		j2, err := json.MarshalIndent(newBody, "", "  ")
+		if err != nil {
+			return nil, fmt.Errorf("could not remarshal json: %w", err)
+		}
+		ret.Body = j2
 	}
 
 	// extract content

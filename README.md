@@ -53,6 +53,7 @@ To install the service and the timer modify the files to your needs and copy bot
 | watches.replaces.replace_with | replacement string for the regex match |
 | watches.retry_on_match | retry request up to retry.count if the response body matches the provided regex |
 | watches.skip_soft_error_patterns | if set there are no checks for soft errors like default error pages |
+| watches.jq | apply a jq filter to the response body before applying replaces. Exmaple: .result | .[] | select(.name=="test") |
 
 ## Example
 

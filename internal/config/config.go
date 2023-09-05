@@ -57,6 +57,7 @@ type WatchConfig struct {
 	Replaces                []ReplaceConfig   `koanf:"replaces"`
 	RetryOnMatch            []string          `koanf:"retry_on_match"`
 	SkipSofterrorPatterns   bool              `koanf:"skip_soft_error_patterns"`
+	JQ                      string            `koanf:"jq"`
 }
 
 type ReplaceConfig struct {
