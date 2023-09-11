@@ -16,7 +16,7 @@ func RandStringRunes(n int) string {
 }
 
 func IsGitInstalled() bool {
-	cmd := exec.Command("git", "-v")
+	cmd := exec.Command("git", "--version")
 	if err := cmd.Run(); err != nil {
 		return false
 	}
