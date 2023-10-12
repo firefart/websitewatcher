@@ -277,7 +277,13 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		}
 		var x any
 		if err := json.Unmarshal(ret.Body, &x); err != nil {
-			return nil, fmt.Errorf("supplied a jq query but the body is no valid json: %w", err)
+			var body []byte
+			if len(ret.Body) > 500 {
+				body = ret.Body[:500]
+			} else {
+				body = ret.Body
+			}
+			return nil, fmt.Errorf("supplied a jq query but the body is no valid json: %w. Body: %s", err, string(body))
 		}
 		iter := query.Run(x)
 		var newBody []any
