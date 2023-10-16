@@ -1,5 +1,5 @@
 websitewatcher
 *.exe
-*.json
+config.json
 *.db
 .vscode/
