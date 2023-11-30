@@ -15,6 +15,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/database"
 	"github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/mail"
+	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
 	"golang.org/x/sync/semaphore"
 
@@ -22,12 +23,13 @@ import (
 )
 
 type app struct {
-	logger     *logrus.Logger
-	config     config.Configuration
-	httpClient *http.HTTPClient
-	mailer     *mail.Mail
-	dryRun     bool
-	db         *database.Database
+	logger      *logrus.Logger
+	config      config.Configuration
+	httpClient  *http.HTTPClient
+	mailer      *mail.Mail
+	dryRun      bool
+	db          *database.Database
+	taskmanager *taskmanager.TaskManager
 }
 
 func main() {
@@ -69,9 +71,6 @@ func (app *app) run() error {
 		return err
 	}
 
-	// remove old websites in the database on each run
-	db.CleanupDatabase(app.logger, configuration)
-
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
 	mailer := mail.New(configuration, httpClient, app.logger)
 
@@ -80,8 +79,12 @@ func (app *app) run() error {
 	app.dryRun = *dryRun
 	app.db = db
 	app.mailer = mailer
+	app.taskmanager = taskmanager.New(app.logger)
 
 	ctx := context.Background()
+
+	// remove old websites in the database on each run
+	db.CleanupDatabase(app.logger, configuration)
 
 	var wg sync.WaitGroup
 	sem := semaphore.NewWeighted(configuration.ParallelChecks)
