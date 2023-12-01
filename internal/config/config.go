@@ -70,6 +70,7 @@ var defaultConfig = Configuration{
 		Count: 3,
 		Delay: 3 * time.Second,
 	},
+	Database: "db.sqlite3",
 	Mail: MailConfig{
 		Retries: 3,
 	},
