@@ -1,5 +1,3 @@
-1. cleanup database
-2. add tasks
-3. run tasks
-4. channel to report results and write to database
-5. config reload?
+config reload?
+
+push to dockerhub

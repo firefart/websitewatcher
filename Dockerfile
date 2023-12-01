@@ -1,6 +1,7 @@
-FROM golang:latest AS build-env
+FROM golang:alpine AS build-env
 WORKDIR /src
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=1
+RUN apk add --update gcc musl-dev
 COPY go.mod /src/
 RUN go mod download
 COPY . .
@@ -8,7 +9,7 @@ RUN go build -a -o websitewatcher -trimpath
 
 FROM alpine:latest
 
-RUN apk add --no-cache ca-certificates \
+RUN apk add --no-cache ca-certificates git \
     && rm -rf /var/cache/*
 
 RUN mkdir -p /app \

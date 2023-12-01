@@ -12,11 +12,10 @@ See the `config.json.sample` file for all possible configuration options.
 ./websitewatcher -config config.json
 ```
 
-This will be a one time run. The first run of a newly added website does not trigger a diff email.
+This will add all items from the config to the internal cron system and runs them on the defined intervals until the program is stopped.
+The first run of a newly added website does not trigger a diff email. The tool uses a local sqlite database to store the previous results. If you compile it by hand you need gcc installed, as the sqlite go library contains some c code.
 
-To run this binary regularly you can create a systemd service and a timer. You can find examples in [websitewatcher.service](websitewatcher.service) and [websitewatcher.timer](websitewatcher.timer) which will run the checks each hour. The previous versions are always stored in a local db.
-
-To install the service and the timer modify the files to your needs and copy both to `/etc/systemd/system`. Then run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.timer`.
+To run this tool as a service you can use [websitewatcher.service](websitewatcher.service). Copy it to `/etc/systemd/system` and run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.service`.
 
 ## Config Options
 
@@ -41,7 +40,7 @@ To install the service and the timer modify the files to your needs and copy bot
 | useragent | useragent header to use for outgoing http requests |
 | retry_on_match | global setting of strings to retry request up to retry.count if the response body matches the provided regex |
 | watches.name | friendly name of the watch |
-| watches.cron | how often to run this check in cron format. See https://crontab.guru/ for examples. |
+| watches.cron | how often to run this check in cron format. See [https://crontab.guru/](https://crontab.guru/) or the [golang cron library docs](https://pkg.go.dev/github.com/robfig/cron?utm_source=godoc#hdr-CRON_Expression_Format) for examples. Defaults to `@hourly` if not set. |
 | watches.url | the url to check |
 | watches.method | http method to use. Defaults to GET |
 | watches.body | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed |

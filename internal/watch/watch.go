@@ -22,6 +22,7 @@ type Watch struct {
 	logger     logger.Logger
 
 	Name                    string
+	Cron                    string
 	URL                     string
 	Method                  string
 	Body                    string
@@ -64,6 +65,7 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPCli
 	w := Watch{
 		logger:                  logger,
 		httpClient:              httpClient,
+		Cron:                    c.Cron,
 		Name:                    c.Name,
 		URL:                     c.URL,
 		Method:                  c.Method,

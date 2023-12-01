@@ -8,7 +8,8 @@ WorkingDirectory=/home/websitewatcher
 User=websitewatcher
 SyslogIdentifier=websitewatcher
 ExecStart=/home/websitewatcher/websitewatcher -config /home/websitewatcher/config.json
-Restart=no
+Restart=on-failure
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target

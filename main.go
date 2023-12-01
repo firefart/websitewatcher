@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"sync"
+	"os/signal"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
@@ -17,7 +17,6 @@ import (
 	"github.com/firefart/websitewatcher/internal/mail"
 	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
-	"golang.org/x/sync/semaphore"
 
 	"github.com/sirupsen/logrus"
 )
@@ -59,17 +58,21 @@ func (app *app) run() error {
 		app.logger.SetLevel(logrus.DebugLevel)
 	}
 
+	if *configFile == "" {
+		return fmt.Errorf("please supply a config file")
+	}
+
 	configuration, err := config.GetConfig(*configFile)
 	if err != nil {
 		return err
 	}
 	app.logger.Debugf("Got config: %+v", configuration)
 
-	start := time.Now().UnixNano()
-	db, err := database.ReadDatabase(configuration.Database)
+	db, err := database.New(configuration)
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
 	mailer := mail.New(configuration, httpClient, app.logger)
@@ -81,30 +84,23 @@ func (app *app) run() error {
 	app.mailer = mailer
 	app.taskmanager = taskmanager.New(app.logger)
 
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer cancel()
 
 	// remove old websites in the database on each run
-	db.CleanupDatabase(app.logger, configuration)
+	if err := db.CleanupDatabase(ctx, app.logger, configuration); err != nil {
+		return fmt.Errorf("[CLEANUP] %w", err)
+	}
 
-	var wg sync.WaitGroup
-	sem := semaphore.NewWeighted(configuration.ParallelChecks)
 	for _, wc := range configuration.Watches {
 		if wc.Disabled {
 			app.logger.Infof("[%s] skipping because it's disabled", wc.Name)
 			continue
 		}
 
-		if err := sem.Acquire(ctx, 1); err != nil {
-			app.logError(err)
-			continue
-		}
-		wg.Add(1)
+		w := watch.New(wc, app.logger, httpClient)
 
-		go func(wc config.WatchConfig) {
-			defer sem.Release(1)
-			defer wg.Done()
-
-			w := watch.New(wc, app.logger, httpClient)
+		job := func() {
 			if err := app.processWatch(ctx, w); err != nil {
 				app.logError(fmt.Errorf("[%s] error: %w", w.Name, err))
 				if !app.dryRun {
@@ -115,16 +111,23 @@ func (app *app) run() error {
 				}
 				return
 			}
-		}(wc) // pass wc as a parameter as it's reused on each loop
+		}
+		entryID, err := app.taskmanager.AddTask(w.Cron, job)
+		if err != nil {
+			app.logError(err)
+			continue
+		}
+		app.logger.Debugf("added task %d for %s", entryID, w.Name)
 	}
 
-	wg.Wait()
+	// all tasks added, start the cron
+	app.taskmanager.Start()
 
-	db.SetLastRun(start)
-	err = db.SaveDatabase(configuration.Database)
-	if err != nil {
-		return err
-	}
+	// wait for ctrl+c
+	<-ctx.Done()
+	cancel()
+
+	app.taskmanager.Stop()
 
 	return nil
 }
@@ -177,13 +180,19 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		}
 	}
 
-	lastContent := app.db.GetDatabaseEntry(w.URL)
-	// if it's a new website not yet in the database only process new entries and ignore old ones
-	if lastContent == nil {
-		// lastContent = nil on new sites not yet processed, so send no email here
-		app.logger.Infof("[%s] new website detected, not comparing", w.Name)
-		app.db.SetDatabaseEntry(w.URL, watchReturn.Body)
-		return nil
+	watchID, lastContent, err := app.db.GetLastContentForURL(ctx, w.URL)
+	if err != nil {
+		// if it's a new website not yet in the database only process new entries and ignore old ones
+		if errors.Is(err, database.ErrNotFound) {
+			// lastContent = nil on new sites not yet processed, so send no email here
+			app.logger.Infof("[%s] new website detected, not comparing", w.Name)
+			if err := app.db.SetLastContentForID(ctx, watchID, w.URL, watchReturn.Body); err != nil {
+				return err
+			}
+			return nil
+		}
+		// other error, just return it
+		return err
 	}
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
@@ -204,7 +213,9 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	}
 
 	// update database entry if we did not have any errors
-	app.db.SetDatabaseEntry(w.URL, watchReturn.Body)
+	if err := app.db.SetLastContentForID(ctx, watchID, w.URL, watchReturn.Body); err != nil {
+		return err
+	}
 
 	return nil
 }
