@@ -13,7 +13,6 @@ func New(logger logger.Logger) *TaskManager {
 	cronLogger := cron.PrintfLogger(logger)
 	return &TaskManager{
 		scheduler: cron.New(
-			cron.WithSeconds(),
 			cron.WithLogger(cronLogger),
 			cron.WithChain(
 				cron.SkipIfStillRunning(cronLogger),
