@@ -13,7 +13,6 @@
     "retries": 3
   },
   "timeout": "1m",
-  "parallel_checks": 5,
   "retry": {
     "count": 3,
     "delay": "10s"

@@ -16,7 +16,6 @@ type Configuration struct {
 	Mail                    MailConfig    `koanf:"mail"`
 	Retry                   RetryConfig   `koanf:"retry"`
 	DiffMethod              string        `koanf:"diff_method"`
-	ParallelChecks          int64         `koanf:"parallel_checks"`
 	Useragent               string        `koanf:"useragent"`
 	Timeout                 time.Duration `koanf:"timeout"`
 	Database                string        `koanf:"database"`
@@ -67,7 +66,6 @@ type ReplaceConfig struct {
 }
 
 var defaultConfig = Configuration{
-	ParallelChecks: 3,
 	Retry: RetryConfig{
 		Count: 3,
 		Delay: 3 * time.Second,

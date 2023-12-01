@@ -31,7 +31,6 @@ To run this tool as a service you can use [websitewatcher.service](websitewatche
 | mail.password | smtp password |
 | mail.retries | how often to retry sending emails |
 | timeout | timeout for http requests |
-| parallel_checks | number of parallel checks of watches |
 | retry.count | number of retries on http errors |
 | retry.delay | time to sleep between retries |
 | diff_method | Diffing mode to use. Can either be "api" to use diffchecker.com, "internal" to use a golang library or "git" to use a localy installed git. Defaults to git. |
