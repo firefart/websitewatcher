@@ -41,6 +41,7 @@ To install the service and the timer modify the files to your needs and copy bot
 | useragent | useragent header to use for outgoing http requests |
 | retry_on_match | global setting of strings to retry request up to retry.count if the response body matches the provided regex |
 | watches.name | friendly name of the watch |
+| watches.cron | how often to run this check in cron format. See https://crontab.guru/ for examples. |
 | watches.url | the url to check |
 | watches.method | http method to use. Defaults to GET |
 | watches.body | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed |

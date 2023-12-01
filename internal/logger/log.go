@@ -1,6 +1,7 @@
 package logger
 
 type Logger interface {
+	Printf(format string, args ...interface{})
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
 	Warnf(format string, args ...interface{})
@@ -15,6 +16,7 @@ type Logger interface {
 
 type NilLogger struct{}
 
+func (_ *NilLogger) Printf(format string, args ...interface{}) {}
 func (_ *NilLogger) Debugf(format string, args ...interface{}) {}
 func (_ *NilLogger) Infof(format string, args ...interface{})  {}
 func (_ *NilLogger) Warnf(format string, args ...interface{})  {}

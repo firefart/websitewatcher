@@ -45,6 +45,7 @@ type RetryConfig struct {
 }
 
 type WatchConfig struct {
+	Cron                    string            `koanf:"cron"`
 	Name                    string            `koanf:"name"`
 	URL                     string            `koanf:"url"`
 	Method                  string            `koanf:"method"`
@@ -99,6 +100,10 @@ func GetConfig(f string) (Configuration, error) {
 	for i, watch := range config.Watches {
 		if watch.Method == "" {
 			config.Watches[i].Method = http.MethodGet
+		}
+		// default to hourly checks
+		if watch.Cron == "" {
+			config.Watches[i].Cron = "@hourly"
 		}
 	}
 
