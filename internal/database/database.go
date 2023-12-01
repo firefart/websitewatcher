@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/logger"
@@ -32,11 +31,9 @@ type Database struct {
 }
 
 type dbEntry struct {
-	id           int64
-	name         string
-	url          string
-	last_fetch   time.Time
-	last_content []byte
+	id   int64
+	name string
+	url  string
 }
 
 func New(configuration config.Configuration) (*Database, error) {
