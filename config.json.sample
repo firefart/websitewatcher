@@ -27,6 +27,7 @@
   ],
   "watches": [{
       "name": "aaa",
+      "cron": "@hourly",
       "url": "http://aaa.com",
       "additional_to": ["ddd@ddd.com", "eee@eee.com"],
       "no_errormail_on_statuscode": [500],
@@ -37,6 +38,7 @@
     },
     {
       "name": "bbb",
+      "cron": "@daily",
       "url": "http://bbb.com",
       "header": {
         "X-Auth-Key": "1234"
