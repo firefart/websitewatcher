@@ -180,13 +180,13 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		}
 	}
 
-	watchID, lastContent, err := app.db.GetLastContentForURL(ctx, w.URL)
+	watchID, lastContent, err := app.db.GetLastContentForURL(ctx, w.Name, w.URL)
 	if err != nil {
 		// if it's a new website not yet in the database only process new entries and ignore old ones
 		if errors.Is(err, database.ErrNotFound) {
 			// lastContent = nil on new sites not yet processed, so send no email here
 			app.logger.Infof("[%s] new website detected, not comparing", w.Name)
-			if err := app.db.SetLastContentForID(ctx, watchID, w.URL, watchReturn.Body); err != nil {
+			if err := app.db.SetLastContentForID(ctx, watchID, w.Name, w.URL, watchReturn.Body); err != nil {
 				return err
 			}
 			return nil
@@ -213,7 +213,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	}
 
 	// update database entry if we did not have any errors
-	if err := app.db.SetLastContentForID(ctx, watchID, w.URL, watchReturn.Body); err != nil {
+	if err := app.db.SetLastContentForID(ctx, watchID, w.Name, w.URL, watchReturn.Body); err != nil {
 		return err
 	}
 
