@@ -65,6 +65,9 @@ func (db *Database) GetLastContentForURL(ctx context.Context, url string) (int64
 		}
 		return -1, nil, fmt.Errorf("error on select last content: %w", err)
 	}
+	if err := row.Err(); err != nil {
+		return -1, nil, fmt.Errorf("error on close last content: %w", err)
+	}
 	return id, last_content, nil
 }
 
@@ -97,25 +100,32 @@ func (db *Database) CleanupDatabase(ctx context.Context, log logger.Logger, c co
 		}
 		return fmt.Errorf("error on select: %w", err)
 	}
+	defer rows.Close()
+
+	databaseRows := make(map[int64]string)
 	for rows.Next() {
 		var id int64
 		var url string
 		if err := rows.Scan(&id, &url); err != nil {
 			return fmt.Errorf("error on row scan: %w", err)
 		}
-		disabled, ok := configURLs[url]
-		// remove entries not present in config anymore and disabled items
-		if !ok || disabled {
-			log.Infof("Removing entry %s from database", url)
-			if _, err := db.db.ExecContext(ctx, "DELETE FROM WATCHES WHERE ID = ?", id); err != nil {
-				return fmt.Errorf("error on delete: %w", err)
-			}
-			continue
-		}
+		databaseRows[id] = url
 	}
 
 	if err := rows.Err(); err != nil {
 		return fmt.Errorf("error on rows: %w", err)
+	}
+
+	for dbID, url := range databaseRows {
+		disabled, ok := configURLs[url]
+		// remove entries not present in config anymore and disabled items
+		if !ok || disabled {
+			log.Infof("Removing entry %s from database", url)
+			if _, err := db.db.ExecContext(ctx, "DELETE FROM WATCHES WHERE ID = ?", dbID); err != nil {
+				return fmt.Errorf("error on delete: %w", err)
+			}
+			continue
+		}
 	}
 
 	return nil
