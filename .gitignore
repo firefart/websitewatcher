@@ -2,4 +2,5 @@ websitewatcher
 *.exe
 config.json
 *.db
+*.sqlite3
 .vscode/
