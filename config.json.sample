@@ -24,7 +24,16 @@
   "retry_on_match": [
     "global error"
   ],
-  "watches": [{
+  "watches": [
+    {
+      "name": "Jokes",
+      "cron": "@every 5s",
+      "url": "https://icanhazdadjoke.com",
+      "header": {
+        "Accept": "text/plain"
+      }
+    },
+    {
       "name": "aaa",
       "cron": "@hourly",
       "url": "http://aaa.com",
@@ -67,13 +76,6 @@
       },
       "method": "POST",
       "body": "{\"page\":1}"
-    },
-    {
-      "name": "Jokes",
-      "url": "https://icanhazdadjoke.com",
-      "header": {
-        "Accept": "text/plain"
-      }
     },
     {
       "name": "JSON Example",
