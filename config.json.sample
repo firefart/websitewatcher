@@ -12,7 +12,7 @@
     "password": "",
     "retries": 3
   },
-  "timeout": "1m",
+  "timeout": "25s",
   "retry": {
     "count": 3,
     "delay": "10s"
