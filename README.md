@@ -17,6 +17,8 @@ The first run of a newly added website does not trigger a diff email. The tool u
 
 To run this tool as a service you can use [websitewatcher.service](websitewatcher.service). Copy it to `/etc/systemd/system` and run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.service`.
 
+If an error occurs, it will be sent to the global defined `mail.to`. The `watches.additional_to` recipients are not notified in this case.
+
 ## Config Options
 
 | Option | Description |
