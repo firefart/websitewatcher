@@ -73,10 +73,10 @@ func (db *Database) GetLastContentForURL(ctx context.Context, name, url string) 
 func (db *Database) SetLastContentForID(ctx context.Context, id int64, name, url string, content []byte) error {
 	var err error
 	if id > 0 {
-		_, err = db.db.Exec("INSERT OR REPLACE INTO WATCHES(ID, NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", id, name, url, content)
+		_, err = db.db.Exec("INSERT OR REPLACE INTO WATCHES(ID, NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,?,CURRENT_TIMESTAMP,?);", id, name, url, content)
 	} else {
 		// no id == mew emtry. So omit the ID from the update to auto generate a new one
-		_, err = db.db.Exec("INSERT OR REPLACE INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,CURRENT_TIMESTAMP,?);", name, url, content)
+		_, err = db.db.Exec("INSERT OR REPLACE INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
 	}
 	if err != nil {
 		return fmt.Errorf("error on insert/update: %w", err)
