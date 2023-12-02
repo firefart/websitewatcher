@@ -117,7 +117,7 @@ func (app *app) run() error {
 			app.logError(err)
 			continue
 		}
-		app.logger.Debugf("added task %d for %s", entryID, w.Name)
+		app.logger.Debugf("added task %d for %s (%s)", entryID, w.Name, w.Cron)
 	}
 
 	// all tasks added, start the cron
