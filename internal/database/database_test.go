@@ -58,9 +58,10 @@ func TestPrepareDatabase(t *testing.T) {
 	defer db.Close()
 
 	ctx := context.Background()
+	numberOfDummyEntries := 100
 
 	// insert random data
-	for i := 0; i < 100; i++ {
+	for i := 0; i < numberOfDummyEntries; i++ {
 		id, err := db.InsertLastContent(ctx, gofakeit.Name(), gofakeit.URL(), []byte(gofakeit.LetterN(20)))
 		require.Nil(t, err)
 		require.Greater(t, id, int64(0))
@@ -69,19 +70,29 @@ func TestPrepareDatabase(t *testing.T) {
 	// add a valid entry
 	name := gofakeit.Name()
 	url := gofakeit.URL()
-	content := []byte(gofakeit.LetterN(20))
-	validID, err := db.InsertLastContent(ctx, name, url, content)
+	validID, err := db.InsertLastContent(ctx, name, url, []byte(gofakeit.LetterN(20)))
 	require.Nil(t, err)
 	require.Greater(t, validID, int64(0))
 
-	configuration.Watches = make([]config.WatchConfig, 2)
+	configuration.Watches = make([]config.WatchConfig, 3)
 	configuration.Watches[0].Name = name
 	configuration.Watches[0].URL = url
-	configuration.Watches[1].Name = gofakeit.Name()
-	configuration.Watches[1].URL = gofakeit.URL()
+	// new entry
+	newName := gofakeit.Name()
+	newURL := gofakeit.URL()
+	configuration.Watches[1].Name = newName
+	configuration.Watches[1].URL = newURL
+	newName2 := gofakeit.Name()
+	newURL2 := gofakeit.URL()
+	configuration.Watches[2].Name = newName2
+	configuration.Watches[2].URL = newURL2
 
 	returnedConfig, deletedRows, err := db.PrepareDatabase(ctx, configuration)
 	require.Nil(t, err)
-	_ = returnedConfig
-	_ = deletedRows
+	require.Len(t, returnedConfig, 2)
+	require.Equal(t, deletedRows, int64(numberOfDummyEntries))
+	require.Equal(t, returnedConfig[0].Name, newName)
+	require.Equal(t, returnedConfig[0].URL, newURL)
+	require.Equal(t, returnedConfig[1].Name, newName2)
+	require.Equal(t, returnedConfig[1].URL, newURL2)
 }
