@@ -1,6 +1,8 @@
 package taskmanager
 
 import (
+	"fmt"
+
 	"github.com/firefart/websitewatcher/internal/logger"
 	"github.com/robfig/cron/v3"
 )
@@ -35,6 +37,15 @@ func (tm *TaskManager) AddTask(schedule string, task func()) (cron.EntryID, erro
 
 func (tm *TaskManager) RemoveTask(id cron.EntryID) {
 	tm.scheduler.Remove(id)
+}
+
+func (tm *TaskManager) RunJob(id cron.EntryID) error {
+	taskID := tm.scheduler.Entry(id)
+	if !taskID.Valid() {
+		return fmt.Errorf("could not find task %d", id)
+	}
+	taskID.Job.Run()
+	return nil
 }
 
 func (tm *TaskManager) ListTasks() []cron.Entry {

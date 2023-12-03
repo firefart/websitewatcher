@@ -17,6 +17,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/mail"
 	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
+	"github.com/robfig/cron/v3"
 
 	"github.com/sirupsen/logrus"
 )
@@ -88,10 +89,15 @@ func (app *app) run() error {
 	defer cancel()
 
 	// remove old websites in the database on each run
-	if err := db.CleanupDatabase(ctx, app.logger, configuration); err != nil {
+	newEntries, deletedRows, err := db.PrepareDatabase(ctx, configuration)
+	if err != nil {
 		return fmt.Errorf("[CLEANUP] %w", err)
 	}
+	if deletedRows > 0 {
+		app.logger.Infof("Removed %d old entries from database", deletedRows)
+	}
 
+	firstRunners := make(map[cron.EntryID]string)
 	for _, wc := range configuration.Watches {
 		if wc.Disabled {
 			app.logger.Infof("[%s] skipping because it's disabled", wc.Name)
@@ -112,16 +118,34 @@ func (app *app) run() error {
 				return
 			}
 		}
+
 		entryID, err := app.taskmanager.AddTask(w.Cron, job)
 		if err != nil {
 			app.logError(err)
 			continue
 		}
 		app.logger.Debugf("added task %d for %s (%s)", entryID, w.Name, w.Cron)
+
+		// determine if it's a new job that has never been run
+		for _, tmp := range newEntries {
+			if tmp.Name == wc.Name && tmp.URL == wc.URL {
+				firstRunners[entryID] = wc.Name
+				break
+			}
+		}
 	}
 
 	// all tasks added, start the cron
 	app.taskmanager.Start()
+
+	// if it's a new job run it manually to add a baseline to the database
+	for entryID, name := range firstRunners {
+		app.logger.Debugf("running job for %s as it's a new entry", name)
+		if err := app.taskmanager.RunJob(entryID); err != nil {
+			app.logError(err)
+			continue
+		}
+	}
 
 	// wait for ctrl+c
 	<-ctx.Done()
@@ -180,13 +204,13 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		}
 	}
 
-	watchID, lastContent, err := app.db.GetLastContentForURL(ctx, w.Name, w.URL)
+	watchID, lastContent, err := app.db.GetLastContent(ctx, w.Name, w.URL)
 	if err != nil {
 		// if it's a new website not yet in the database only process new entries and ignore old ones
 		if errors.Is(err, database.ErrNotFound) {
 			// lastContent = nil on new sites not yet processed, so send no email here
 			app.logger.Infof("[%s] new website detected, not comparing", w.Name)
-			if err := app.db.SetLastContentForID(ctx, watchID, w.Name, w.URL, watchReturn.Body); err != nil {
+			if _, err := app.db.InsertLastContent(ctx, w.Name, w.URL, watchReturn.Body); err != nil {
 				return err
 			}
 			return nil
@@ -213,7 +237,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	}
 
 	// update database entry if we did not have any errors
-	if err := app.db.SetLastContentForID(ctx, watchID, w.Name, w.URL, watchReturn.Body); err != nil {
+	if err := app.db.UpdateLastContent(ctx, watchID, watchReturn.Body); err != nil {
 		return err
 	}
 

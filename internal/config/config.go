@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/helper"
@@ -115,6 +116,16 @@ func GetConfig(f string) (Configuration, error) {
 	}
 	if config.DiffMethod == "git" && !helper.IsGitInstalled() {
 		return Configuration{}, fmt.Errorf("diff mode git requires git to be installed")
+	}
+
+	// check for uniqueness
+	var tmpArray []string
+	for _, wc := range config.Watches {
+		key := fmt.Sprintf("%s%s", wc.Name, wc.URL)
+		if slices.Contains(tmpArray, key) {
+			return Configuration{}, fmt.Errorf("Name and URL combinations need to be unique. Please use another name or url for entry %s", wc.Name)
+		}
+		tmpArray = append(tmpArray, key)
 	}
 
 	return config, nil

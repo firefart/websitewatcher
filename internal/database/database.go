@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/firefart/websitewatcher/internal/config"
-	"github.com/firefart/websitewatcher/internal/logger"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -17,7 +17,7 @@ const create string = `
 		ID INTEGER NOT NULL PRIMARY KEY,
 		NAME TEXT NOT NULL,
 		URL TEXT NOT NULL,
-		LAST_FETCH DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		LAST_FETCH DATETIME,
 		LAST_CONTENT BLOB
 	);
 	CREATE UNIQUE INDEX IF NOT EXISTS IDX_NAME_URL
@@ -28,12 +28,6 @@ var ErrNotFound = errors.New("url not found in database")
 
 type Database struct {
 	db *sql.DB
-}
-
-type dbEntry struct {
-	id   int64
-	name string
-	url  string
 }
 
 func New(configuration config.Configuration) (*Database, error) {
@@ -53,7 +47,7 @@ func (db *Database) Close() error {
 	return db.db.Close()
 }
 
-func (db *Database) GetLastContentForURL(ctx context.Context, name, url string) (int64, []byte, error) {
+func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64, []byte, error) {
 	row := db.db.QueryRowContext(ctx, "SELECT ID, LAST_CONTENT FROM WATCHES WHERE NAME=? AND URL=?", name, url)
 	var last_content []byte
 	var id int64
@@ -70,67 +64,61 @@ func (db *Database) GetLastContentForURL(ctx context.Context, name, url string) 
 	return id, last_content, nil
 }
 
-func (db *Database) SetLastContentForID(ctx context.Context, id int64, name, url string, content []byte) error {
-	var err error
-	if id > 0 {
-		_, err = db.db.Exec("INSERT OR REPLACE INTO WATCHES(ID, NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,?,CURRENT_TIMESTAMP,?);", id, name, url, content)
-	} else {
-		// no id == mew emtry. So omit the ID from the update to auto generate a new one
-		_, err = db.db.Exec("INSERT OR REPLACE INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
-	}
+func (db *Database) InsertLastContent(ctx context.Context, name, url string, content []byte) (int64, error) {
+	res, err := db.db.Exec("INSERT INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
 	if err != nil {
-		return fmt.Errorf("error on insert/update: %w", err)
+		return -1, fmt.Errorf("error on insert: %w", err)
+	}
+	dbID, err := res.LastInsertId()
+	if err != nil {
+		return -1, fmt.Errorf("error on insert lastinsertid: %w", err)
+	}
+	return dbID, nil
+}
+
+func (db *Database) UpdateLastContent(ctx context.Context, id int64, content []byte) error {
+	res, err := db.db.Exec("UPDATE WATCHES SET LAST_FETCH=CURRENT_TIMESTAMP, LAST_CONTENT=? WHERE ID=?;", content, id)
+	if err != nil {
+		return fmt.Errorf("error on update: %w", err)
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("error on rows affected")
 	}
 	return nil
 }
 
-// removes old feeds from database
-func (db *Database) CleanupDatabase(ctx context.Context, log logger.Logger, c config.Configuration) error {
-	rows, err := db.db.QueryContext(ctx, "SELECT ID, NAME, URL FROM WATCHES ORDER BY ID DESC")
-	if err != nil {
-		// empty database, just return
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil
-		}
-		return fmt.Errorf("error on select: %w", err)
-	}
-	defer rows.Close()
+// cleans up old entries and returns new ones
+func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration) ([]config.WatchConfig, int64, error) {
+	var newWatches []config.WatchConfig
+	var foundIDs []any // needs to be any so we can pass it to execcontext
+	var rowsAffected int64
 
-	var databaseRows []dbEntry
-	for rows.Next() {
-		var dbWatch dbEntry
-		if err := rows.Scan(&dbWatch.id, &dbWatch.name, &dbWatch.url); err != nil {
-			return fmt.Errorf("error on row scan: %w", err)
-		}
-		databaseRows = append(databaseRows, dbWatch)
-	}
-
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("error on rows: %w", err)
-	}
-
-	for _, dbObj := range databaseRows {
-		found := false
-		for _, configObj := range c.Watches {
-			// do not count disabled entries and delete them from the database
-			if configObj.Disabled {
+	for _, c := range c.Watches {
+		row := db.db.QueryRowContext(ctx, "SELECT ID FROM WATCHES WHERE NAME=? AND URL=?", c.Name, c.URL)
+		var id int64
+		if err := row.Scan(&id); err != nil {
+			// new entry not yet fetched. add to array and continue with the next config entry
+			if errors.Is(err, sql.ErrNoRows) {
+				newWatches = append(newWatches, c)
 				continue
 			}
-
-			if configObj.Name == dbObj.name && configObj.URL == dbObj.url {
-				found = true
-				break
-			}
+			return nil, rowsAffected, fmt.Errorf("error on select: %w", err)
 		}
-		// remove entries not present in config anymore
-		if !found {
-			log.Infof("Removing entry %s (%s) from database", dbObj.name, dbObj.url)
-			if _, err := db.db.ExecContext(ctx, "DELETE FROM WATCHES WHERE ID = ?", dbObj.id); err != nil {
-				return fmt.Errorf("error on delete: %w", err)
-			}
-			continue
+		foundIDs = append(foundIDs, id)
+	}
+
+	if len(foundIDs) > 0 {
+		// remove all items in database that have no corresponding config entry (==remove old items)
+		query := fmt.Sprintf("DELETE FROM WATCHES WHERE ID NOT IN (?%s)", strings.Repeat(",?", len(foundIDs)-1))
+		res, err := db.db.ExecContext(ctx, query, foundIDs...)
+		if err != nil {
+			return nil, rowsAffected, fmt.Errorf("error on select in: %w", err)
+		}
+		rowsAffected, err = res.RowsAffected()
+		if err != nil {
+			return nil, rowsAffected, fmt.Errorf("error on rowsaffected: %w", err)
 		}
 	}
 
-	return nil
+	return newWatches, rowsAffected, nil
 }
