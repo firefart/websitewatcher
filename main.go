@@ -139,12 +139,15 @@ func (app *app) run() error {
 	app.taskmanager.Start()
 
 	// if it's a new job run it manually to add a baseline to the database
-	for entryID, name := range firstRunners {
-		app.logger.Debugf("running job for %s as it's a new entry", name)
-		if err := app.taskmanager.RunJob(entryID); err != nil {
-			app.logError(err)
-			continue
-		}
+	// also run as a go func so the program does not block
+	for entryID, entryName := range firstRunners {
+		go func(id cron.EntryID, name string) {
+			app.logger.Debugf("running job for %s as it's a new entry", name)
+			if err := app.taskmanager.RunJob(id); err != nil {
+				app.logError(err)
+				return
+			}
+		}(entryID, entryName)
 	}
 
 	// wait for ctrl+c
