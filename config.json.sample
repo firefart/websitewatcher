@@ -6,8 +6,7 @@
       "name": "websitewatcher",
       "mail": "a@a.com"
     },
-    "to": ["bbb@bbb.com", "ccc@ccc.com"],
-    "skiptls": true,
+    "to": ["bbb@bbb.com"],
     "user": "",
     "password": "",
     "retries": 3
@@ -17,13 +16,8 @@
     "count": 3,
     "delay": "10s"
   },
-  "diff_method": "api | internal | git",
+  "diff_method": "git",
   "database": "db.sqlite3",
-  "no_errormail_on_statuscode": [502,503,504],
-  "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
-  "retry_on_match": [
-    "global error"
-  ],
   "watches": [
     {
       "name": "Jokes",
@@ -32,6 +26,11 @@
       "header": {
         "Accept": "text/plain"
       }
+    },
+    {
+      "name": "JSON Example",
+      "url": "https://domain.com/test.json",
+      "jq": ".result | .[] | select(.name==\"test\")"
     },
     {
       "name": "aaa",
@@ -76,11 +75,6 @@
       },
       "method": "POST",
       "body": "{\"page\":1}"
-    },
-    {
-      "name": "JSON Example",
-      "url": "https://domain.com/test.json",
-      "jq": ".result | .[] | select(.name==\"test\")"
     }
   ]
 }
