@@ -67,7 +67,6 @@ func (app *app) run() error {
 	if err != nil {
 		return err
 	}
-	app.logger.Debugf("Got config: %+v", configuration)
 
 	db, err := database.New(configuration)
 	if err != nil {
