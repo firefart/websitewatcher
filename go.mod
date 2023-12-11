@@ -3,7 +3,7 @@ module github.com/firefart/websitewatcher
 go 1.21
 
 require (
-	github.com/brianvoe/gofakeit/v6 v6.25.0
+	github.com/brianvoe/gofakeit/v6 v6.26.0
 	github.com/itchyny/gojq v0.12.14
 	github.com/knadh/koanf/parsers/json v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0
