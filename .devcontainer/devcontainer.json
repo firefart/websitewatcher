@@ -2,12 +2,11 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "Go",
-	"image": "mcr.microsoft.com/devcontainers/go",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
 	"features": {
 		"ghcr.io/guiyomh/features/golangci-lint:0": {
-			"version": "latest"
-		},
-		"ghcr.io/devcontainers/features/git:1": {
 			"version": "latest"
 		}
 	},
