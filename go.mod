@@ -3,13 +3,13 @@ module github.com/firefart/websitewatcher
 go 1.21
 
 require (
-	github.com/brianvoe/gofakeit/v6 v6.26.0
+	github.com/brianvoe/gofakeit/v6 v6.26.3
 	github.com/itchyny/gojq v0.12.14
 	github.com/knadh/koanf/parsers/json v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0
 	github.com/knadh/koanf/providers/structs v0.1.0
 	github.com/knadh/koanf/v2 v2.0.1
-	github.com/mattn/go-sqlite3 v1.14.18
+	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sergi/go-diff v1.3.1
 	github.com/sirupsen/logrus v1.9.3
