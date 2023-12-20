@@ -1,8 +1,10 @@
 # websitewatcher
 
-This tool can be used to monitor websites for changes and trigger an email with a diff to the previous version if they differ.
+This tool can be used to monitor websites for changes and trigger an email with a diff to the previous version if they
+differ.
 
-It also supports extracting only a particular content from the website via regex and capture groups and also to replace content based on a regex (for example to patch out CSRF tokens before comparing).
+It also supports extracting only a particular content from the website via regex and capture groups and also to replace
+content based on a regex (for example to patch out CSRF tokens before comparing).
 
 See the `config.json.sample` file for all possible configuration options.
 
@@ -12,59 +14,69 @@ See the `config.json.sample` file for all possible configuration options.
 ./websitewatcher -config config.json
 ```
 
-This will add all items from the config to the internal cron system and runs them on the defined intervals until the program is stopped.
-The first run of a newly added website does not trigger a diff email. The tool uses a local sqlite database to store the previous results. If you compile it by hand you need gcc installed, as the sqlite go library contains some c code.
+This will add all items from the config to the internal cron system and runs them on the defined intervals until the
+program is stopped.
+The first run of a newly added website does not trigger a diff email. The tool uses a local sqlite database to store the
+previous results. If you compile it by hand you need gcc installed, as the sqlite go library contains some c code.
 
-To run this tool as a service you can use [websitewatcher.service](websitewatcher.service). Copy it to `/etc/systemd/system` and run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.service`.
+To run this tool as a service you can use [websitewatcher.service](websitewatcher.service). Copy it
+to `/etc/systemd/system` and run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.service`.
 
-If an error occurs, it will be sent to the global defined `mail.to`. The `watches.additional_to` recipients are not notified in this case.
+If an error occurs, it will be sent to the global defined `mail.to`. The `watches.additional_to` recipients are not
+notified in this case.
 
 ## Config Options
 
-| Option | Description |
-|---|---|
-| mail.server | Mailserver to use |
-| mail.port | port of the mailserver |
-| mail.from.name | the from name on sent emails |
-| mail.from.mail | the from email address on sent emails |
-| mail.to | array of global receipients. these addresses are included on every watch |
-| mail.skiptls | no TLS certificate checks on connecting to mailserver |
-| mail.user | smtp username, empty on no authentication |
-| mail.password | smtp password |
-| mail.retries | how often to retry sending emails |
-| timeout | timeout for http requests |
-| retry.count | number of retries on http errors |
-| retry.delay | time to sleep between retries |
-| diff_method | Diffing mode to use. Can either be "api" to use diffchecker.com, "internal" to use a golang library or "git" to use a localy installed git. Defaults to git. |
-| database | filename of the database |
-| no_errormail_on_statuscode | if we get this status code after all retries do not send an error email|
-| useragent | useragent header to use for outgoing http requests |
-| retry_on_match | global setting of strings to retry request up to retry.count if the response body matches the provided regex |
-| watches.name | friendly name of the watch |
-| watches.cron | how often to run this check in cron format. See [https://crontab.guru/](https://crontab.guru/) or the [golang cron library docs](https://pkg.go.dev/github.com/robfig/cron?utm_source=godoc#hdr-CRON_Expression_Format) for examples. Defaults to `@hourly` if not set. |
-| watches.url | the url to check |
-| watches.method | http method to use. Defaults to GET |
-| watches.body | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed |
-| watches.additional_to | array of additional emails for this watch. The email will be sent to the global ones and this list |
-| watches.no_errormail_on_statuscode | additional http errors to ignore when sending error emails. The global option is merged with this one |
-| watches.header | additional http headers to add |
-| watches.disabled | used to disable a watch |
-| watches.pattern | the pattern is a regex and must contain one match group. The group is used as the body. This is used to extract the relevant body in big html sites. If left empty the whole body is used |
-| watches.replaces.pattern | regex pattern to match in the body |
-| watches.replaces.replace_with | replacement string for the regex match |
-| watches.retry_on_match | retry request up to retry.count if the response body matches the provided regex |
-| watches.skip_soft_error_patterns | if set there are no checks for soft errors like default error pages |
-| watches.jq | apply a jq filter to the response body before applying replaces. Exmaple: .result | .[] | select(.name=="test") |
+| Option                             | Description                                                                                                                                                                                                                                                             |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| mail.server                        | Mailserver to use                                                                                                                                                                                                                                                       |
+| mail.port                          | port of the mailserver                                                                                                                                                                                                                                                  |
+| mail.from.name                     | the from name on sent emails                                                                                                                                                                                                                                            |
+| mail.from.mail                     | the from email address on sent emails                                                                                                                                                                                                                                   |
+| mail.to                            | array of global receipients. these addresses are included on every watch                                                                                                                                                                                                |
+| mail.skiptls                       | no TLS certificate checks on connecting to mailserver                                                                                                                                                                                                                   |
+| mail.user                          | smtp username, empty on no authentication                                                                                                                                                                                                                               |
+| mail.password                      | smtp password                                                                                                                                                                                                                                                           |
+| mail.retries                       | how often to retry sending emails                                                                                                                                                                                                                                       |
+| timeout                            | timeout for http requests                                                                                                                                                                                                                                               |
+| retry.count                        | number of retries on http errors                                                                                                                                                                                                                                        |
+| retry.delay                        | time to sleep between retries                                                                                                                                                                                                                                           |
+| diff_method                        | Diffing mode to use. Can either be "api" to use diffchecker.com, "internal" to use a golang library or "git" to use a localy installed git. Defaults to git.                                                                                                            |
+| database                           | filename of the database                                                                                                                                                                                                                                                |
+| no_errormail_on_statuscode         | if we get this status code after all retries do not send an error email                                                                                                                                                                                                 |
+| useragent                          | useragent header to use for outgoing http requests                                                                                                                                                                                                                      |
+| retry_on_match                     | global setting of strings to retry request up to retry.count if the response body matches the provided regex                                                                                                                                                            |
+| watches.name                       | friendly name of the watch                                                                                                                                                                                                                                              |
+| watches.cron                       | how often to run this check in cron format. See [https://crontab.guru/](https://crontab.guru/) or the [golang cron library docs](https://pkg.go.dev/github.com/robfig/cron?utm_source=godoc#hdr-CRON_Expression_Format) for examples. Defaults to `@hourly` if not set. |
+| watches.url                        | the url to check                                                                                                                                                                                                                                                        |
+| watches.method                     | http method to use. Defaults to GET                                                                                                                                                                                                                                     |
+| watches.body                       | optional body to send with the request. Don't forget to set a Content-Type header via watcher.header if needed                                                                                                                                                          |
+| watches.additional_to              | array of additional emails for this watch. The email will be sent to the global ones and this list                                                                                                                                                                      |
+| watches.no_errormail_on_statuscode | additional http errors to ignore when sending error emails. The global option is merged with this one                                                                                                                                                                   |
+| watches.header                     | additional http headers to add                                                                                                                                                                                                                                          |
+| watches.disabled                   | used to disable a watch                                                                                                                                                                                                                                                 |
+| watches.pattern                    | the pattern is a regex and must contain one match group. The group is used as the body. This is used to extract the relevant body in big html sites. If left empty the whole body is used                                                                               |
+| watches.replaces.pattern           | regex pattern to match in the body                                                                                                                                                                                                                                      |
+| watches.replaces.replace_with      | replacement string for the regex match                                                                                                                                                                                                                                  |
+| watches.retry_on_match             | retry request up to retry.count if the response body matches the provided regex                                                                                                                                                                                         |
+| watches.skip_soft_error_patterns   | if set there are no checks for soft errors like default error pages                                                                                                                                                                                                     |
+| watches.jq                         | apply a jq filter to the response body before applying replaces. Exmaple: .result                                                                                                                                                                                       | .[] | select(.name=="test") |
 
 ## Example
 
 In this example we will monitor [https://go.dev/dl](https://go.dev/dl) for new versions.
 
-As we are only interested in the latest version, we use the global `pattern` to extract the content we want. To play with the regexes head over to [https://regex101.com/](https://regex101.com/) and select `go` on the left hand side. Also check the needed modifiers like g, m, s and so on. To include the modifiers in the regex you can prepend it like `(?s)`. Also be sure to escape your regex in the JSON (double quotes and backslashes).
+As we are only interested in the latest version, we use the global `pattern` to extract the content we want. To play
+with the regexes head over to [https://regex101.com/](https://regex101.com/) and select `go` on the left hand side. Also
+check the needed modifiers like g, m, s and so on. To include the modifiers in the regex you can prepend it like `(?s)`.
+Also be sure to escape your regex in the JSON (double quotes and backslashes).
 
-After the body is extracted we clean up the content by removing the content we are not interested part by part. The last 2 `replace` sections remove trailing and leading spaces and double newlines.
+After the body is extracted we clean up the content by removing the content we are not interested part by part. The last
+2 `replace` sections remove trailing and leading spaces and double newlines.
 
-The resulting content (see below) is then checked against the last stored version every time the job runs. To test your config you can run `./websitewatcher -config config.json -debug -dry-run` which will print out the results after each replace so it's easier to debug faulty regexes.
+The resulting content (see below) is then checked against the last stored version every time the job runs. To test your
+config you can run `./websitewatcher -config config.json -debug -dry-run` which will print out the results after each
+replace, so it's easier to debug faulty regexes.
 
 ```json
 {
@@ -197,7 +209,6 @@ Example E-Mail:
 GIT Diff Method (default):
 
 ![screenshot](screenshot_git.png "git diff mode")
-
 
 API Diff Method:
 

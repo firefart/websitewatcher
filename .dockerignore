@@ -16,3 +16,4 @@ LICENSE
 .github/
 .devcontainer/
 .gitignore
+.idea/

@@ -49,9 +49,9 @@ func (db *Database) Close() error {
 
 func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64, []byte, error) {
 	row := db.db.QueryRowContext(ctx, "SELECT ID, LAST_CONTENT FROM WATCHES WHERE NAME=? AND URL=?", name, url)
-	var last_content []byte
+	var lastContent []byte
 	var id int64
-	err := row.Scan(&id, &last_content)
+	err := row.Scan(&id, &lastContent)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return -1, nil, ErrNotFound
@@ -61,11 +61,11 @@ func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64
 	if err := row.Err(); err != nil {
 		return -1, nil, fmt.Errorf("error on close last content: %w", err)
 	}
-	return id, last_content, nil
+	return id, lastContent, nil
 }
 
 func (db *Database) InsertLastContent(ctx context.Context, name, url string, content []byte) (int64, error) {
-	res, err := db.db.Exec("INSERT INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
+	res, err := db.db.ExecContext(ctx, "INSERT INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
 	if err != nil {
 		return -1, fmt.Errorf("error on insert: %w", err)
 	}
@@ -77,7 +77,7 @@ func (db *Database) InsertLastContent(ctx context.Context, name, url string, con
 }
 
 func (db *Database) UpdateLastContent(ctx context.Context, id int64, content []byte) error {
-	res, err := db.db.Exec("UPDATE WATCHES SET LAST_FETCH=CURRENT_TIMESTAMP, LAST_CONTENT=? WHERE ID=?;", content, id)
+	res, err := db.db.ExecContext(ctx, "UPDATE WATCHES SET LAST_FETCH=CURRENT_TIMESTAMP, LAST_CONTENT=? WHERE ID=?;", content, id)
 	if err != nil {
 		return fmt.Errorf("error on update: %w", err)
 	}
@@ -87,10 +87,10 @@ func (db *Database) UpdateLastContent(ctx context.Context, id int64, content []b
 	return nil
 }
 
-// cleans up old entries and returns new ones
+// PrepareDatabase cleans up old entries and returns new ones
 func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration) ([]config.WatchConfig, int64, error) {
 	var newWatches []config.WatchConfig
-	var foundIDs []any // needs to be any so we can pass it to execcontext
+	var foundIDs []any // needs to be any, so we can pass it to execcontext
 	var rowsAffected int64
 
 	for _, c := range c.Watches {

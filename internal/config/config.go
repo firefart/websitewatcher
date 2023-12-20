@@ -123,7 +123,7 @@ func GetConfig(f string) (Configuration, error) {
 	for _, wc := range config.Watches {
 		key := fmt.Sprintf("%s%s", wc.Name, wc.URL)
 		if slices.Contains(tmpArray, key) {
-			return Configuration{}, fmt.Errorf("Name and URL combinations need to be unique. Please use another name or url for entry %s", wc.Name)
+			return Configuration{}, fmt.Errorf("name and url combinations need to be unique. Please use another name or url for entry %s", wc.Name)
 		}
 		tmpArray = append(tmpArray, key)
 	}

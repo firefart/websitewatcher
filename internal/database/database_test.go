@@ -11,20 +11,20 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	config := config.Configuration{
+	configuration := config.Configuration{
 		Database: ":memory:",
 	}
-	db, err := database.New(config)
+	db, err := database.New(configuration)
 	require.Nil(t, err)
 	err = db.Close()
 	require.Nil(t, err)
 }
 
 func TestDatabase(t *testing.T) {
-	config := config.Configuration{
+	configuration := config.Configuration{
 		Database: ":memory:",
 	}
-	db, err := database.New(config)
+	db, err := database.New(configuration)
 	require.Nil(t, err)
 	defer db.Close()
 

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -62,7 +63,7 @@ func GenerateHTMLDiffGit(body string, text1, text2 string) (string, error) {
 	return body, nil
 }
 
-func GenerateHTMLDiffAPI(httpClient *http2.HTTPClient, body string, text1, text2 string) (string, error) {
+func GenerateHTMLDiffAPI(httpClient *http2.Client, body string, text1, text2 string) (string, error) {
 	diffCSS, diffHTML, err := diffAPI(httpClient, text1, text2)
 	if err != nil {
 		return "", err
@@ -131,8 +132,9 @@ func diffGit(text1, text2 string) ([]byte, error) {
 	err = cmd.Run()
 	if err != nil {
 		// exit error 0 and 1 are good ones so ignore them
-		if exitError, ok := err.(*exec.ExitError); ok {
-			exitCode := exitError.ExitCode()
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			exitCode := exitErr.ExitCode()
 			if exitCode != 0 && exitCode != 1 {
 				return nil, fmt.Errorf("could not execute git diff: %w - Stderr: %s", err, stderr.String())
 			}
@@ -215,7 +217,7 @@ func convertGitDiffToHTML(input string) (string, string, error) {
 	return gitDiffCss, html, nil
 }
 
-func diffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, error) {
+func diffAPI(client *http2.Client, text1, text2 string) (string, string, error) {
 	// 	curl --location --request POST 'https://api.diffchecker.com/public/text?output_type=html&email=YOUR_EMAIL' \
 	// --header 'Content-Type: application/json' \
 	// --data-raw '{
@@ -265,7 +267,7 @@ func diffAPI(client *http2.HTTPClient, text1, text2 string) (string, string, err
 	}
 
 	if jsonResp.Error != nil {
-		return "", "", fmt.Errorf("Error on calling Diff API: %s - %s", jsonResp.Error.Code, jsonResp.Error.Message)
+		return "", "", fmt.Errorf("error on calling Diff API: %s - %s", jsonResp.Error.Code, jsonResp.Error.Message)
 	}
 
 	if len(jsonResp.Errors) > 0 {

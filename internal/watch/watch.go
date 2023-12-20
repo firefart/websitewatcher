@@ -18,7 +18,7 @@ import (
 )
 
 type Watch struct {
-	httpClient *httpint.HTTPClient
+	httpClient *httpint.Client
 	logger     logger.Logger
 
 	Name                    string
@@ -61,7 +61,7 @@ func (err *InvalidResponseError) Error() string {
 	return fmt.Sprintf("got invalid response on http request: message: %s, status: %d, bodylen: %d", err.ErrorMessage, err.StatusCode, len(err.Body))
 }
 
-func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.HTTPClient) Watch {
+func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.Client) Watch {
 	w := Watch{
 		logger:                  logger,
 		httpClient:              httpClient,
@@ -211,7 +211,7 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 		return nil, err
 	}
 
-	// if we reach here we still have an soft error after all retries
+	// if we reach here we still have a soft error after all retries
 	return nil, &InvalidResponseError{
 		ErrorMessage: "response error after all retries",
 		StatusCode:   ret.StatusCode,
@@ -265,7 +265,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 func (w Watch) Process(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
 	ret, err := w.checkWithRetries(ctx, config)
 	if err != nil {
-		// if we reach here the last retry resulted in an error
+		// if we reach here the last retry resulted in an error,
 		// or we have another config error
 		// the InvalidResponseError is handled by the calling function
 		return nil, err

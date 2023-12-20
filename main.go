@@ -25,7 +25,7 @@ import (
 type app struct {
 	logger      *logrus.Logger
 	config      config.Configuration
-	httpClient  *http.HTTPClient
+	httpClient  *http.Client
 	mailer      *mail.Mail
 	dryRun      bool
 	db          *database.Database
@@ -43,7 +43,7 @@ func main() {
 	}
 }
 
-func (app app) logError(err error) {
+func (app *app) logError(err error) {
 	app.logger.Errorf("[ERROR] %v", err)
 }
 
@@ -165,8 +165,8 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		var invalidErr *watch.InvalidResponseError
 		switch {
 		case errors.As(err, &urlErr) && urlErr.Timeout():
-			// ignore timeout errors so outer mail will not send emails on them
-			// we also do not update the database so we keep the old, non timeout
+			// ignore timeout errors so outer mail will not send emails on, them
+			// we also do not update the database, so we keep the old, non timeout
 			// content in there
 			app.logger.Infof("[%s] timed out, ignoring", w.Name)
 			return nil

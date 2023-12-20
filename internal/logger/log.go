@@ -16,14 +16,14 @@ type Logger interface {
 
 type NilLogger struct{}
 
-func (_ *NilLogger) Printf(format string, args ...interface{}) {}
-func (_ *NilLogger) Debugf(format string, args ...interface{}) {}
-func (_ *NilLogger) Infof(format string, args ...interface{})  {}
-func (_ *NilLogger) Warnf(format string, args ...interface{})  {}
-func (_ *NilLogger) Errorf(format string, args ...interface{}) {}
-func (_ *NilLogger) Fatalf(format string, args ...interface{}) {}
-func (_ *NilLogger) Debug(args ...interface{})                 {}
-func (_ *NilLogger) Info(args ...interface{})                  {}
-func (_ *NilLogger) Warn(args ...interface{})                  {}
-func (_ *NilLogger) Error(args ...interface{})                 {}
-func (_ *NilLogger) Fatal(args ...interface{})                 {}
+func (_ *NilLogger) Printf(_ string, _ ...interface{}) {}
+func (_ *NilLogger) Debugf(_ string, _ ...interface{}) {}
+func (_ *NilLogger) Infof(_ string, _ ...interface{})  {}
+func (_ *NilLogger) Warnf(_ string, _ ...interface{})  {}
+func (_ *NilLogger) Errorf(_ string, _ ...interface{}) {}
+func (_ *NilLogger) Fatalf(_ string, _ ...interface{}) {}
+func (_ *NilLogger) Debug(_ ...interface{})            {}
+func (_ *NilLogger) Info(_ ...interface{})             {}
+func (_ *NilLogger) Warn(_ ...interface{})             {}
+func (_ *NilLogger) Error(_ ...interface{})            {}
+func (_ *NilLogger) Fatal(_ ...interface{})            {}

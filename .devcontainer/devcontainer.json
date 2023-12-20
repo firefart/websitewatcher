@@ -1,33 +1,33 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
-	"name": "Go",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	"features": {
-		"ghcr.io/guiyomh/features/golangci-lint:0": {
-			"version": "latest"
-		}
-	},
-	"postCreateCommand": "go mod download",
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "go version",
-	// Configure tool-specific properties.
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"golang.go",
-				"shardulm94.trailing-spaces",
-				"IBM.output-colorizer",
-				"ms-vscode.makefile-tools",
-				"github.vscode-github-actions",
-				"ms-azuretools.vscode-docker"
-			]
-		}
-	}
+  "name": "Go",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/guiyomh/features/golangci-lint:0": {
+      "version": "latest"
+    }
+  },
+  "postCreateCommand": "go mod download",
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "go version",
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "shardulm94.trailing-spaces",
+        "IBM.output-colorizer",
+        "ms-vscode.makefile-tools",
+        "github.vscode-github-actions",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
 }

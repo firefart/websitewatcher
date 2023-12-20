@@ -18,11 +18,11 @@ import (
 type Mail struct {
 	config     config.Configuration
 	dialer     *gomail.Dialer
-	httpClient *http.HTTPClient
+	httpClient *http.Client
 	logger     logger.Logger
 }
 
-func New(config config.Configuration, httpClient *http.HTTPClient, logger logger.Logger) *Mail {
+func New(config config.Configuration, httpClient *http.Client, logger logger.Logger) *Mail {
 	d := gomail.NewDialer(config.Mail.Server, config.Mail.Port, config.Mail.User, config.Mail.Password)
 	if config.Mail.SkipTLS {
 		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
