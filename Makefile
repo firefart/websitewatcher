@@ -17,6 +17,7 @@ run: build
 
 .PHONY: dev
 dev: build
+	rm -f db.sqlite3
 	./websitewatcher -debug -dry-run -config config.json
 
 .PHONY: lint
