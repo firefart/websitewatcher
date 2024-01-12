@@ -85,11 +85,11 @@ func GetConfig(f string) (Configuration, error) {
 	})
 
 	if err := k.Load(structs.Provider(defaultConfig, "koanf"), nil); err != nil {
-		return Configuration{}, err
+		return Configuration{}, fmt.Errorf("could ont load default config: %v", err)
 	}
 
 	if err := k.Load(file.Provider(f), json.Parser()); err != nil {
-		return Configuration{}, err
+		return Configuration{}, fmt.Errorf("could not load config: %v", err)
 	}
 
 	var config Configuration
