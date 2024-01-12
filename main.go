@@ -6,11 +6,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"net/url"
-	"os"
-	"os/signal"
-	"time"
-
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/database"
 	"github.com/firefart/websitewatcher/internal/http"
@@ -18,6 +13,10 @@ import (
 	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
 	"github.com/robfig/cron/v3"
+	"net/url"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -72,7 +71,11 @@ func (app *app) run() error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			app.logger.Errorf("error on database close: %v", err)
+		}
+	}()
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
 	mailer := mail.New(configuration, httpClient, app.logger)
@@ -229,7 +232,11 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		} else {
 			subject := fmt.Sprintf("[%s] change detected", w.Name)
 			app.logger.Infof("%s - sending email", subject)
-			text := fmt.Sprintf("Name: %s\nURL: %s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", w.Name, w.URL, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
+			text := fmt.Sprintf("Name: %s\nURL: %s", w.Name, w.URL)
+			if w.Description != "" {
+				text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)
+			}
+			text = fmt.Sprintf("%s\nRequest Duration: %s\\nStatus: %d\\nBodylen: %d", text, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
 			if err := app.mailer.SendDiffEmail(w, app.config.DiffMethod, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}

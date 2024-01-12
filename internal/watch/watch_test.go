@@ -17,14 +17,14 @@ func TestCheck(t *testing.T) {
 		UserAgent     string
 		ServerContent string
 		ServerStatus  int
-		WantContant   string
+		WantContent   string
 		WantStatus    int
 	}{
 		"Default check": {
 			UserAgent:     "xxx",
 			ServerContent: "test",
 			ServerStatus:  gohttp.StatusOK,
-			WantContant:   "test",
+			WantContent:   "test",
 			WantStatus:    gohttp.StatusOK,
 		},
 	}
@@ -56,8 +56,8 @@ func TestCheck(t *testing.T) {
 				t.Errorf("CheckWatch() got status %d, want %d", ret.StatusCode, tc.WantStatus)
 			}
 			contentString := string(ret.Body)
-			if contentString != tc.WantContant {
-				t.Errorf("CheckWatch() got content %s, want %s", contentString, tc.WantContant)
+			if contentString != tc.WantContent {
+				t.Errorf("CheckWatch() got content %s, want %s", contentString, tc.WantContent)
 			}
 		})
 	}

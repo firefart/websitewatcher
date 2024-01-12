@@ -24,6 +24,7 @@ type Watch struct {
 	Name                    string
 	Cron                    string
 	URL                     string
+	Description             string
 	Method                  string
 	Body                    string
 	Header                  map[string]string
@@ -68,6 +69,7 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.Client)
 		Cron:                    c.Cron,
 		Name:                    c.Name,
 		URL:                     c.URL,
+		Description:             c.Description,
 		Method:                  c.Method,
 		Body:                    c.Body,
 		Header:                  c.Header,
@@ -246,7 +248,11 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not get %s: %w", w.URL, err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			w.logger.Errorf("error on body close: %v", err)
+		}
+	}()
 	duration := time.Since(start)
 
 	body, err := io.ReadAll(resp.Body)

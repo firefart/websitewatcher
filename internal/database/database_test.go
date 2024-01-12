@@ -26,7 +26,11 @@ func TestDatabase(t *testing.T) {
 	}
 	db, err := database.New(configuration)
 	require.Nil(t, err)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("error on database close: %v", err)
+		}
+	}()
 
 	name := gofakeit.Name()
 	url := gofakeit.URL()
@@ -55,7 +59,11 @@ func TestPrepareDatabase(t *testing.T) {
 	}
 	db, err := database.New(configuration)
 	require.Nil(t, err)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("error on database close: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	numberOfDummyEntries := 100

@@ -47,6 +47,7 @@ type RetryConfig struct {
 type WatchConfig struct {
 	Cron                    string            `koanf:"cron"`
 	Name                    string            `koanf:"name"`
+	Description             string            `koanf:"description"`
 	URL                     string            `koanf:"url"`
 	Method                  string            `koanf:"method"`
 	Body                    string            `koanf:"body"`
