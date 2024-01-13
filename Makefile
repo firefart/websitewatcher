@@ -9,7 +9,7 @@ update:
 build: test
 	go fmt ./...
 	go vet ./...
-	CGO_ENABLED=1 go build -o websitewatcher
+	go build -o websitewatcher
 
 .PHONY: run
 run: build

@@ -1,7 +1,5 @@
 FROM golang:alpine AS build-env
 WORKDIR /src
-ENV CGO_ENABLED=1
-RUN apk add --update gcc musl-dev
 COPY go.mod /src/
 RUN go mod download
 COPY . .

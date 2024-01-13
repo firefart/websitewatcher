@@ -9,7 +9,7 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 const create string = `
