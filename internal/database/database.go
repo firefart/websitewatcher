@@ -31,7 +31,7 @@ type Database struct {
 }
 
 func New(configuration config.Configuration) (*Database, error) {
-	db, err := sql.Open("sqlite3", configuration.Database)
+	db, err := sql.Open("sqlite", configuration.Database)
 	if err != nil {
 		return nil, fmt.Errorf("could not open database %s: %w", configuration.Database, err)
 	}
