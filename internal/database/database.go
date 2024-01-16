@@ -31,7 +31,7 @@ type Database struct {
 }
 
 func New(configuration config.Configuration) (*Database, error) {
-	db, err := sql.Open("sqlite", configuration.Database)
+	db, err := sql.Open("sqlite", fmt.Sprintf("%s?_pragma=journal_mode(WAL)", configuration.Database))
 	if err != nil {
 		return nil, fmt.Errorf("could not open database %s: %w", configuration.Database, err)
 	}

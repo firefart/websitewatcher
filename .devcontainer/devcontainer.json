@@ -6,9 +6,8 @@
     "dockerfile": "Dockerfile"
   },
   "features": {
-    "ghcr.io/guiyomh/features/golangci-lint:0": {
-      "version": "latest"
-    }
+    "ghcr.io/guiyomh/features/golangci-lint:0": {},
+    "ghcr.io/devcontainers-contrib/features/go-task:1": {}
   },
   "postCreateCommand": "go mod download",
   // Features to add to the dev container. More info: https://containers.dev/features.
@@ -24,9 +23,10 @@
         "golang.go",
         "shardulm94.trailing-spaces",
         "IBM.output-colorizer",
-        "ms-vscode.makefile-tools",
         "github.vscode-github-actions",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "task.vscode-task",
+        "redhat.vscode-yaml"
       ]
     }
   }

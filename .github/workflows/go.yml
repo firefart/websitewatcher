@@ -1,17 +1,20 @@
 name: Go
-on: [ push, pull_request ]
+on: [push, pull_request]
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ "stable" ]
+        go: ["stable"]
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
+
+      - name: Install Task
+        uses: arduino/setup-task@v1
 
       - name: Check out code
         uses: actions/checkout@v4
@@ -29,7 +32,7 @@ jobs:
           go get -v -t -d ./...
 
       - name: Build
-        run: make build
+        run: task build
 
       - name: Test
-        run: make test
+        run: task test

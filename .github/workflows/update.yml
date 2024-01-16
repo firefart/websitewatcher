@@ -19,9 +19,12 @@ jobs:
         with:
           go-version: "stable"
 
+      - name: Install Task
+        uses: arduino/setup-task@v1
+
       - name: update
         run: |
-          make update
+          task update
 
       - name: setup git config
         run: |
@@ -39,7 +42,7 @@ jobs:
           if [ $exit_status -eq 0 ]; then
             echo "nothing has changed"
           else
-            git add go.mod go.sum internal/pb/database.pb.go
+            git add go.mod go.sum
             git commit -m "auto update from github actions"
             git push origin main
           fi
