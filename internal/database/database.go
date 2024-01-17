@@ -35,9 +35,21 @@ func New(configuration config.Configuration) (*Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not open database %s: %w", configuration.Database, err)
 	}
+
 	if _, err := db.Exec(create); err != nil {
 		return nil, fmt.Errorf("could not create tables: %w", err)
 	}
+
+	// truncate the wal file
+	if _, err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
+		return nil, fmt.Errorf("could not truncate wal: %w", err)
+	}
+
+	// shrink and format the database
+	if _, err := db.Exec("VACUUM;"); err != nil {
+		return nil, fmt.Errorf("could not vacuum: %w", err)
+	}
+
 	return &Database{
 		db: db,
 	}, nil
