@@ -40,14 +40,14 @@ func New(configuration config.Configuration) (*Database, error) {
 		return nil, fmt.Errorf("could not create tables: %w", err)
 	}
 
-	// truncate the wal file
-	if _, err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
-		return nil, fmt.Errorf("could not truncate wal: %w", err)
-	}
-
 	// shrink and format the database
 	if _, err := db.Exec("VACUUM;"); err != nil {
 		return nil, fmt.Errorf("could not vacuum: %w", err)
+	}
+
+	// truncate the wal file
+	if _, err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
+		return nil, fmt.Errorf("could not truncate wal: %w", err)
 	}
 
 	return &Database{
