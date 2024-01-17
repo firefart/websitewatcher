@@ -3,7 +3,7 @@ module github.com/firefart/websitewatcher
 go 1.21
 
 require (
-	github.com/brianvoe/gofakeit/v6 v6.26.4
+	github.com/brianvoe/gofakeit/v6 v6.27.0
 	github.com/itchyny/gojq v0.12.14
 	github.com/knadh/koanf/parsers/json v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0
@@ -41,7 +41,7 @@ require (
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/cc/v3 v3.41.0 // indirect
 	modernc.org/ccgo/v3 v3.16.15 // indirect
-	modernc.org/libc v1.40.1 // indirect
+	modernc.org/libc v1.40.5 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/opt v0.1.3 // indirect
