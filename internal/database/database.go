@@ -40,7 +40,7 @@ func New(configuration config.Configuration) (*Database, error) {
 		return nil, fmt.Errorf("could not create tables: %w", err)
 	}
 
-	// shrink and format the database
+	// shrink and format the database (must be run before the checkpoint)
 	if _, err := db.Exec("VACUUM;"); err != nil {
 		return nil, fmt.Errorf("could not vacuum: %w", err)
 	}
