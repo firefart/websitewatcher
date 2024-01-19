@@ -2,12 +2,16 @@ package database_test
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/database"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 )
 
 func TestNew(t *testing.T) {
@@ -103,4 +107,41 @@ func TestPrepareDatabase(t *testing.T) {
 	require.Equal(t, returnedConfig[0].URL, newURL)
 	require.Equal(t, returnedConfig[1].Name, newName2)
 	require.Equal(t, returnedConfig[1].URL, newURL2)
+}
+
+// This tests that concurrent writes to not lock the database
+func TestLocking(t *testing.T) {
+	// we need a physical file for testing the lock
+	file, err := os.CreateTemp("", "*.sqlite")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	configuration := config.Configuration{
+		Database: file.Name(),
+	}
+	db, err := database.New(configuration)
+	require.Nil(t, err)
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("error on database close: %v", err)
+		}
+	}()
+
+	inserts := 100
+	g, ctx := errgroup.WithContext(context.Background())
+	for i := 0; i < inserts; i++ {
+		i := i
+		g.Go(func() error {
+			if _, err := db.InsertLastContent(ctx, fmt.Sprintf("name_%d", i), fmt.Sprintf("url_%d", i), []byte(fmt.Sprintf("content_%d", i))); err != nil {
+				return err
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		t.Fatal(err)
+	}
 }

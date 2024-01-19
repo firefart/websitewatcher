@@ -27,10 +27,31 @@ const create string = `
 var ErrNotFound = errors.New("url not found in database")
 
 type Database struct {
-	db *sql.DB
+	reader *sql.DB
+	writer *sql.DB
 }
 
 func New(configuration config.Configuration) (*Database, error) {
+	reader, err := new(configuration)
+	if err != nil {
+		return nil, fmt.Errorf("could not create reader: %w", err)
+	}
+	reader.SetMaxOpenConns(100)
+	writer, err := new(configuration)
+	if err != nil {
+		return nil, fmt.Errorf("could not create writer: %w", err)
+	}
+	// only one writer connection as there can only be one
+	writer.SetMaxOpenConns(1)
+	writer.SetMaxIdleConns(1)
+
+	return &Database{
+		reader: reader,
+		writer: writer,
+	}, nil
+}
+
+func new(configuration config.Configuration) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", fmt.Sprintf("%s?_pragma=journal_mode(WAL)", configuration.Database))
 	if err != nil {
 		return nil, fmt.Errorf("could not open database %s: %w", configuration.Database, err)
@@ -46,21 +67,29 @@ func New(configuration config.Configuration) (*Database, error) {
 	}
 
 	// truncate the wal file
-	if _, err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
+	if _, err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE);"); err != nil {
 		return nil, fmt.Errorf("could not truncate wal: %w", err)
 	}
 
-	return &Database{
-		db: db,
-	}, nil
+	if _, err := db.Exec("PRAGMA synchronous(NORMAL);"); err != nil {
+		return nil, fmt.Errorf("could not set synchronous: %w", err)
+	}
+
+	if _, err := db.Exec("PRAGMA busy_timeout(5000);"); err != nil {
+		return nil, fmt.Errorf("could not set synchronous: %w", err)
+	}
+
+	return db, nil
 }
 
 func (db *Database) Close() error {
-	return db.db.Close()
+	err1 := db.writer.Close()
+	err2 := db.reader.Close()
+	return errors.Join(err1, err2)
 }
 
 func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64, []byte, error) {
-	row := db.db.QueryRowContext(ctx, "SELECT ID, LAST_CONTENT FROM WATCHES WHERE NAME=? AND URL=?", name, url)
+	row := db.reader.QueryRowContext(ctx, "SELECT ID, LAST_CONTENT FROM WATCHES WHERE NAME=? AND URL=?", name, url)
 	var lastContent []byte
 	var id int64
 	err := row.Scan(&id, &lastContent)
@@ -77,7 +106,7 @@ func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64
 }
 
 func (db *Database) InsertLastContent(ctx context.Context, name, url string, content []byte) (int64, error) {
-	res, err := db.db.ExecContext(ctx, "INSERT INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
+	res, err := db.writer.ExecContext(ctx, "INSERT INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
 	if err != nil {
 		return -1, fmt.Errorf("error on insert: %w", err)
 	}
@@ -89,7 +118,7 @@ func (db *Database) InsertLastContent(ctx context.Context, name, url string, con
 }
 
 func (db *Database) UpdateLastContent(ctx context.Context, id int64, content []byte) error {
-	res, err := db.db.ExecContext(ctx, "UPDATE WATCHES SET LAST_FETCH=CURRENT_TIMESTAMP, LAST_CONTENT=? WHERE ID=?;", content, id)
+	res, err := db.writer.ExecContext(ctx, "UPDATE WATCHES SET LAST_FETCH=CURRENT_TIMESTAMP, LAST_CONTENT=? WHERE ID=?;", content, id)
 	if err != nil {
 		return fmt.Errorf("error on update: %w", err)
 	}
@@ -106,7 +135,7 @@ func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration)
 	var rowsAffected int64
 
 	for _, c := range c.Watches {
-		row := db.db.QueryRowContext(ctx, "SELECT ID FROM WATCHES WHERE NAME=? AND URL=?", c.Name, c.URL)
+		row := db.reader.QueryRowContext(ctx, "SELECT ID FROM WATCHES WHERE NAME=? AND URL=?", c.Name, c.URL)
 		var id int64
 		if err := row.Scan(&id); err != nil {
 			// new entry not yet fetched. add to array and continue with the next config entry
@@ -122,7 +151,7 @@ func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration)
 	if len(foundIDs) > 0 {
 		// remove all items in database that have no corresponding config entry (==remove old items)
 		query := fmt.Sprintf("DELETE FROM WATCHES WHERE ID NOT IN (?%s)", strings.Repeat(",?", len(foundIDs)-1))
-		res, err := db.db.ExecContext(ctx, query, foundIDs...)
+		res, err := db.writer.ExecContext(ctx, query, foundIDs...)
 		if err != nil {
 			return nil, rowsAffected, fmt.Errorf("error on select in: %w", err)
 		}
