@@ -5,18 +5,12 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     "ghcr.io/guiyomh/features/golangci-lint:0": {},
     "ghcr.io/devcontainers-contrib/features/go-task:1": {}
   },
   "postCreateCommand": "go mod download",
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-  // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "go version",
-  // Configure tool-specific properties.
   "customizations": {
     "vscode": {
       "extensions": [

@@ -98,7 +98,7 @@ replace, so it's easier to debug faulty regexes.
     "count": 1
   },
   "parallel_checks": 5,
-  "database": "db.db",
+  "database": "db.sqlite3",
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
   "watches": [{
     "name": "Golang Downloads",
