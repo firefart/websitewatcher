@@ -32,12 +32,18 @@ type Database struct {
 }
 
 func New(configuration config.Configuration) (*Database, error) {
-	reader, err := new(configuration)
+	if strings.ToLower(configuration.Database) == ":memory:" {
+		// not possible because of the two db instances, with in memory they
+		// would be separate instances
+		return nil, fmt.Errorf("in memory databases are not supported")
+	}
+
+	reader, err := newDatabase(configuration)
 	if err != nil {
 		return nil, fmt.Errorf("could not create reader: %w", err)
 	}
 	reader.SetMaxOpenConns(100)
-	writer, err := new(configuration)
+	writer, err := newDatabase(configuration)
 	if err != nil {
 		return nil, fmt.Errorf("could not create writer: %w", err)
 	}
@@ -51,7 +57,7 @@ func New(configuration config.Configuration) (*Database, error) {
 	}, nil
 }
 
-func new(configuration config.Configuration) (*sql.DB, error) {
+func newDatabase(configuration config.Configuration) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", fmt.Sprintf("%s?_pragma=journal_mode(WAL)", configuration.Database))
 	if err != nil {
 		return nil, fmt.Errorf("could not open database %s: %w", configuration.Database, err)
