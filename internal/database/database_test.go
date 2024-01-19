@@ -25,8 +25,14 @@ func TestNew(t *testing.T) {
 }
 
 func TestDatabase(t *testing.T) {
+	file, err := os.CreateTemp("", "*.sqlite")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
 	configuration := config.Configuration{
-		Database: ":memory:",
+		Database: file.Name(),
 	}
 	db, err := database.New(configuration)
 	require.Nil(t, err)
@@ -58,8 +64,14 @@ func TestDatabase(t *testing.T) {
 }
 
 func TestPrepareDatabase(t *testing.T) {
+	file, err := os.CreateTemp("", "*.sqlite")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
 	configuration := config.Configuration{
-		Database: ":memory:",
+		Database: file.Name(),
 	}
 	db, err := database.New(configuration)
 	require.Nil(t, err)
