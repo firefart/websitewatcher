@@ -168,7 +168,7 @@ const gitDiffCss = `
 		background-color: #ffcbbd;
 	}
 	div.changes {
-		background-color: lightyellow;       
+		background-color: lightyellow;
 	}
 `
 
