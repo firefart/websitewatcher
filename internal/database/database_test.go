@@ -15,8 +15,14 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	file, err := os.CreateTemp("", "*.sqlite")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
 	configuration := config.Configuration{
-		Database: ":memory:",
+		Database: file.Name(),
 	}
 	db, err := database.New(configuration)
 	require.Nil(t, err)
