@@ -24,7 +24,7 @@ tasks:
 
   run:
     cmds:
-      - ./{{.PROGRAM}}} -debug -dry-run -config config.json
+      - ./{{.PROGRAM}} -debug -dry-run -config config.json
 
   lint:
     cmds:
