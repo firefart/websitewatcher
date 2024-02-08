@@ -30,5 +30,6 @@ config.json
 *.sqlite3-journal
 *.sqlite3-shm
 *.sqlite3-whl
+*.sqlite3-wal
 .vscode/
 websitewatcher
