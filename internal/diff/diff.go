@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/brianvoe/gofakeit/v6"
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/firefart/websitewatcher/internal/helper"
 	http2 "github.com/firefart/websitewatcher/internal/http"
 	"github.com/sergi/go-diff/diffmatchpatch"
