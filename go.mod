@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/sync v0.6.0
 	gopkg.in/mail.v2 v2.3.1
-	modernc.org/sqlite v1.29.1
+	modernc.org/sqlite v1.29.2
 )
 
 require (
