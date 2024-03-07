@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.6.0
 	gopkg.in/mail.v2 v2.3.1
-	modernc.org/sqlite v1.29.2
+	modernc.org/sqlite v1.29.3
 )
 
 require (
@@ -29,7 +29,6 @@ require (
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.19 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
