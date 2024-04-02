@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.0.2
-	github.com/itchyny/gojq v0.12.14
+	github.com/itchyny/gojq v0.12.15
 	github.com/knadh/koanf/parsers/json v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0
 	github.com/knadh/koanf/providers/structs v0.1.0
