@@ -20,7 +20,8 @@
         "github.vscode-github-actions",
         "ms-azuretools.vscode-docker",
         "task.vscode-task",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "usernamehw.errorlens"
       ]
     }
   }
