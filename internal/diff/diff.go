@@ -172,11 +172,11 @@ const gitDiffCss = `
 	}
 `
 
+var indexRe = regexp.MustCompile(`^index [A-Fa-f0-9]+\.\.[A-Fa-f0-9]+ [0-9]+$`)
+
 func convertGitDiffToHTML(input string) (string, string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	builder := strings.Builder{}
-
-	re := regexp.MustCompile(`^index [A-Fa-f0-9]+\.\.[A-Fa-f0-9]+ [0-9]+$`)
 
 	for scanner.Scan() {
 		text := scanner.Text()
@@ -188,7 +188,7 @@ func convertGitDiffToHTML(input string) (string, string, error) {
 		// 		+++ b/tmp/websitewatcher_SQINZHLunW/4036934040
 		if strings.HasPrefix(text, "diff --git") {
 			continue
-		} else if re.MatchString(text) {
+		} else if indexRe.MatchString(text) {
 			continue
 		} else if strings.HasPrefix(text, "---") {
 			continue
