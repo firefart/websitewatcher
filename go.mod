@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.0.3
-	github.com/itchyny/gojq v0.12.15
+	github.com/itchyny/gojq v0.12.16
 	github.com/knadh/koanf/parsers/json v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0
 	github.com/knadh/koanf/providers/structs v0.1.0
@@ -23,10 +23,10 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1 // indirect
+	github.com/go-viper/mapstructure/v2 v2.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/itchyny/timefmt-go v0.1.5 // indirect
+	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -38,7 +38,7 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240304020402-f0dba7c97c2b // indirect
-	modernc.org/libc v1.50.9 // indirect
+	modernc.org/libc v1.51.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect
