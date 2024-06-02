@@ -238,7 +238,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)
 			}
 			text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
-			if err := app.mailer.SendDiffEmail(w, app.config.DiffMethod, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
+			if err := app.mailer.SendDiffEmail(ctx, w, app.config.DiffMethod, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}

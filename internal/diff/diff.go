@@ -49,8 +49,8 @@ func GenerateHTMLDiffInternal(body string, text1, text2 string) (string, error) 
 	return body, nil
 }
 
-func GenerateHTMLDiffGit(body string, text1, text2 string) (string, error) {
-	diff, err := diffGit(text1, text2)
+func GenerateHTMLDiffGit(ctx context.Context, body string, text1, text2 string) (string, error) {
+	diff, err := diffGit(ctx, text1, text2)
 	if err != nil {
 		return "", err
 	}
@@ -63,8 +63,8 @@ func GenerateHTMLDiffGit(body string, text1, text2 string) (string, error) {
 	return body, nil
 }
 
-func GenerateHTMLDiffAPI(httpClient *http2.Client, body string, text1, text2 string) (string, error) {
-	diffCSS, diffHTML, err := diffAPI(httpClient, text1, text2)
+func GenerateHTMLDiffAPI(ctx context.Context, httpClient *http2.Client, body string, text1, text2 string) (string, error) {
+	diffCSS, diffHTML, err := diffAPI(ctx, httpClient, text1, text2)
 	if err != nil {
 		return "", err
 	}
@@ -80,7 +80,7 @@ func diffInternal(text1, text2 string) []byte {
 	return []byte(htmlDiff)
 }
 
-func diffGit(text1, text2 string) ([]byte, error) {
+func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", helper.RandStringRunes(10))) // nolint:gomnd
 	err := os.Mkdir(tmpdir, os.ModePerm)
 	if err != nil {
@@ -106,7 +106,7 @@ func diffGit(text1, text2 string) ([]byte, error) {
 		return nil, fmt.Errorf("could not write inputFile2: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	outFile := path.Join(tmpdir, "diff.txt")
@@ -217,7 +217,7 @@ func convertGitDiffToHTML(input string) (string, string, error) {
 	return gitDiffCss, html, nil
 }
 
-func diffAPI(client *http2.Client, text1, text2 string) (string, string, error) {
+func diffAPI(ctx context.Context, client *http2.Client, text1, text2 string) (string, string, error) {
 	// 	curl --location --request POST 'https://api.diffchecker.com/public/text?output_type=html&email=YOUR_EMAIL' \
 	// --header 'Content-Type: application/json' \
 	// --data-raw '{
@@ -245,7 +245,7 @@ func diffAPI(client *http2.Client, text1, text2 string) (string, string, error) 
 	if err != nil {
 		return "", "", fmt.Errorf("could not marshal data: %w", err)
 	}
-	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return "", "", fmt.Errorf("error on diff http creation: %w", err)
 	}

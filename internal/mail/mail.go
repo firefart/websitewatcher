@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"html"
@@ -46,11 +47,11 @@ func (m *Mail) SendErrorEmail(w watch.Watch, err error) error {
 	return nil
 }
 
-func (m *Mail) SendDiffEmail(w watch.Watch, diffMethod, subject, body, text1, text2 string) error {
+func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, subject, body, text1, text2 string) error {
 	content := ""
 	switch diffMethod {
 	case "api":
-		htmlContent, err := diff.GenerateHTMLDiffAPI(m.httpClient, body, text1, text2)
+		htmlContent, err := diff.GenerateHTMLDiffAPI(ctx, m.httpClient, body, text1, text2)
 		if err != nil {
 			return err
 		}
@@ -62,7 +63,7 @@ func (m *Mail) SendDiffEmail(w watch.Watch, diffMethod, subject, body, text1, te
 		}
 		content = htmlContent
 	case "git":
-		htmlContent, err := diff.GenerateHTMLDiffGit(body, text1, text2)
+		htmlContent, err := diff.GenerateHTMLDiffGit(ctx, body, text1, text2)
 		if err != nil {
 			return err
 		}
