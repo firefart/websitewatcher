@@ -33,3 +33,4 @@ config.json
 *.sqlite3-wal
 .vscode/
 websitewatcher
+dist/
