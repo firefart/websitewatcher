@@ -275,7 +275,7 @@ func diffAPI(ctx context.Context, client *http2.Client, text1, text2 string) (st
 		for _, err := range jsonResp.Errors {
 			msg = fmt.Sprintf("%s - Message: %s Location: %s Param: %s", msg, err.Message, err.Location, err.Param)
 		}
-		return "", "", fmt.Errorf(msg)
+		return "", "", fmt.Errorf("%s", msg)
 	}
 
 	return jsonResp.CSS, jsonResp.HTML, nil
