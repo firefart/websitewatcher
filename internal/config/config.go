@@ -32,11 +32,14 @@ type MailConfig struct {
 		Name string `koanf:"name"`
 		Mail string `koanf:"mail"`
 	} `koanf:"from"`
-	To       []string `koanf:"to"`
-	User     string   `koanf:"user"`
-	Password string   `koanf:"password"`
-	SkipTLS  bool     `koanf:"skiptls"`
-	Retries  int      `koanf:"retries"`
+	To       []string      `koanf:"to"`
+	User     string        `koanf:"user"`
+	Password string        `koanf:"password"`
+	TLS      bool          `koanf:"tls"`
+	StartTLS bool          `koanf:"starttls"`
+	SkipTLS  bool          `koanf:"skiptls"`
+	Retries  int           `koanf:"retries"`
+	Timeout  time.Duration `koanf:"timeout"`
 }
 
 type RetryConfig struct {
@@ -75,6 +78,7 @@ var defaultConfig = Configuration{
 	Database: "db.sqlite3",
 	Mail: MailConfig{
 		Retries: 3,
+		Timeout: 10 * time.Second,
 	},
 	DiffMethod: "git",
 }

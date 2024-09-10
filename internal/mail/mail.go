@@ -3,6 +3,7 @@ package mail
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"html"
 	"strings"
@@ -13,34 +14,60 @@ import (
 	"github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/logger"
 	"github.com/firefart/websitewatcher/internal/watch"
-	gomail "gopkg.in/mail.v2"
+
+	gomail "github.com/wneessen/go-mail"
 )
 
 type Mail struct {
 	config     config.Configuration
-	dialer     *gomail.Dialer
+	dialer     *gomail.Client
 	httpClient *http.Client
 	logger     logger.Logger
 }
 
-func New(config config.Configuration, httpClient *http.Client, logger logger.Logger) *Mail {
-	d := gomail.NewDialer(config.Mail.Server, config.Mail.Port, config.Mail.User, config.Mail.Password)
-	if config.Mail.SkipTLS {
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+func New(config config.Configuration, httpClient *http.Client, logger logger.Logger) (*Mail, error) {
+	var options []gomail.Option
+
+	options = append(options, gomail.WithTimeout(config.Mail.Timeout))
+	options = append(options, gomail.WithPort(config.Mail.Port))
+	if config.Mail.User != "" && config.Mail.Password != "" {
+		options = append(options, gomail.WithSMTPAuth(gomail.SMTPAuthPlain))
+		options = append(options, gomail.WithUsername(config.Mail.User))
+		options = append(options, gomail.WithUsername(config.Mail.Password))
 	}
+	if config.Mail.SkipTLS {
+		options = append(options, gomail.WithTLSConfig(&tls.Config{
+			InsecureSkipVerify: true,
+		}))
+	}
+
+	// use either tls, starttls, or starttls with fallback to plaintext
+	if config.Mail.TLS {
+		options = append(options, gomail.WithSSL())
+	} else if config.Mail.StartTLS {
+		options = append(options, gomail.WithTLSPortPolicy(gomail.TLSMandatory))
+	} else {
+		options = append(options, gomail.WithTLSPortPolicy(gomail.TLSOpportunistic))
+	}
+
+	mailer, err := gomail.NewClient(config.Mail.Server, options...)
+	if err != nil {
+		return nil, fmt.Errorf("could not create mail client: %w", err)
+	}
+
 	return &Mail{
 		config:     config,
-		dialer:     d,
+		dialer:     mailer,
 		httpClient: httpClient,
 		logger:     logger,
-	}
+	}, nil
 }
 
-func (m *Mail) SendErrorEmail(w watch.Watch, err error) error {
+func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) error {
 	subject := fmt.Sprintf("[ERROR] error in websitewatcher on %s", w.Name)
 	body := fmt.Sprintf("%s", err)
 	for _, to := range m.config.Mail.To {
-		if err := m.send(to, subject, body, "text/plain"); err != nil {
+		if err := m.send(ctx, to, subject, body, gomail.TypeTextPlain); err != nil {
 			return err
 		}
 	}
@@ -72,10 +99,10 @@ func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, sub
 		return fmt.Errorf("invalid diff method %s", diffMethod)
 	}
 	m.logger.Debugf("Mail Content: %s", content)
-	return m.sendHTMLEmail(w, subject, content)
+	return m.sendHTMLEmail(ctx, w, subject, content)
 }
 
-func (m *Mail) SendWatchError(w watch.Watch, ret *watch.InvalidResponseError) error {
+func (m *Mail) SendWatchError(ctx context.Context, w watch.Watch, ret *watch.InvalidResponseError) error {
 	subject := fmt.Sprintf("Invalid response for %s", w.Name)
 
 	var sb strings.Builder
@@ -107,21 +134,21 @@ func (m *Mail) SendWatchError(w watch.Watch, ret *watch.InvalidResponseError) er
 
 	text := sb.String()
 	htmlContent := generateHTML(text)
-	if err := m.sendHTMLEmail(w, subject, htmlContent); err != nil {
+	if err := m.sendHTMLEmail(ctx, w, subject, htmlContent); err != nil {
 		return fmt.Errorf("error on sending email: %w", err)
 	}
 
 	return nil
 }
 
-func (m *Mail) sendHTMLEmail(w watch.Watch, subject, htmlBody string) error {
+func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBody string) error {
 	tos := m.config.Mail.To
 	if len(w.AdditionalTo) > 0 {
 		tos = append(tos, w.AdditionalTo...)
 	}
 
 	for _, to := range tos {
-		if err := m.send(to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), htmlBody, "text/html"); err != nil {
+		if err := m.send(ctx, to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), htmlBody, gomail.TypeTextHTML); err != nil {
 			return err
 		}
 	}
@@ -129,18 +156,26 @@ func (m *Mail) sendHTMLEmail(w watch.Watch, subject, htmlBody string) error {
 	return nil
 }
 
-func (m *Mail) send(to string, subject, body, contentType string) error {
-	msg := gomail.NewMessage()
-	msg.SetAddressHeader("From", m.config.Mail.From.Mail, m.config.Mail.From.Name)
-	msg.SetHeader("To", to)
-	msg.SetHeader("Subject", subject)
-	msg.SetBody(contentType, body)
+func (m *Mail) send(ctx context.Context, to string, subject, body string, contentType gomail.ContentType) error {
+	msg := gomail.NewMsg()
+	if err := msg.FromFormat(m.config.Mail.From.Name, m.config.Mail.From.Mail); err != nil {
+		return err
+	}
+	if err := msg.To(to); err != nil {
+		return err
+	}
+	msg.Subject(subject)
+	msg.SetBodyString(contentType, body)
 
 	var err error
 	for i := 1; i <= m.config.Mail.Retries; i++ {
-		err = m.dialer.DialAndSend(msg)
+		err = m.dialer.DialAndSendWithContext(ctx, msg)
 		if err == nil {
 			return nil
+		}
+		// bail out on cancel
+		if errors.Is(err, context.Canceled) {
+			return err
 		}
 		m.logger.Errorf("error on sending email %q on try %d: %v", subject, i, err)
 	}

@@ -48,6 +48,9 @@ func (app *app) logError(err error) {
 }
 
 func (app *app) run() error {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer cancel()
+
 	configFile := flag.String("config", "", "config file to use")
 	debug := flag.Bool("debug", false, "Print debug output")
 	dryRun := flag.Bool("dry-run", false, "dry-run - send no emails")
@@ -79,7 +82,10 @@ func (app *app) run() error {
 	}()
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
-	mailer := mail.New(configuration, httpClient, app.logger)
+	mailer, err := mail.New(configuration, httpClient, app.logger)
+	if err != nil {
+		return err
+	}
 
 	app.config = configuration
 	app.httpClient = httpClient
@@ -87,9 +93,6 @@ func (app *app) run() error {
 	app.db = db
 	app.mailer = mailer
 	app.taskmanager = taskmanager.New(app.logger)
-
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
-	defer cancel()
 
 	// remove old websites in the database on each run
 	newEntries, deletedRows, err := db.PrepareDatabase(ctx, configuration)
@@ -113,7 +116,7 @@ func (app *app) run() error {
 			if err := app.processWatch(ctx, w); err != nil {
 				app.logError(fmt.Errorf("[%s] error: %w", w.Name, err))
 				if !app.dryRun {
-					if err2 := app.mailer.SendErrorEmail(w, err); err2 != nil {
+					if err2 := app.mailer.SendErrorEmail(ctx, w, err); err2 != nil {
 						app.logError(err2)
 						return
 					}
@@ -200,7 +203,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			// send mail to indicate we might have an error
 			if !app.dryRun {
 				app.logger.Infof("[%s] sending watch error email", w.Name)
-				if err := app.mailer.SendWatchError(w, invalidErr); err != nil {
+				if err := app.mailer.SendWatchError(ctx, w, invalidErr); err != nil {
 					return err
 				}
 			}

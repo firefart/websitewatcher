@@ -151,7 +151,7 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	return diff, nil
 }
 
-const gitDiffCss = `
+const gitDiffCSS = `
 	div {
 		font-family: monospace;
 		padding-left: 0.5em;
@@ -214,7 +214,7 @@ func convertGitDiffToHTML(input string) (string, string, error) {
 	inner := builder.String()
 	html := fmt.Sprintf(`<div class="container">%s</div>`, inner)
 
-	return gitDiffCss, html, nil
+	return gitDiffCSS, html, nil
 }
 
 func diffAPI(ctx context.Context, client *http2.Client, text1, text2 string) (string, string, error) {

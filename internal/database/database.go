@@ -9,6 +9,7 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 
+	// use sqlite as database
 	_ "modernc.org/sqlite"
 )
 
