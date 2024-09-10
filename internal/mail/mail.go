@@ -157,7 +157,7 @@ func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBo
 }
 
 func (m *Mail) send(ctx context.Context, to string, subject, body string, contentType gomail.ContentType) error {
-	msg := gomail.NewMsg()
+	msg := gomail.NewMsg(gomail.WithNoDefaultUserAgent())
 	if err := msg.FromFormat(m.config.Mail.From.Name, m.config.Mail.From.Mail); err != nil {
 		return err
 	}
