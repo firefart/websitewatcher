@@ -1,6 +1,6 @@
 module github.com/firefart/websitewatcher
 
-go 1.22
+go 1.23
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.0.4
