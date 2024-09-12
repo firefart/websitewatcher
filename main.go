@@ -82,10 +82,7 @@ func (app *app) run() error {
 	}()
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
-	mailer, err := mail.New(configuration, httpClient, app.logger)
-	if err != nil {
-		return err
-	}
+	mailer := mail.New(configuration, httpClient, app.logger)
 
 	app.config = configuration
 	app.httpClient = httpClient
