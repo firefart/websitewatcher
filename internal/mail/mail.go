@@ -55,9 +55,9 @@ func (m *Mail) newClient() (*gomail.Client, error) {
 	if m.config.Mail.TLS {
 		options = append(options, gomail.WithSSL())
 	} else if m.config.Mail.StartTLS {
-		options = append(options, gomail.WithTLSPortPolicy(gomail.TLSMandatory))
+		options = append(options, gomail.WithTLSPolicy(gomail.TLSMandatory))
 	} else {
-		options = append(options, gomail.WithTLSPortPolicy(gomail.TLSOpportunistic))
+		options = append(options, gomail.WithTLSPolicy(gomail.TLSOpportunistic))
 	}
 
 	mailer, err := gomail.NewClient(m.config.Mail.Server, options...)
