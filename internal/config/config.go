@@ -63,6 +63,7 @@ type WatchConfig struct {
 	RetryOnMatch            []string          `koanf:"retry_on_match"`
 	SkipSofterrorPatterns   bool              `koanf:"skip_soft_error_patterns"`
 	JQ                      string            `koanf:"jq"`
+	Useragent               string            `koanf:"useragent"`
 }
 
 type ReplaceConfig struct {
@@ -84,7 +85,7 @@ var defaultConfig = Configuration{
 }
 
 func GetConfig(f string) (Configuration, error) {
-	var k = koanf.NewWithConf(koanf.Conf{
+	k := koanf.NewWithConf(koanf.Conf{
 		Delim: ".",
 	})
 

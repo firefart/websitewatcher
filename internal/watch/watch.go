@@ -36,6 +36,7 @@ type Watch struct {
 	RetryOnMatch            []string
 	SkipSofterrorPatterns   bool
 	JQ                      string
+	UserAgent               string
 }
 
 type Replace struct {
@@ -81,6 +82,7 @@ func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.Client)
 		RetryOnMatch:            c.RetryOnMatch,
 		SkipSofterrorPatterns:   c.SkipSofterrorPatterns,
 		JQ:                      c.JQ,
+		UserAgent:               c.Useragent,
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet
@@ -244,7 +246,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	}
 
 	start := time.Now()
-	resp, err := w.httpClient.Do(req)
+	resp, err := w.httpClient.Do(req, w.UserAgent)
 	if err != nil {
 		return nil, fmt.Errorf("could not get %s: %w", w.URL, err)
 	}

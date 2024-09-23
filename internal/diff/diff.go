@@ -251,7 +251,7 @@ func diffAPI(ctx context.Context, client *http2.Client, text1, text2 string) (st
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(req, "")
 	if err != nil {
 		return "", "", fmt.Errorf("error on diff http: %w", err)
 	}

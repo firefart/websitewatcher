@@ -22,8 +22,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
+        run: task deps
+
+      - name: Install dependencies
+        run: task setup
 
       - name: Build
         run: task build

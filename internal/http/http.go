@@ -25,7 +25,11 @@ func NewHTTPClient(userAgent string, timeout time.Duration) *Client {
 	}
 }
 
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	req.Header.Set("User-Agent", c.userAgent)
+func (c *Client) Do(req *http.Request, userAgent string) (*http.Response, error) {
+	if userAgent != "" {
+		req.Header.Set("User-Agent", userAgent)
+	} else {
+		req.Header.Set("User-Agent", c.userAgent)
+	}
 	return c.client.Do(req)
 }

@@ -4,6 +4,14 @@ vars:
   PROGRAM: websitewatcher
 
 tasks:
+  deps:
+    cmds:
+      - go mod tidy -v
+
+  setup:
+    cmds:
+      - go install mvdan.cc/gofumpt@latest
+
   update:
     cmds:
       - go get -u
@@ -11,18 +19,22 @@ tasks:
 
   build:
     aliases: [default]
+    deps: [deps]
     cmds:
       - go fmt ./...
+      - gofumpt -l -w .
       - go vet ./...
       - go build -o {{.PROGRAM}}
 
   test:
+    deps: [deps]
     env:
       CGO_ENABLED: 1 # required by -race
     cmds:
       - go test -race -cover ./...
 
   run:
+    deps: [build]
     cmds:
       - ./{{.PROGRAM}} -debug -dry-run -config config.json
 
@@ -38,3 +50,11 @@ tasks:
     vars:
       GOPATH:
         sh: go env GOPATH
+
+  tag:
+    cmds:
+      - git tag -a "${TAG}" -m "${TAG}"
+      - git push origin "${TAG}"
+    preconditions:
+      - sh: '[[ -n "${TAG}" ]]'
+        msg: "Please set the TAG environment variable"

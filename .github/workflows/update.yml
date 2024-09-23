@@ -24,9 +24,11 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: setup
+        run: task setup
+
       - name: update
-        run: |
-          task update
+        run: task update
 
       - name: setup git config
         run: |
