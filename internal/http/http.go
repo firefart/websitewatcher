@@ -12,9 +12,9 @@ type Client struct {
 }
 
 func NewHTTPClient(userAgent string, timeout time.Duration) *Client {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+	// use default transport so proxy is respected
+	tr := http.DefaultTransport.(*http.Transport)
+	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	httpClient := http.Client{
 		Timeout:   timeout,
 		Transport: tr,
