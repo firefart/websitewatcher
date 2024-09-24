@@ -19,8 +19,44 @@ func (q *Queries) DeleteWatch(ctx context.Context, id int64) error {
 	return err
 }
 
+const getAllWatches = `-- name: GetAllWatches :many
+SELECT id, name, url, last_fetch, last_content
+FROM watches
+order by id
+`
+
+func (q *Queries) GetAllWatches(ctx context.Context) ([]Watch, error) {
+	rows, err := q.db.QueryContext(ctx, getAllWatches)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Watch
+	for rows.Next() {
+		var i Watch
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Url,
+			&i.LastFetch,
+			&i.LastContent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getWatchByNameAndUrl = `-- name: GetWatchByNameAndUrl :one
-SELECT id, name, url, last_fetch, last_content FROM watches
+SELECT id, name, url, last_fetch, last_content
+FROM watches
 WHERE name=?
 AND url=?
 `

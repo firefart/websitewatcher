@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"slices"
 	"strings"
 
 	"github.com/firefart/websitewatcher/internal/config"
@@ -125,6 +126,11 @@ func newDatabase(ctx context.Context, configuration config.Configuration, logger
 		return nil, fmt.Errorf("could not set synchronous: %w", err)
 	}
 
+	// set the busy timeout (ms) - how long a command waits to be executed when the db is locked / busy
+	if _, err := db.Exec("PRAGMA busy_timeout(5000);"); err != nil {
+		return nil, fmt.Errorf("could not set synchronous: %w", err)
+	}
+
 	return db, nil
 }
 
@@ -176,6 +182,7 @@ func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration)
 	var newWatches []config.WatchConfig
 	var foundIDs []int64
 
+	// check for new watches (new in the config and not yet in the database)
 	for _, c := range c.Watches {
 		row, err := db.reader.GetWatchByNameAndUrl(ctx, sqlc.GetWatchByNameAndUrlParams{
 			Name: c.Name,
@@ -192,11 +199,24 @@ func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration)
 		foundIDs = append(foundIDs, row.ID)
 	}
 
-	for _, id := range foundIDs {
-		if err := db.writer.DeleteWatch(ctx, id); err != nil {
-			return nil, -1, fmt.Errorf("could not delete watch %d: %w", id, err)
+	// purge unneeded watches
+	allWatches, err := db.reader.GetAllWatches(ctx)
+	if err != nil {
+		return nil, -1, fmt.Errorf("could not get all watches: %w", err)
+	}
+
+	deletedWatches := 0
+	// loop over all database watches
+	for _, watch := range allWatches {
+		// if the old watch from the database is missing from the config, delete it
+		// foundIDs = watches both in the config and the database
+		if !slices.Contains(foundIDs, watch.ID) {
+			if err := db.writer.DeleteWatch(ctx, watch.ID); err != nil {
+				return nil, -1, fmt.Errorf("could not delete watch %d: %w", watch.ID, err)
+			}
+			deletedWatches++
 		}
 	}
 
-	return newWatches, len(foundIDs), nil
+	return newWatches, deletedWatches, nil
 }

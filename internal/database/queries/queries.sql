@@ -1,5 +1,11 @@
+-- name: GetAllWatches :many
+SELECT *
+FROM watches
+order by id;
+
 -- name: GetWatchByNameAndUrl :one
-SELECT * FROM watches
+SELECT *
+FROM watches
 WHERE name=?
 AND url=?;
 

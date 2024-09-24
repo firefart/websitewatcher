@@ -16,7 +16,7 @@ func New(logger *slog.Logger) (*TaskManager, error) {
 	scheduler, err := gocron.NewScheduler(
 		gocron.WithLogger(logger),
 		gocron.WithGlobalJobOptions(
-			gocron.WithSingletonMode(gocron.LimitModeReschedule),
+			gocron.WithSingletonMode(gocron.LimitModeReschedule), // same jobs can not overlap
 		),
 	)
 	if err != nil {
