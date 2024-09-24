@@ -36,10 +36,11 @@ func (tm *TaskManager) Stop() error {
 	return tm.scheduler.Shutdown()
 }
 
-func (tm *TaskManager) AddTask(schedule string, task func()) (uuid.UUID, error) {
+func (tm *TaskManager) AddTask(name, schedule string, task func()) (uuid.UUID, error) {
 	j, err := tm.scheduler.NewJob(
 		gocron.CronJob(schedule, false),
 		gocron.NewTask(task),
+		gocron.WithName(name),
 	)
 	if err != nil {
 		return uuid.Nil, err

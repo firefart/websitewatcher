@@ -124,7 +124,7 @@ func (app *app) run(dryRun bool, configFile string) error {
 			}
 		}
 
-		entryID, err := app.taskmanager.AddTask(w.Cron, job)
+		entryID, err := app.taskmanager.AddTask(w.Name, w.Cron, job)
 		if err != nil {
 			app.logError(err)
 			continue
