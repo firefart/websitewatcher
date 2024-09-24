@@ -15,6 +15,9 @@ type TaskManager struct {
 func New(logger *slog.Logger) (*TaskManager, error) {
 	scheduler, err := gocron.NewScheduler(
 		gocron.WithLogger(logger),
+		gocron.WithGlobalJobOptions(
+			gocron.WithSingletonMode(gocron.LimitModeReschedule),
+		),
 	)
 	if err != nil {
 		return nil, err
