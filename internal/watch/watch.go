@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"strings"
@@ -13,13 +14,12 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 	httpint "github.com/firefart/websitewatcher/internal/http"
-	"github.com/firefart/websitewatcher/internal/logger"
 	"github.com/itchyny/gojq"
 )
 
 type Watch struct {
 	httpClient *httpint.Client
-	logger     logger.Logger
+	logger     *slog.Logger
 
 	Name                    string
 	Cron                    string
@@ -63,7 +63,7 @@ func (err *InvalidResponseError) Error() string {
 	return fmt.Sprintf("got invalid response on http request: message: %s, status: %d, bodylen: %d", err.ErrorMessage, err.StatusCode, len(err.Body))
 }
 
-func New(c config.WatchConfig, logger logger.Logger, httpClient *httpint.Client) Watch {
+func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) Watch {
 	w := Watch{
 		logger:                  logger,
 		httpClient:              httpClient,
@@ -168,20 +168,20 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 		// no sleep on first try
 		if i > 1 {
 			if retryDelay > 0 {
-				w.logger.Infof("[%s] retrying after %s", w.Name, retryDelay)
+				w.logger.Info("retrying", slog.String("name", w.Name), slog.Duration("delay", retryDelay))
 				select {
 				case <-ctx.Done():
 					return nil, ctx.Err()
 				case <-time.After(retryDelay):
 				}
 			} else {
-				w.logger.Infof("[%s] retrying without delay", w.Name)
+				w.logger.Info("retrying without delay", slog.String("name", w.Name))
 			}
 		}
-		w.logger.Infof("[%s] try #%d", w.Name, i)
+		w.logger.Info("checking watch", slog.String("name", w.Name), slog.Int("try", i))
 		ret, err = w.doHTTP(ctx)
 		if err != nil {
-			w.logger.Errorf("[%s] received error %s", w.Name, err)
+			w.logger.Error("received error", slog.String("name", w.Name), slog.String("err", err.Error()))
 			continue
 		}
 		// check for additional errors like soft errors and status codes here
@@ -191,7 +191,7 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 		}
 
 		if retryResult {
-			w.logger.Infof("[%s] retry check: %s", w.Name, cause)
+			w.logger.Info("retry check", slog.String("name", w.Name), slog.String("cause", cause))
 			if i != retries {
 				// only continue if it's not the last retry
 				continue
@@ -252,7 +252,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			w.logger.Errorf("error on body close: %v", err)
+			w.logger.Error("error on body close", slog.String("err", err.Error()))
 		}
 	}()
 	duration := time.Since(start)
@@ -322,10 +322,9 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		}
 		match := re.FindSubmatch(ret.Body)
 		if match == nil || len(match) < 2 {
-			msg := fmt.Sprintf("pattern %q did not match %s", w.Pattern, string(ret.Body))
-			w.logger.Errorf(msg)
+			w.logger.Error("pattern did not match", slog.String("pattern", w.Pattern), slog.String("body", string(ret.Body)))
 			return ret, &InvalidResponseError{
-				ErrorMessage: msg,
+				ErrorMessage: fmt.Sprintf("pattern %q did not match %s", w.Pattern, string(ret.Body)),
 				StatusCode:   ret.StatusCode,
 				Header:       ret.Header,
 				Body:         ret.Body,
@@ -336,13 +335,13 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 	}
 
 	for _, replace := range w.Replaces {
-		w.logger.Debugf("[%s] replacing %s with %s", w.Name, replace.Pattern, replace.ReplaceWith)
+		w.logger.Debug("replacing", slog.String("name", w.Name), slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith))
 		re, err := regexp.Compile(replace.Pattern)
 		if err != nil {
 			return ret, fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
 		}
 		ret.Body = re.ReplaceAll(ret.Body, []byte(replace.ReplaceWith))
-		w.logger.Debugf("[%s] After %s --> %s:\n%s\n\n", w.Name, replace.Pattern, replace.ReplaceWith, string(ret.Body))
+		w.logger.Debug("after replacement", slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith), slog.String("body", string(ret.Body)))
 	}
 
 	return ret, nil

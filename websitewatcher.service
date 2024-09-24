@@ -7,7 +7,7 @@ After=network.target network-online.target
 WorkingDirectory=/home/websitewatcher
 User=websitewatcher
 SyslogIdentifier=websitewatcher
-ExecStart=/home/websitewatcher/websitewatcher -config /home/websitewatcher/config.json
+ExecStart=/home/websitewatcher/websitewatcher -config /home/websitewatcher/config.json -json
 Restart=on-failure
 RestartSec=10
 

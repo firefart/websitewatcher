@@ -2,6 +2,8 @@ package watch
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	gohttp "net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,7 +11,6 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/http"
-	"github.com/firefart/websitewatcher/internal/logger"
 )
 
 func TestCheck(t *testing.T) {
@@ -31,6 +32,8 @@ func TestCheck(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			server := httptest.NewServer(gohttp.HandlerFunc(func(w gohttp.ResponseWriter, r *gohttp.Request) {
 				if tc.UserAgent != "" && r.Header.Get("User-Agent") != tc.UserAgent {
 					t.Errorf("CheckWatch() want Useragent %s, got %s", tc.UserAgent, r.Header.Get("User-Agent"))
@@ -43,10 +46,15 @@ func TestCheck(t *testing.T) {
 			defer server.Close()
 
 			client := http.NewHTTPClient(tc.UserAgent, 1*time.Second)
-			w := New(config.WatchConfig{
-				Name: "Test",
-				URL:  server.URL,
-			}, &logger.NilLogger{}, client)
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			w := New(
+				config.WatchConfig{
+					Name: "Test",
+					URL:  server.URL,
+				},
+				logger,
+				client,
+			)
 
 			ret, err := w.doHTTP(context.Background())
 			if err != nil {

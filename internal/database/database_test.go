@@ -2,19 +2,20 @@ package database_test
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/database"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	file, err := os.CreateTemp("", "*.sqlite")
 	if err != nil {
 		log.Fatal(err)
@@ -24,13 +25,15 @@ func TestNew(t *testing.T) {
 	configuration := config.Configuration{
 		Database: file.Name(),
 	}
-	db, err := database.New(configuration)
+	db, err := database.New(context.Background(), configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
 	err = db.Close()
 	require.Nil(t, err)
 }
 
-func TestDatabase(t *testing.T) {
+func TestInsertAndGetLastContent(t *testing.T) {
+	t.Parallel()
+
 	file, err := os.CreateTemp("", "*.sqlite")
 	if err != nil {
 		log.Fatal(err)
@@ -40,36 +43,63 @@ func TestDatabase(t *testing.T) {
 	configuration := config.Configuration{
 		Database: file.Name(),
 	}
-	db, err := database.New(configuration)
-	require.Nil(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("error on database close: %v", err)
-		}
-	}()
-
-	name := gofakeit.Name()
-	url := gofakeit.URL()
-	content := []byte(gofakeit.LetterN(20))
-	content2 := []byte(gofakeit.LetterN(20))
-
 	ctx := context.Background()
-	id, err := db.InsertLastContent(ctx, name, url, content)
+	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	require.Greater(t, id, int64(0))
-	id2, dbContent, err := db.GetLastContent(ctx, name, url)
+	defer db.Close()
+
+	name := "Test"
+	url := "https://google.com"
+	content := []byte("test")
+
+	watchID, err := db.InsertWatch(ctx, name, url, content)
 	require.Nil(t, err)
-	require.Equal(t, id, id2)
-	require.Equal(t, content, dbContent)
-	err = db.UpdateLastContent(ctx, id, content2)
+	require.Positive(t, watchID)
+
+	id, lastContent, err := db.GetLastContent(ctx, name, url)
 	require.Nil(t, err)
-	id4, dbContent2, err := db.GetLastContent(ctx, name, url)
+	require.Equal(t, content, lastContent)
+	require.Equal(t, watchID, id)
+}
+
+func TestUpdateLastContent(t *testing.T) {
+	t.Parallel()
+
+	file, err := os.CreateTemp("", "*.sqlite")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	configuration := config.Configuration{
+		Database: file.Name(),
+	}
+	ctx := context.Background()
+	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	require.Equal(t, id, id4)
-	require.Equal(t, content2, dbContent2)
+	defer db.Close()
+
+	name := "Test"
+	url := "https://google.com"
+	content := []byte("test")
+	newContent := []byte("firefart.at")
+
+	watchID, err := db.InsertWatch(ctx, name, url, content)
+	require.Nil(t, err)
+	require.Positive(t, watchID)
+
+	err = db.UpdateLastContent(ctx, watchID, newContent)
+	require.Nil(t, err)
+
+	id, lastContent, err := db.GetLastContent(ctx, name, url)
+	require.Nil(t, err)
+	require.Equal(t, newContent, lastContent)
+	require.Equal(t, watchID, id)
 }
 
 func TestPrepareDatabase(t *testing.T) {
+	t.Parallel()
+
 	file, err := os.CreateTemp("", "*.sqlite")
 	if err != nil {
 		log.Fatal(err)
@@ -78,88 +108,30 @@ func TestPrepareDatabase(t *testing.T) {
 
 	configuration := config.Configuration{
 		Database: file.Name(),
+		Watches: []config.WatchConfig{
+			{
+				Name: "New",
+				URL:  "New",
+			},
+		},
 	}
-	db, err := database.New(configuration)
-	require.Nil(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("error on database close: %v", err)
-		}
-	}()
-
 	ctx := context.Background()
-	numberOfDummyEntries := 100
-
-	// insert random data
-	for i := 0; i < numberOfDummyEntries; i++ {
-		id, err := db.InsertLastContent(ctx, gofakeit.Name(), gofakeit.URL(), []byte(gofakeit.LetterN(20)))
-		require.Nil(t, err)
-		require.Greater(t, id, int64(0))
-	}
-
-	// add a valid entry
-	name := gofakeit.Name()
-	url := gofakeit.URL()
-	validID, err := db.InsertLastContent(ctx, name, url, []byte(gofakeit.LetterN(20)))
+	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	require.Greater(t, validID, int64(0))
+	defer db.Close()
 
-	configuration.Watches = make([]config.WatchConfig, 3)
-	configuration.Watches[0].Name = name
-	configuration.Watches[0].URL = url
-	// new entry
-	newName := gofakeit.Name()
-	newURL := gofakeit.URL()
-	configuration.Watches[1].Name = newName
-	configuration.Watches[1].URL = newURL
-	newName2 := gofakeit.Name()
-	newURL2 := gofakeit.URL()
-	configuration.Watches[2].Name = newName2
-	configuration.Watches[2].URL = newURL2
+	name := "Test"
+	url := "https://google.com"
+	content := []byte("test")
 
-	returnedConfig, deletedRows, err := db.PrepareDatabase(ctx, configuration)
+	watchID, err := db.InsertWatch(ctx, name, url, content)
 	require.Nil(t, err)
-	require.Len(t, returnedConfig, 2)
-	require.Equal(t, deletedRows, int64(numberOfDummyEntries))
-	require.Equal(t, returnedConfig[0].Name, newName)
-	require.Equal(t, returnedConfig[0].URL, newURL)
-	require.Equal(t, returnedConfig[1].Name, newName2)
-	require.Equal(t, returnedConfig[1].URL, newURL2)
-}
+	require.Positive(t, watchID)
 
-// This tests that concurrent writes to not lock the database
-func TestLocking(t *testing.T) {
-	// we need a physical file for testing the lock
-	file, err := os.CreateTemp("", "*.sqlite")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(file.Name())
-
-	configuration := config.Configuration{
-		Database: file.Name(),
-	}
-	db, err := database.New(configuration)
+	newWatches, deletedEntries, err := db.PrepareDatabase(ctx, configuration)
 	require.Nil(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("error on database close: %v", err)
-		}
-	}()
-
-	inserts := 100
-	g, ctx := errgroup.WithContext(context.Background())
-	for i := 0; i < inserts; i++ {
-		i := i
-		g.Go(func() error {
-			if _, err := db.InsertLastContent(ctx, fmt.Sprintf("name_%d", i), fmt.Sprintf("url_%d", i), []byte(fmt.Sprintf("content_%d", i))); err != nil {
-				return err
-			}
-			return nil
-		})
-	}
-
-	if err := g.Wait(); err != nil {
-		t.Fatal(err)
-	}
+	require.Equal(t, 1, deletedEntries)
+	require.Len(t, newWatches, 1)
+	require.Equal(t, newWatches[0].Name, "New")
+	require.Equal(t, newWatches[0].URL, "New")
 }

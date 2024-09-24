@@ -3,48 +3,59 @@ package database
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
+	"log/slog"
+	"slices"
 	"strings"
 
 	"github.com/firefart/websitewatcher/internal/config"
+	"github.com/firefart/websitewatcher/internal/database/sqlc"
+	"github.com/pressly/goose/v3"
 
-	// use sqlite as database
+	// use the sqlite implementation
 	_ "modernc.org/sqlite"
 )
 
-const create string = `
-	CREATE TABLE IF NOT EXISTS WATCHES (
-		ID INTEGER NOT NULL PRIMARY KEY,
-		NAME TEXT NOT NULL,
-		URL TEXT NOT NULL,
-		LAST_FETCH DATETIME,
-		LAST_CONTENT BLOB
-	);
-	CREATE UNIQUE INDEX IF NOT EXISTS IDX_NAME_URL
-	ON WATCHES(NAME, URL);
-`
-
 var ErrNotFound = errors.New("url not found in database")
 
-type Database struct {
-	reader *sql.DB
-	writer *sql.DB
+//go:embed migrations/*.sql
+var embedMigrations embed.FS
+
+type Interface interface {
+	Close() error
+	GetLastContent(ctx context.Context, name, url string) (int64, []byte, error)
+	InsertWatch(ctx context.Context, name, url string, content []byte) (int64, error)
+	UpdateLastContent(ctx context.Context, id int64, content []byte) error
+	PrepareDatabase(ctx context.Context, c config.Configuration) ([]config.WatchConfig, int, error)
 }
 
-func New(configuration config.Configuration) (*Database, error) {
+type Database struct {
+	reader    *sqlc.Queries
+	writer    *sqlc.Queries
+	readerRAW *sql.DB
+	writerRAW *sql.DB
+}
+
+// compile time check that struct implements the interface
+var _ Interface = (*Database)(nil)
+
+func New(ctx context.Context, configuration config.Configuration, logger *slog.Logger) (*Database, error) {
 	if strings.ToLower(configuration.Database) == ":memory:" {
 		// not possible because of the two db instances, with in memory they
 		// would be separate instances
 		return nil, fmt.Errorf("in memory databases are not supported")
 	}
 
-	reader, err := newDatabase(configuration)
+	reader, err := newDatabase(ctx, configuration, logger, true)
 	if err != nil {
 		return nil, fmt.Errorf("could not create reader: %w", err)
 	}
 	reader.SetMaxOpenConns(100)
-	writer, err := newDatabase(configuration)
+	// no migrations on the second connection
+	writer, err := newDatabase(ctx, configuration, logger, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not create writer: %w", err)
 	}
@@ -53,19 +64,51 @@ func New(configuration config.Configuration) (*Database, error) {
 	writer.SetMaxIdleConns(1)
 
 	return &Database{
-		reader: reader,
-		writer: writer,
+		reader:    sqlc.New(reader),
+		writer:    sqlc.New(writer),
+		readerRAW: reader,
+		writerRAW: writer,
 	}, nil
 }
 
-func newDatabase(configuration config.Configuration) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", fmt.Sprintf("%s?_pragma=journal_mode(WAL)", configuration.Database))
+func newDatabase(ctx context.Context, configuration config.Configuration, logger *slog.Logger, skipMigrations bool) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", fmt.Sprintf("%s?_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)", configuration.Database))
 	if err != nil {
 		return nil, fmt.Errorf("could not open database %s: %w", configuration.Database, err)
 	}
 
-	if _, err := db.Exec(create); err != nil {
-		return nil, fmt.Errorf("could not create tables: %w", err)
+	// we have a reader and a writer so no need to apply all migrations twice
+	if !skipMigrations {
+		migrationFS, err := fs.Sub(embedMigrations, "migrations")
+		if err != nil {
+			return nil, fmt.Errorf("could not sub migration fs: %w", err)
+		}
+
+		prov, err := goose.NewProvider("sqlite3", db, migrationFS)
+		if err != nil {
+			return nil, fmt.Errorf("could not create goose provider: %w", err)
+		}
+
+		result, err := prov.Up(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not apply migrations: %w", err)
+		}
+
+		for _, r := range result {
+			if r.Error != nil {
+				return nil, fmt.Errorf("could not apply migration %s: %w", r.Source.Path, r.Error)
+			}
+		}
+
+		if len(result) > 0 {
+			logger.Info(fmt.Sprintf("Applied %d database migrations", len(result)))
+		}
+
+		version, err := prov.GetDBVersion(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not get current database version: %w", err)
+		}
+		logger.Info("Database setup", slog.Int64("version", version))
 	}
 
 	// shrink and defrag the database (must be run before the checkpoint)
@@ -92,83 +135,88 @@ func newDatabase(configuration config.Configuration) (*sql.DB, error) {
 }
 
 func (db *Database) Close() error {
-	err1 := db.writer.Close()
-	err2 := db.reader.Close()
+	err1 := db.writerRAW.Close()
+	err2 := db.readerRAW.Close()
 	return errors.Join(err1, err2)
 }
 
 func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64, []byte, error) {
-	row := db.reader.QueryRowContext(ctx, "SELECT ID, LAST_CONTENT FROM WATCHES WHERE NAME=? AND URL=?", name, url)
-	var lastContent []byte
-	var id int64
-	err := row.Scan(&id, &lastContent)
+	watch, err := db.reader.GetWatchByNameAndUrl(ctx, sqlc.GetWatchByNameAndUrlParams{
+		Name: name,
+		Url:  url,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return -1, nil, ErrNotFound
 		}
-		return -1, nil, fmt.Errorf("error on select last content: %w", err)
+		return -1, nil, err
 	}
-	if err := row.Err(); err != nil {
-		return -1, nil, fmt.Errorf("error on close last content: %w", err)
-	}
-	return id, lastContent, nil
+	return watch.ID, watch.LastContent, nil
 }
 
-func (db *Database) InsertLastContent(ctx context.Context, name, url string, content []byte) (int64, error) {
-	res, err := db.writer.ExecContext(ctx, "INSERT INTO WATCHES(NAME, URL, LAST_FETCH, LAST_CONTENT) VALUES(?,?,CURRENT_TIMESTAMP,?);", name, url, content)
+func (db *Database) InsertWatch(ctx context.Context, name, url string, content []byte) (int64, error) {
+	res, err := db.writer.InsertWatch(ctx, sqlc.InsertWatchParams{
+		Name:        name,
+		Url:         url,
+		LastContent: content,
+	})
 	if err != nil {
 		return -1, fmt.Errorf("error on insert: %w", err)
 	}
-	dbID, err := res.LastInsertId()
-	if err != nil {
-		return -1, fmt.Errorf("error on insert lastinsertid: %w", err)
-	}
-	return dbID, nil
+	return res.ID, nil
 }
 
 func (db *Database) UpdateLastContent(ctx context.Context, id int64, content []byte) error {
-	res, err := db.writer.ExecContext(ctx, "UPDATE WATCHES SET LAST_FETCH=CURRENT_TIMESTAMP, LAST_CONTENT=? WHERE ID=?;", content, id)
+	_, err := db.writer.UpdateWatch(ctx, sqlc.UpdateWatchParams{
+		LastContent: content,
+		ID:          id,
+	})
 	if err != nil {
 		return fmt.Errorf("error on update: %w", err)
-	}
-	if _, err := res.RowsAffected(); err != nil {
-		return fmt.Errorf("error on rows affected")
 	}
 	return nil
 }
 
 // PrepareDatabase cleans up old entries and returns new ones
-func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration) ([]config.WatchConfig, int64, error) {
+func (db *Database) PrepareDatabase(ctx context.Context, c config.Configuration) ([]config.WatchConfig, int, error) {
 	var newWatches []config.WatchConfig
-	var foundIDs []any // needs to be any, so we can pass it to execcontext
-	var rowsAffected int64
+	var foundIDs []int64
 
+	// check for new watches (new in the config and not yet in the database)
 	for _, c := range c.Watches {
-		row := db.reader.QueryRowContext(ctx, "SELECT ID FROM WATCHES WHERE NAME=? AND URL=?", c.Name, c.URL)
-		var id int64
-		if err := row.Scan(&id); err != nil {
+		row, err := db.reader.GetWatchByNameAndUrl(ctx, sqlc.GetWatchByNameAndUrlParams{
+			Name: c.Name,
+			Url:  c.URL,
+		})
+		if err != nil {
 			// new entry not yet fetched. add to array and continue with the next config entry
 			if errors.Is(err, sql.ErrNoRows) {
 				newWatches = append(newWatches, c)
 				continue
 			}
-			return nil, rowsAffected, fmt.Errorf("error on select: %w", err)
+			return nil, -1, fmt.Errorf("error on select: %w", err)
 		}
-		foundIDs = append(foundIDs, id)
+		foundIDs = append(foundIDs, row.ID)
 	}
 
-	if len(foundIDs) > 0 {
-		// remove all items in database that have no corresponding config entry (==remove old items)
-		query := fmt.Sprintf("DELETE FROM WATCHES WHERE ID NOT IN (?%s)", strings.Repeat(",?", len(foundIDs)-1))
-		res, err := db.writer.ExecContext(ctx, query, foundIDs...)
-		if err != nil {
-			return nil, rowsAffected, fmt.Errorf("error on select in: %w", err)
-		}
-		rowsAffected, err = res.RowsAffected()
-		if err != nil {
-			return nil, rowsAffected, fmt.Errorf("error on rowsaffected: %w", err)
+	// purge unneeded watches
+	allWatches, err := db.reader.GetAllWatches(ctx)
+	if err != nil {
+		return nil, -1, fmt.Errorf("could not get all watches: %w", err)
+	}
+
+	deletedWatches := 0
+	// loop over all database watches
+	for _, watch := range allWatches {
+		// if the old watch from the database is missing from the config, delete it
+		// foundIDs = watches both in the config and the database
+		if !slices.Contains(foundIDs, watch.ID) {
+			if err := db.writer.DeleteWatch(ctx, watch.ID); err != nil {
+				return nil, -1, fmt.Errorf("could not delete watch %d: %w", watch.ID, err)
+			}
+			deletedWatches++
 		}
 	}
 
-	return newWatches, rowsAffected, nil
+	return newWatches, deletedWatches, nil
 }
