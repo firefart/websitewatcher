@@ -27,7 +27,7 @@ type app struct {
 	httpClient  *http.Client
 	mailer      *mail.Mail
 	dryRun      bool
-	db          *database.Database
+	db          database.Interface
 	taskmanager *taskmanager.TaskManager
 }
 
