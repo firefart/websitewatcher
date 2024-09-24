@@ -2,6 +2,8 @@ package watch
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	gohttp "net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,10 +44,15 @@ func TestCheck(t *testing.T) {
 			defer server.Close()
 
 			client := http.NewHTTPClient(tc.UserAgent, 1*time.Second)
-			w := New(config.WatchConfig{
-				Name: "Test",
-				URL:  server.URL,
-			}, nil, client)
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			w := New(
+				config.WatchConfig{
+					Name: "Test",
+					URL:  server.URL,
+				},
+				logger,
+				client,
+			)
 
 			ret, err := w.doHTTP(context.Background())
 			if err != nil {
