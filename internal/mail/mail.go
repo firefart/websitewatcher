@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/diff"
 	"github.com/firefart/websitewatcher/internal/http"
-	"github.com/firefart/websitewatcher/internal/logger"
 	"github.com/firefart/websitewatcher/internal/watch"
 
 	gomail "github.com/wneessen/go-mail"
@@ -21,10 +21,10 @@ import (
 type Mail struct {
 	config     config.Configuration
 	httpClient *http.Client
-	logger     logger.Logger
+	logger     *slog.Logger
 }
 
-func New(config config.Configuration, httpClient *http.Client, logger logger.Logger) *Mail {
+func New(config config.Configuration, httpClient *http.Client, logger *slog.Logger) *Mail {
 	return &Mail{
 		config:     config,
 		httpClient: httpClient,
@@ -103,7 +103,7 @@ func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, sub
 	default:
 		return fmt.Errorf("invalid diff method %s", diffMethod)
 	}
-	m.logger.Debugf("Mail Content: %s", content)
+	m.logger.Debug("Mail", slog.String("content", content))
 	return m.sendHTMLEmail(ctx, w, subject, content)
 }
 
@@ -185,7 +185,7 @@ func (m *Mail) send(ctx context.Context, to string, subject, body string, conten
 		if errors.Is(err, context.Canceled) {
 			return err
 		}
-		m.logger.Errorf("error on sending email %q on try %d: %v", subject, i, err)
+		m.logger.Error("error on sending email", slog.String("subject", subject), slog.Int("try", i), slog.String("err", err.Error()))
 	}
 	return fmt.Errorf("could not send mail %q after %d retries. Last error: %w", subject, m.config.Mail.Retries, err)
 }

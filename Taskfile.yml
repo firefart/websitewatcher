@@ -8,18 +8,30 @@ tasks:
     cmds:
       - go mod tidy -v
 
-  setup:
-    cmds:
-      - go install mvdan.cc/gofumpt@latest
-
   update:
+    deps: [generate]
     cmds:
       - go get -u
       - go mod tidy -v
 
+  generate:
+    deps: [sqlc]
+
+  sqlc:
+    cmds:
+      - sqlc generate
+
+  setup:
+    cmds:
+      - go install github.com/pressly/goose/v3/cmd/goose@latest
+      - go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+      - go install mvdan.cc/gofumpt@latest
+
   build:
     aliases: [default]
-    deps: [deps]
+    deps: [deps, generate]
+    env:
+      CGO_ENABLED: 0
     cmds:
       - go fmt ./...
       - gofumpt -l -w .
@@ -27,7 +39,7 @@ tasks:
       - go build -o {{.PROGRAM}}
 
   test:
-    deps: [deps]
+    deps: [deps, generate]
     env:
       CGO_ENABLED: 1 # required by -race
     cmds:

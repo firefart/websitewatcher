@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"os/signal"
@@ -17,13 +18,11 @@ import (
 	"github.com/firefart/websitewatcher/internal/mail"
 	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
-	"github.com/robfig/cron/v3"
-
-	"github.com/sirupsen/logrus"
+	"github.com/google/uuid"
 )
 
 type app struct {
-	logger      *logrus.Logger
+	logger      *slog.Logger
 	config      config.Configuration
 	httpClient  *http.Client
 	mailer      *mail.Mail
@@ -33,51 +32,51 @@ type app struct {
 }
 
 func main() {
-	logger := logrus.New()
+	var debugMode bool
+	var configFilename string
+	var jsonOutput bool
+	var dryRun bool
+	flag.BoolVar(&debugMode, "debug", false, "Enable DEBUG mode")
+	flag.StringVar(&configFilename, "config", "", "config file to use")
+	flag.BoolVar(&jsonOutput, "json", false, "output in json instead")
+	flag.BoolVar(&dryRun, "dry-run", false, "dry-run - send no emails")
+	flag.Parse()
+
+	logger := newLogger(debugMode, jsonOutput)
 	app := app{
 		logger: logger,
 	}
-	if err := app.run(); err != nil {
+	if err := app.run(dryRun, configFilename); err != nil {
 		app.logError(err)
 		os.Exit(1)
 	}
 }
 
 func (app *app) logError(err error) {
-	app.logger.Errorf("[ERROR] %v", err)
+	app.logger.Error("error occurred", slog.String("err", err.Error()))
 }
 
-func (app *app) run() error {
+func (app *app) run(dryRun bool, configFile string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer cancel()
 
-	configFile := flag.String("config", "", "config file to use")
-	debug := flag.Bool("debug", false, "Print debug output")
-	dryRun := flag.Bool("dry-run", false, "dry-run - send no emails")
-	flag.Parse()
-
-	app.logger.SetOutput(os.Stdout)
-	app.logger.SetLevel(logrus.InfoLevel)
-	if *debug {
-		app.logger.SetLevel(logrus.DebugLevel)
-	}
-
-	if *configFile == "" {
+	if configFile == "" {
 		return fmt.Errorf("please supply a config file")
 	}
 
-	configuration, err := config.GetConfig(*configFile)
+	configuration, err := config.GetConfig(configFile)
 	if err != nil {
 		return err
 	}
 
-	db, err := database.New(configuration)
+	db, err := database.New(ctx, configuration, app.logger)
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		if err := db.Close(); err != nil {
-			app.logger.Errorf("error on database close: %v", err)
+			app.logger.Error("error on database close", slog.String("err", err.Error()))
 		}
 	}()
 
@@ -86,10 +85,13 @@ func (app *app) run() error {
 
 	app.config = configuration
 	app.httpClient = httpClient
-	app.dryRun = *dryRun
+	app.dryRun = dryRun
 	app.db = db
 	app.mailer = mailer
-	app.taskmanager = taskmanager.New(app.logger)
+	app.taskmanager, err = taskmanager.New(app.logger)
+	if err != nil {
+		return fmt.Errorf("could not create taskmanager: %w", err)
+	}
 
 	// remove old websites in the database on each run
 	newEntries, deletedRows, err := db.PrepareDatabase(ctx, configuration)
@@ -97,13 +99,13 @@ func (app *app) run() error {
 		return fmt.Errorf("[CLEANUP] %w", err)
 	}
 	if deletedRows > 0 {
-		app.logger.Infof("Removed %d old entries from database", deletedRows)
+		app.logger.Info("Removed old entries from database", slog.Int("deleted-rows", deletedRows))
 	}
 
-	firstRunners := make(map[cron.EntryID]string)
+	firstRunners := make(map[uuid.UUID]string)
 	for _, wc := range configuration.Watches {
 		if wc.Disabled {
-			app.logger.Infof("[%s] skipping because it's disabled", wc.Name)
+			app.logger.Info("skipping because it's disabled", slog.String("name", wc.Name))
 			continue
 		}
 
@@ -127,7 +129,7 @@ func (app *app) run() error {
 			app.logError(err)
 			continue
 		}
-		app.logger.Debugf("added task %d for %s (%s)", entryID, w.Name, w.Cron)
+		app.logger.Debug("added task", slog.String("id", entryID.String()), slog.String("name", w.Name), slog.String("schedule", w.Cron))
 
 		// determine if it's a new job that has never been run
 		for _, tmp := range newEntries {
@@ -144,8 +146,8 @@ func (app *app) run() error {
 	// if it's a new job run it manually to add a baseline to the database
 	// also run as a go func so the program does not block
 	for entryID, entryName := range firstRunners {
-		go func(id cron.EntryID, name string) {
-			app.logger.Debugf("running job for %s as it's a new entry", name)
+		go func(id uuid.UUID, name string) {
+			app.logger.Debug("running job as it's a new entry", slog.String("name", name))
 			if err := app.taskmanager.RunJob(id); err != nil {
 				app.logError(err)
 				return
@@ -157,7 +159,9 @@ func (app *app) run() error {
 	<-ctx.Done()
 	cancel()
 
-	app.taskmanager.Stop()
+	if err := app.taskmanager.Stop(); err != nil {
+		return fmt.Errorf("error stopping taskmanager: %w", err)
+	}
 
 	return nil
 }
@@ -172,11 +176,11 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			// ignore timeout errors so outer mail will not send emails on, them
 			// we also do not update the database, so we keep the old, non timeout
 			// content in there
-			app.logger.Infof("[%s] timed out, ignoring", w.Name)
+			app.logger.Info("watch timed out, ignoring", slog.String("name", w.Name))
 			return nil
 		case errors.As(err, &invalidErr):
 			// we still have an error or soft error after all retries
-			app.logger.Errorf("[%s] invalid response - message: %s, status: %d, body: %s, duration: %s", w.Name, invalidErr.ErrorMessage, invalidErr.StatusCode, string(invalidErr.Body), invalidErr.Duration)
+			app.logger.Error("invalid response", slog.String("name", w.Name), slog.String("error-message", invalidErr.ErrorMessage), slog.Int("error-code", invalidErr.StatusCode), slog.String("error-body", string(invalidErr.Body)), slog.Duration("duration", invalidErr.Duration))
 
 			// do not send error emails on these status codes
 			ignoreStatusCode := false
@@ -193,13 +197,13 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			}
 			// if statuscode is ignored, do not send email
 			if ignoreStatusCode {
-				app.logger.Infof("[%s] not sending error mail because status %d is excluded", w.Name, invalidErr.StatusCode)
+				app.logger.Info("not sending error mail because status is excluded", slog.String("name", w.Name), slog.Int("status-code", invalidErr.StatusCode))
 				return nil
 			}
 
 			// send mail to indicate we might have an error
 			if !app.dryRun {
-				app.logger.Infof("[%s] sending watch error email", w.Name)
+				app.logger.Info("sending watch error email", slog.String("name", w.Name))
 				if err := app.mailer.SendWatchError(ctx, w, invalidErr); err != nil {
 					return err
 				}
@@ -215,7 +219,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		// if it's a new website not yet in the database only process new entries and ignore old ones
 		if errors.Is(err, database.ErrNotFound) {
 			// lastContent = nil on new sites not yet processed, so send no email here
-			app.logger.Infof("[%s] new website detected, not comparing", w.Name)
+			app.logger.Info("new website detected, not comparing", slog.String("name", w.Name))
 			if _, err := app.db.InsertLastContent(ctx, w.Name, w.URL, watchReturn.Body); err != nil {
 				return err
 			}
@@ -227,12 +231,10 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
 		if app.dryRun {
-			app.logger.Infof("[%s] Dry Run: Website differs", w.Name)
-			app.logger.Debugf("[%s] Last Body %s", w.Name, lastContent)
-			app.logger.Debugf("[%s] Returned Body %s", w.Name, watchReturn.Body)
+			app.logger.Info("Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
 		} else {
 			subject := fmt.Sprintf("[%s] change detected", w.Name)
-			app.logger.Infof("%s - sending email", subject)
+			app.logger.Info("sending email", slog.String("subject", subject))
 			text := fmt.Sprintf("Name: %s\nURL: %s", w.Name, w.URL)
 			if w.Description != "" {
 				text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)
@@ -243,7 +245,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			}
 		}
 	} else {
-		app.logger.Infof("[%s] no change detected", w.Name)
+		app.logger.Info("no change detected", slog.String("name", w.Name))
 	}
 
 	// update database entry if we did not have any errors

@@ -2,52 +2,62 @@ package taskmanager
 
 import (
 	"fmt"
+	"log/slog"
 
-	"github.com/firefart/websitewatcher/internal/logger"
-	"github.com/robfig/cron/v3"
+	"github.com/go-co-op/gocron/v2"
+	"github.com/google/uuid"
 )
 
 type TaskManager struct {
-	scheduler *cron.Cron
+	scheduler gocron.Scheduler
 }
 
-func New(logger logger.Logger) *TaskManager {
-	cronLogger := cron.PrintfLogger(logger)
-	return &TaskManager{
-		scheduler: cron.New(
-			cron.WithLogger(cronLogger),
-			cron.WithChain(
-				cron.SkipIfStillRunning(cronLogger),
-			),
-		),
+func New(logger *slog.Logger) (*TaskManager, error) {
+	scheduler, err := gocron.NewScheduler(
+		gocron.WithLogger(logger),
+	)
+	if err != nil {
+		return nil, err
 	}
+
+	return &TaskManager{
+		scheduler: scheduler,
+	}, nil
 }
 
 func (tm *TaskManager) Start() {
 	tm.scheduler.Start()
 }
 
-func (tm *TaskManager) Stop() {
-	tm.scheduler.Stop()
+func (tm *TaskManager) Stop() error {
+	return tm.scheduler.Shutdown()
 }
 
-func (tm *TaskManager) AddTask(schedule string, task func()) (cron.EntryID, error) {
-	return tm.scheduler.AddFunc(schedule, task)
-}
-
-func (tm *TaskManager) RemoveTask(id cron.EntryID) {
-	tm.scheduler.Remove(id)
-}
-
-func (tm *TaskManager) RunJob(id cron.EntryID) error {
-	taskID := tm.scheduler.Entry(id)
-	if !taskID.Valid() {
-		return fmt.Errorf("could not find task %d", id)
+func (tm *TaskManager) AddTask(schedule string, task func()) (uuid.UUID, error) {
+	j, err := tm.scheduler.NewJob(
+		gocron.CronJob(schedule, false),
+		gocron.NewTask(task),
+	)
+	if err != nil {
+		return uuid.Nil, err
 	}
-	taskID.Job.Run()
-	return nil
+	return j.ID(), nil
 }
 
-func (tm *TaskManager) ListTasks() []cron.Entry {
-	return tm.scheduler.Entries()
+func (tm *TaskManager) RemoveTask(id uuid.UUID) error {
+	return tm.scheduler.RemoveJob(id)
+}
+
+func (tm *TaskManager) RunJob(id uuid.UUID) error {
+	jobs := tm.scheduler.Jobs()
+	for _, job := range jobs {
+		if job.ID() == id {
+			return job.RunNow()
+		}
+	}
+	return fmt.Errorf("could not find task %d", id)
+}
+
+func (tm *TaskManager) ListTasks() []gocron.Job {
+	return tm.scheduler.Jobs()
 }

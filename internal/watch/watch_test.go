@@ -9,7 +9,6 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/http"
-	"github.com/firefart/websitewatcher/internal/logger"
 )
 
 func TestCheck(t *testing.T) {
@@ -46,7 +45,7 @@ func TestCheck(t *testing.T) {
 			w := New(config.WatchConfig{
 				Name: "Test",
 				URL:  server.URL,
-			}, &logger.NilLogger{}, client)
+			}, nil, client)
 
 			ret, err := w.doHTTP(context.Background())
 			if err != nil {
