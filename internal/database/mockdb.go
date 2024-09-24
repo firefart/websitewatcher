@@ -22,7 +22,7 @@ func (*MockDB) GetLastContent(_ context.Context, _, _ string) (int64, []byte, er
 	return 0, nil, nil
 }
 
-func (*MockDB) InsertLastContent(_ context.Context, _, _ string, _ []byte) (int64, error) {
+func (*MockDB) InsertWatch(_ context.Context, _, _ string, _ []byte) (int64, error) {
 	return 0, nil
 }
 

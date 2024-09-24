@@ -27,7 +27,7 @@ var embedMigrations embed.FS
 type Interface interface {
 	Close() error
 	GetLastContent(ctx context.Context, name, url string) (int64, []byte, error)
-	InsertLastContent(ctx context.Context, name, url string, content []byte) (int64, error)
+	InsertWatch(ctx context.Context, name, url string, content []byte) (int64, error)
 	UpdateLastContent(ctx context.Context, id int64, content []byte) error
 	PrepareDatabase(ctx context.Context, c config.Configuration) ([]config.WatchConfig, int, error)
 }
@@ -154,7 +154,7 @@ func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64
 	return watch.ID, watch.LastContent, nil
 }
 
-func (db *Database) InsertLastContent(ctx context.Context, name, url string, content []byte) (int64, error) {
+func (db *Database) InsertWatch(ctx context.Context, name, url string, content []byte) (int64, error) {
 	res, err := db.writer.InsertWatch(ctx, sqlc.InsertWatchParams{
 		Name:        name,
 		Url:         url,

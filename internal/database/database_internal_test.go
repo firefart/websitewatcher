@@ -15,6 +15,8 @@ import (
 )
 
 func TestMigrations(t *testing.T) {
+	t.Parallel()
+
 	db, err := sql.Open("sqlite", ":memory:?_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)")
 	require.Nil(t, err, "could not open database")
 
