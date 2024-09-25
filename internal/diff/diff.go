@@ -49,18 +49,21 @@ func GenerateHTMLDiffInternal(body string, text1, text2 string) (string, error) 
 	return body, nil
 }
 
-func GenerateHTMLDiffGit(ctx context.Context, body string, text1, text2 string) (string, error) {
+func GenerateDiffGit(ctx context.Context, body string, text1, text2 string) (string, string, error) {
 	diff, err := diffGit(ctx, text1, text2)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	diffCSS, diffHTML, err := convertGitDiffToHTML(string(diff))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	body = strings.ReplaceAll(body, "\n", "<br>\n")
-	body = fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", diffCSS, body, diffHTML)
-	return body, nil
+
+	textBody := fmt.Sprintf("%s\n%s", body, diff)
+
+	htmlBody := strings.ReplaceAll(body, "\n", "<br>\n")
+	htmlBody = fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", diffCSS, body, diffHTML)
+	return textBody, htmlBody, nil
 }
 
 func GenerateHTMLDiffAPI(ctx context.Context, httpClient *http2.Client, body string, text1, text2 string) (string, error) {

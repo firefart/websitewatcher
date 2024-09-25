@@ -72,7 +72,7 @@ func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) err
 	subject := fmt.Sprintf("[ERROR] error in websitewatcher on %s", w.Name)
 	body := fmt.Sprintf("%s", err)
 	for _, to := range m.config.Mail.To {
-		if err := m.send(ctx, to, subject, body, gomail.TypeTextPlain); err != nil {
+		if err := m.send(ctx, to, subject, body, ""); err != nil {
 			return err
 		}
 	}
@@ -80,31 +80,30 @@ func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) err
 }
 
 func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, subject, body, text1, text2 string) error {
-	content := ""
+	htmlContent := ""
+	textContent := ""
+	var err error
 	switch diffMethod {
 	case "api":
-		htmlContent, err := diff.GenerateHTMLDiffAPI(ctx, m.httpClient, body, text1, text2)
+		htmlContent, err = diff.GenerateHTMLDiffAPI(ctx, m.httpClient, body, text1, text2)
 		if err != nil {
 			return err
 		}
-		content = htmlContent
 	case "internal":
-		htmlContent, err := diff.GenerateHTMLDiffInternal(body, text1, text2)
+		htmlContent, err = diff.GenerateHTMLDiffInternal(body, text1, text2)
 		if err != nil {
 			return err
 		}
-		content = htmlContent
 	case "git":
-		htmlContent, err := diff.GenerateHTMLDiffGit(ctx, body, text1, text2)
+		textContent, htmlContent, err = diff.GenerateDiffGit(ctx, body, text1, text2)
 		if err != nil {
 			return err
 		}
-		content = htmlContent
 	default:
 		return fmt.Errorf("invalid diff method %s", diffMethod)
 	}
-	m.logger.Debug("Mail", slog.String("content", content))
-	return m.sendHTMLEmail(ctx, w, subject, content)
+	m.logger.Debug("Mail", slog.String("content-text", textContent), slog.String("html-content", htmlContent))
+	return m.sendMultipartEmail(ctx, w, subject, textContent, htmlContent)
 }
 
 func (m *Mail) SendWatchError(ctx context.Context, w watch.Watch, ret *watch.InvalidResponseError) error {
@@ -153,7 +152,7 @@ func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBo
 	}
 
 	for _, to := range tos {
-		if err := m.send(ctx, to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), htmlBody, gomail.TypeTextHTML); err != nil {
+		if err := m.send(ctx, to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), "", htmlBody); err != nil {
 			return err
 		}
 	}
@@ -161,12 +160,32 @@ func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBo
 	return nil
 }
 
-func (m *Mail) send(ctx context.Context, to string, subject, body string, contentType gomail.ContentType) error {
+func (m *Mail) sendMultipartEmail(ctx context.Context, w watch.Watch, subject, textBody, htmlBody string) error {
+	tos := m.config.Mail.To
+	if len(w.AdditionalTo) > 0 {
+		tos = append(tos, w.AdditionalTo...)
+	}
+
+	for _, to := range tos {
+		if err := m.send(ctx, to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), textBody, htmlBody); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlContent string) error {
+	if textContent == "" && htmlContent == "" {
+		return fmt.Errorf("need a content to send email")
+	}
+
 	mailer, err := m.newClient()
 	if err != nil {
 		return err
 	}
 	msg := gomail.NewMsg(gomail.WithNoDefaultUserAgent())
+	msg.SetUserAgent("websitewatcher / https://github.com/firefart/websitewatcher")
 	if err := msg.FromFormat(m.config.Mail.From.Name, m.config.Mail.From.Mail); err != nil {
 		return err
 	}
@@ -174,7 +193,12 @@ func (m *Mail) send(ctx context.Context, to string, subject, body string, conten
 		return err
 	}
 	msg.Subject(subject)
-	msg.SetBodyString(contentType, body)
+	if textContent != "" {
+		msg.SetBodyString(gomail.TypeTextPlain, textContent)
+	}
+	if htmlContent != "" {
+		msg.SetBodyString(gomail.TypeTextHTML, htmlContent)
+	}
 
 	for i := 1; i <= m.config.Mail.Retries; i++ {
 		err = mailer.DialAndSendWithContext(ctx, msg)
