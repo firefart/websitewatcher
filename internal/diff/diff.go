@@ -61,8 +61,8 @@ func GenerateDiffGit(ctx context.Context, body string, text1, text2 string) (str
 
 	textBody := fmt.Sprintf("%s\n%s", body, diff)
 
-	htmlBody := strings.ReplaceAll(body, "\n", "<br>\n")
-	htmlBody = fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", diffCSS, body, diffHTML)
+	body = strings.ReplaceAll(body, "\n", "<br>\n")
+	htmlBody := fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", diffCSS, body, diffHTML)
 	return textBody, htmlBody, nil
 }
 
