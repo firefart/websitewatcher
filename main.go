@@ -99,13 +99,13 @@ func (app *app) run(dryRun bool, configFile string) error {
 		return fmt.Errorf("[CLEANUP] %w", err)
 	}
 	if deletedRows > 0 {
-		app.logger.Info("Removed old entries from database", slog.Int("deleted-rows", deletedRows))
+		app.logger.Info("removed old entries from database", slog.Int("deleted-rows", deletedRows))
 	}
 
 	firstRunners := make(map[uuid.UUID]string)
 	for _, wc := range configuration.Watches {
 		if wc.Disabled {
-			app.logger.Info("skipping because it's disabled", slog.String("name", wc.Name))
+			app.logger.Info("skipping watch because it's disabled", slog.String("name", wc.Name))
 			continue
 		}
 
@@ -147,7 +147,7 @@ func (app *app) run(dryRun bool, configFile string) error {
 	// also run as a go func so the program does not block
 	for entryID, entryName := range firstRunners {
 		go func(id uuid.UUID, name string) {
-			app.logger.Debug("running job as it's a new entry", slog.String("name", name))
+			app.logger.Debug("running new job", slog.String("name", name))
 			if err := app.taskmanager.RunJob(id); err != nil {
 				app.logError(err)
 				return
@@ -234,7 +234,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			app.logger.Info("Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
 		} else {
 			subject := fmt.Sprintf("[%s] change detected", w.Name)
-			app.logger.Info("sending email", slog.String("subject", subject))
+			app.logger.Info("sending diff email", slog.String("name", w.Name))
 			text := fmt.Sprintf("Name: %s\nURL: %s", w.Name, w.URL)
 			if w.Description != "" {
 				text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)

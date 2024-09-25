@@ -102,7 +102,6 @@ func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, sub
 	default:
 		return fmt.Errorf("invalid diff method %s", diffMethod)
 	}
-	m.logger.Debug("Mail", slog.String("content-text", textContent), slog.String("html-content", htmlContent))
 	return m.sendMultipartEmail(ctx, w, subject, textContent, htmlContent)
 }
 
@@ -179,6 +178,8 @@ func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlCo
 	if textContent == "" && htmlContent == "" {
 		return fmt.Errorf("need a content to send email")
 	}
+
+	m.logger.Debug("sending email", slog.String("subject", subject), slog.String("to", to), slog.String("content-text", textContent), slog.String("html-content", htmlContent))
 
 	mailer, err := m.newClient()
 	if err != nil {
