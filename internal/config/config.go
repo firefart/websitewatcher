@@ -23,6 +23,7 @@ type Configuration struct {
 	NoErrorMailOnStatusCode []int         `koanf:"no_errormail_on_statuscode"`
 	RetryOnMatch            []string      `koanf:"retry_on_match"`
 	Watches                 []WatchConfig `koanf:"watches"`
+	GracefulTimeout         time.Duration `koanf:"graceful_timeout"`
 }
 
 type MailConfig struct {
@@ -81,7 +82,8 @@ var defaultConfig = Configuration{
 		Retries: 3,
 		Timeout: 10 * time.Second,
 	},
-	DiffMethod: "git",
+	DiffMethod:      "git",
+	GracefulTimeout: 5 * time.Second,
 }
 
 func GetConfig(f string) (Configuration, error) {

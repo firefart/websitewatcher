@@ -75,7 +75,7 @@ func (app *app) run(dryRun bool, configFile string) error {
 	}
 
 	defer func() {
-		if err := db.Close(); err != nil {
+		if err := db.Close(configuration.GracefulTimeout); err != nil {
 			app.logger.Error("error on database close", slog.String("err", err.Error()))
 		}
 	}()

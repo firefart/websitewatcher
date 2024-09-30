@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/database"
@@ -27,7 +28,7 @@ func TestNew(t *testing.T) {
 	}
 	db, err := database.New(context.Background(), configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	err = db.Close()
+	err = db.Close(1 * time.Second)
 	require.Nil(t, err)
 }
 
@@ -46,7 +47,7 @@ func TestInsertAndGetLastContent(t *testing.T) {
 	ctx := context.Background()
 	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	defer db.Close()
+	defer db.Close(1 * time.Second)
 
 	name := "Test"
 	url := "https://google.com"
@@ -77,7 +78,7 @@ func TestUpdateLastContent(t *testing.T) {
 	ctx := context.Background()
 	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	defer db.Close()
+	defer db.Close(1 * time.Second)
 
 	name := "Test"
 	url := "https://google.com"
@@ -118,7 +119,7 @@ func TestPrepareDatabase(t *testing.T) {
 	ctx := context.Background()
 	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	defer db.Close()
+	defer db.Close(1 * time.Second)
 
 	name := "Test"
 	url := "https://google.com"

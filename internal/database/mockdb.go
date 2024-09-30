@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
 )
@@ -16,7 +17,7 @@ func NewMockDB() *MockDB {
 // compile time check that struct implements the interface
 var _ Interface = (*MockDB)(nil)
 
-func (*MockDB) Close() error { return nil }
+func (*MockDB) Close(_ time.Duration) error { return nil }
 
 func (*MockDB) GetLastContent(_ context.Context, _, _ string) (int64, []byte, error) {
 	return 0, nil, nil

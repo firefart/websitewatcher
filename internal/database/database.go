@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/database/sqlc"
@@ -25,7 +26,7 @@ var ErrNotFound = errors.New("url not found in database")
 var embedMigrations embed.FS
 
 type Interface interface {
-	Close() error
+	Close(timeout time.Duration) error
 	GetLastContent(ctx context.Context, name, url string) (int64, []byte, error)
 	InsertWatch(ctx context.Context, name, url string, content []byte) (int64, error)
 	UpdateLastContent(ctx context.Context, id int64, content []byte) error
@@ -112,32 +113,37 @@ func newDatabase(ctx context.Context, configuration config.Configuration, logger
 	}
 
 	// shrink and defrag the database (must be run before the checkpoint)
-	if _, err := db.Exec("VACUUM;"); err != nil {
+	if _, err := db.ExecContext(ctx, "VACUUM;"); err != nil {
 		return nil, fmt.Errorf("could not vacuum: %w", err)
 	}
 
 	// truncate the wal file
-	if _, err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE);"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE);"); err != nil {
 		return nil, fmt.Errorf("could not truncate wal: %w", err)
 	}
 
 	// set synchronous mode to normal as it's recommended for WAL
-	if _, err := db.Exec("PRAGMA synchronous(NORMAL);"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA synchronous(NORMAL);"); err != nil {
 		return nil, fmt.Errorf("could not set synchronous: %w", err)
 	}
 
 	// set the busy timeout (ms) - how long a command waits to be executed when the db is locked / busy
-	if _, err := db.Exec("PRAGMA busy_timeout(5000);"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA busy_timeout(5000);"); err != nil {
 		return nil, fmt.Errorf("could not set synchronous: %w", err)
 	}
 
 	return db, nil
 }
 
-func (db *Database) Close() error {
-	err1 := db.writerRAW.Close()
-	err2 := db.readerRAW.Close()
-	return errors.Join(err1, err2)
+func (db *Database) Close(timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	// truncate the files on close
+	_, err1 := db.writerRAW.ExecContext(ctx, "VACUUM;")
+	_, err2 := db.writerRAW.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE);")
+	err3 := db.writerRAW.Close()
+	err4 := db.readerRAW.Close()
+	return errors.Join(err1, err2, err3, err4)
 }
 
 func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64, []byte, error) {
