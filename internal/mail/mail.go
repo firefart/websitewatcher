@@ -19,53 +19,48 @@ import (
 )
 
 type Mail struct {
+	client     *gomail.Client
 	config     config.Configuration
 	httpClient *http.Client
 	logger     *slog.Logger
 }
 
-func New(config config.Configuration, httpClient *http.Client, logger *slog.Logger) *Mail {
-	return &Mail{
-		config:     config,
-		httpClient: httpClient,
-		logger:     logger,
-	}
-}
-
-// gomail.Client is NOT threadsafe
-// https://github.com/wneessen/go-mail/discussions/268
-// so we need to create a new client each time :/
-func (m *Mail) newClient() (*gomail.Client, error) {
+func New(config config.Configuration, httpClient *http.Client, logger *slog.Logger) (*Mail, error) {
 	var options []gomail.Option
 
-	options = append(options, gomail.WithTimeout(m.config.Mail.Timeout))
-	options = append(options, gomail.WithPort(m.config.Mail.Port))
-	if m.config.Mail.User != "" && m.config.Mail.Password != "" {
+	options = append(options, gomail.WithTimeout(config.Mail.Timeout))
+	options = append(options, gomail.WithPort(config.Mail.Port))
+	if config.Mail.User != "" && config.Mail.Password != "" {
 		options = append(options, gomail.WithSMTPAuth(gomail.SMTPAuthPlain))
-		options = append(options, gomail.WithUsername(m.config.Mail.User))
-		options = append(options, gomail.WithPassword(m.config.Mail.Password))
+		options = append(options, gomail.WithUsername(config.Mail.User))
+		options = append(options, gomail.WithPassword(config.Mail.Password))
 	}
-	if m.config.Mail.SkipTLS {
+	if config.Mail.SkipTLS {
 		options = append(options, gomail.WithTLSConfig(&tls.Config{
 			InsecureSkipVerify: true,
 		}))
 	}
 
 	// use either tls, starttls, or starttls with fallback to plaintext
-	if m.config.Mail.TLS {
+	if config.Mail.TLS {
 		options = append(options, gomail.WithSSL())
-	} else if m.config.Mail.StartTLS {
+	} else if config.Mail.StartTLS {
 		options = append(options, gomail.WithTLSPolicy(gomail.TLSMandatory))
 	} else {
 		options = append(options, gomail.WithTLSPolicy(gomail.TLSOpportunistic))
 	}
 
-	mailer, err := gomail.NewClient(m.config.Mail.Server, options...)
+	mailer, err := gomail.NewClient(config.Mail.Server, options...)
 	if err != nil {
 		return nil, fmt.Errorf("could not create mail client: %w", err)
 	}
 
-	return mailer, nil
+	return &Mail{
+		client:     mailer,
+		config:     config,
+		httpClient: httpClient,
+		logger:     logger,
+	}, nil
 }
 
 func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) error {
@@ -181,10 +176,6 @@ func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlCo
 
 	m.logger.Debug("sending email", slog.String("subject", subject), slog.String("to", to), slog.String("content-text", textContent), slog.String("html-content", htmlContent))
 
-	mailer, err := m.newClient()
-	if err != nil {
-		return err
-	}
 	msg := gomail.NewMsg(gomail.WithNoDefaultUserAgent())
 	msg.SetUserAgent("websitewatcher / https://github.com/firefart/websitewatcher")
 	if err := msg.FromFormat(m.config.Mail.From.Name, m.config.Mail.From.Mail); err != nil {
@@ -201,8 +192,9 @@ func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlCo
 		msg.SetBodyString(gomail.TypeTextHTML, htmlContent)
 	}
 
+	var err error
 	for i := 1; i <= m.config.Mail.Retries; i++ {
-		err = mailer.DialAndSendWithContext(ctx, msg)
+		err = m.client.DialAndSendWithContext(ctx, msg)
 		if err == nil {
 			return nil
 		}

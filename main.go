@@ -81,7 +81,10 @@ func (app *app) run(dryRun bool, configFile string) error {
 	}()
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
-	mailer := mail.New(configuration, httpClient, app.logger)
+	mailer, err := mail.New(configuration, httpClient, app.logger)
+	if err != nil {
+		return err
+	}
 
 	app.config = configuration
 	app.httpClient = httpClient
