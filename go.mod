@@ -3,7 +3,7 @@ module github.com/firefart/websitewatcher
 go 1.23
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.0.4
+	github.com/brianvoe/gofakeit/v7 v7.1.1
 	github.com/charmbracelet/log v0.4.0
 	github.com/go-co-op/gocron/v2 v2.12.1
 	github.com/google/uuid v1.6.0
