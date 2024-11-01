@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/brianvoe/gofakeit/v7 v7.1.2
 	github.com/charmbracelet/log v0.4.0
-	github.com/go-co-op/gocron/v2 v2.12.1
+	github.com/go-co-op/gocron/v2 v2.12.3
 	github.com/google/uuid v1.6.0
 	github.com/itchyny/gojq v0.12.16
 	github.com/knadh/koanf/parsers/json v0.1.0
@@ -22,7 +22,7 @@ require (
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/charmbracelet/lipgloss v0.13.1 // indirect
+	github.com/charmbracelet/lipgloss v1.0.0 // indirect
 	github.com/charmbracelet/x/ansi v0.4.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
