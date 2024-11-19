@@ -72,7 +72,7 @@ type WatchConfig struct {
 
 type ReplaceConfig struct {
 	Pattern     string `koanf:"pattern" validate:"required"`
-	ReplaceWith string `koanf:"replace_with" validate:"required_with=Pattern"`
+	ReplaceWith string `koanf:"replace_with"`
 }
 
 var defaultConfig = Configuration{
