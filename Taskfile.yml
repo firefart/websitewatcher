@@ -50,6 +50,16 @@ tasks:
     cmds:
       - ./{{.PROGRAM}} -debug -dry-run -config config.json
 
+  configcheck:
+    deps: [build]
+    cmds:
+      - ./{{.PROGRAM}} -config config.json -configcheck
+
+  version:
+    deps: [build]
+    cmds:
+      - ./{{.PROGRAM}} -version
+
   lint:
     cmds:
       - golangci-lint run ./... --timeout=30m

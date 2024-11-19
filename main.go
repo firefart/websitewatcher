@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
@@ -19,6 +20,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 )
 
 type app struct {
@@ -36,17 +38,47 @@ func main() {
 	var configFilename string
 	var jsonOutput bool
 	var dryRun bool
+	var version bool
+	var configCheckMode bool
 	flag.BoolVar(&debugMode, "debug", false, "Enable DEBUG mode")
 	flag.StringVar(&configFilename, "config", "", "config file to use")
 	flag.BoolVar(&jsonOutput, "json", false, "output in json instead")
 	flag.BoolVar(&dryRun, "dry-run", false, "dry-run - send no emails")
+	flag.BoolVar(&configCheckMode, "configcheck", false, "just check the config")
+	flag.BoolVar(&version, "version", false, "show version")
 	flag.Parse()
+
+	if version {
+		buildInfo, ok := debug.ReadBuildInfo()
+		if !ok {
+			fmt.Println("Unable to determine version information")
+			os.Exit(1)
+		}
+		fmt.Printf("%s", buildInfo)
+		os.Exit(0)
+	}
 
 	logger := newLogger(debugMode, jsonOutput)
 	app := app{
 		logger: logger,
 	}
-	if err := app.run(dryRun, configFilename); err != nil {
+
+	var err error
+	if configCheckMode {
+		err = configCheck(configFilename)
+	} else {
+		err = app.run(dryRun, configFilename)
+	}
+
+	if err != nil {
+		// check if we have a multierror
+		if merr, ok := err.(*multierror.Error); ok {
+			for _, e := range merr.Errors {
+				app.logError(e)
+			}
+			os.Exit(1)
+		}
+		// a normal error
 		app.logError(err)
 		os.Exit(1)
 	}
@@ -54,6 +86,11 @@ func main() {
 
 func (app *app) logError(err error) {
 	app.logger.Error("error occurred", slog.String("err", err.Error()))
+}
+
+func configCheck(configFilename string) error {
+	_, err := config.GetConfig(configFilename)
+	return err
 }
 
 func (app *app) run(dryRun bool, configFile string) error {

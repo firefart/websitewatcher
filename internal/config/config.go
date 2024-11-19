@@ -7,60 +7,63 @@ import (
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/helper"
+	"github.com/hashicorp/go-multierror"
 	"github.com/knadh/koanf/parsers/json"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/providers/structs"
 	"github.com/knadh/koanf/v2"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type Configuration struct {
 	Mail                    MailConfig    `koanf:"mail"`
 	Retry                   RetryConfig   `koanf:"retry"`
-	DiffMethod              string        `koanf:"diff_method"`
+	DiffMethod              string        `koanf:"diff_method" validate:"required,oneof=git internal api"`
 	Useragent               string        `koanf:"useragent"`
 	Timeout                 time.Duration `koanf:"timeout"`
-	Database                string        `koanf:"database"`
-	NoErrorMailOnStatusCode []int         `koanf:"no_errormail_on_statuscode"`
+	Database                string        `koanf:"database" validate:"required"`
+	NoErrorMailOnStatusCode []int         `koanf:"no_errormail_on_statuscode" validate:"dive,gte=100,lte=999"`
 	RetryOnMatch            []string      `koanf:"retry_on_match"`
-	Watches                 []WatchConfig `koanf:"watches"`
+	Watches                 []WatchConfig `koanf:"watches" validate:"dive"`
 	GracefulTimeout         time.Duration `koanf:"graceful_timeout"`
 }
 
 type MailConfig struct {
-	Server string `koanf:"server"`
-	Port   int    `koanf:"port"`
+	Server string `koanf:"server" validate:"required"`
+	Port   int    `koanf:"port" validate:"required,gt=0,lte=65535"`
 	From   struct {
-		Name string `koanf:"name"`
-		Mail string `koanf:"mail"`
+		Name string `koanf:"name" validate:"required"`
+		Mail string `koanf:"mail" validate:"required,email"`
 	} `koanf:"from"`
-	To       []string      `koanf:"to"`
+	To       []string      `koanf:"to" validate:"required,dive,email"`
 	User     string        `koanf:"user"`
 	Password string        `koanf:"password"`
 	TLS      bool          `koanf:"tls"`
 	StartTLS bool          `koanf:"starttls"`
 	SkipTLS  bool          `koanf:"skiptls"`
-	Retries  int           `koanf:"retries"`
+	Retries  int           `koanf:"retries" validate:"required"`
 	Timeout  time.Duration `koanf:"timeout"`
 }
 
 type RetryConfig struct {
-	Count int           `koanf:"count"`
-	Delay time.Duration `koanf:"delay"`
+	Count int           `koanf:"count" validate:"required"`
+	Delay time.Duration `koanf:"delay" validate:"required"`
 }
 
 type WatchConfig struct {
-	Cron                    string            `koanf:"cron"`
-	Name                    string            `koanf:"name"`
+	Cron                    string            `koanf:"cron" validate:"required,cron"`
+	Name                    string            `koanf:"name" validate:"required"`
 	Description             string            `koanf:"description"`
-	URL                     string            `koanf:"url"`
-	Method                  string            `koanf:"method"`
+	URL                     string            `koanf:"url" validate:"required,url"`
+	Method                  string            `koanf:"method" validate:"required,uppercase"`
 	Body                    string            `koanf:"body"`
 	Header                  map[string]string `koanf:"header"`
-	AdditionalTo            []string          `koanf:"additional_to"`
-	NoErrorMailOnStatusCode []int             `koanf:"no_errormail_on_statuscode"`
+	AdditionalTo            []string          `koanf:"additional_to" validate:"dive,email"`
+	NoErrorMailOnStatusCode []int             `koanf:"no_errormail_on_statuscode" validate:"dive,gte=100,lte=999"`
 	Disabled                bool              `koanf:"disabled"`
 	Pattern                 string            `koanf:"pattern"`
-	Replaces                []ReplaceConfig   `koanf:"replaces"`
+	Replaces                []ReplaceConfig   `koanf:"replaces" validate:"dive"`
 	RetryOnMatch            []string          `koanf:"retry_on_match"`
 	SkipSofterrorPatterns   bool              `koanf:"skip_soft_error_patterns"`
 	JQ                      string            `koanf:"jq"`
@@ -68,8 +71,8 @@ type WatchConfig struct {
 }
 
 type ReplaceConfig struct {
-	Pattern     string `koanf:"pattern"`
-	ReplaceWith string `koanf:"replace_with"`
+	Pattern     string `koanf:"pattern" validate:"required"`
+	ReplaceWith string `koanf:"replace_with" validate:"required"`
 }
 
 var defaultConfig = Configuration{
@@ -87,6 +90,8 @@ var defaultConfig = Configuration{
 }
 
 func GetConfig(f string) (Configuration, error) {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	k := koanf.NewWithConf(koanf.Conf{
 		Delim: ".",
 	})
@@ -115,13 +120,18 @@ func GetConfig(f string) (Configuration, error) {
 		}
 	}
 
-	// check some stuff
-	if config.Mail.Server == "" {
-		return Configuration{}, fmt.Errorf("please supply an email server")
+	if err := validate.Struct(config); err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			return Configuration{}, err
+		}
+
+		var resultErr error
+		for _, err := range err.(validator.ValidationErrors) {
+			resultErr = multierror.Append(resultErr, err)
+		}
+		return Configuration{}, resultErr
 	}
-	if config.DiffMethod != "api" && config.DiffMethod != "git" && config.DiffMethod != "internal" {
-		return Configuration{}, fmt.Errorf("invalid diff method %q", config.DiffMethod)
-	}
+
 	if config.DiffMethod == "git" && !helper.IsGitInstalled() {
 		return Configuration{}, fmt.Errorf("diff mode git requires git to be installed")
 	}
