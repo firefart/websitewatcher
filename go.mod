@@ -15,7 +15,7 @@ require (
 	github.com/knadh/koanf/providers/structs v0.1.0
 	github.com/knadh/koanf/v2 v2.1.2
 	github.com/mattn/go-isatty v0.0.20
-	github.com/pressly/goose/v3 v3.22.1
+	github.com/pressly/goose/v3 v3.23.0
 	github.com/sergi/go-diff v1.3.1
 	github.com/stretchr/testify v1.9.0
 	github.com/wneessen/go-mail v0.5.2
@@ -25,7 +25,7 @@ require (
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/lipgloss v1.0.0 // indirect
-	github.com/charmbracelet/x/ansi v0.5.0 // indirect
+	github.com/charmbracelet/x/ansi v0.5.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
