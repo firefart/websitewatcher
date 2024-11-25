@@ -17,7 +17,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/pressly/goose/v3 v3.23.0
 	github.com/sergi/go-diff v1.3.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/wneessen/go-mail v0.5.2
 	modernc.org/sqlite v1.34.1
 )
