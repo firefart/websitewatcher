@@ -9,13 +9,13 @@ tasks:
       - go mod tidy -v
 
   update:
-    deps: [generate]
+    deps: [ generate ]
     cmds:
       - go get -u
       - go mod tidy -v
 
   generate:
-    deps: [sqlc]
+    deps: [ sqlc ]
 
   sqlc:
     cmds:
@@ -28,8 +28,8 @@ tasks:
       - go install mvdan.cc/gofumpt@latest
 
   build:
-    aliases: [default]
-    deps: [deps, generate]
+    aliases: [ default ]
+    deps: [ deps, generate ]
     env:
       CGO_ENABLED: 0
     cmds:
@@ -39,24 +39,24 @@ tasks:
       - go build -o {{.PROGRAM}}
 
   test:
-    deps: [deps, generate]
+    deps: [ deps, generate ]
     env:
       CGO_ENABLED: 1 # required by -race
     cmds:
       - go test -race -cover ./...
 
   run:
-    deps: [build]
+    deps: [ build ]
     cmds:
       - ./{{.PROGRAM}} -debug -dry-run -config config.json
 
   configcheck:
-    deps: [build]
+    deps: [ build ]
     cmds:
       - ./{{.PROGRAM}} -config config.json -configcheck
 
   version:
-    deps: [build]
+    deps: [ build ]
     cmds:
       - ./{{.PROGRAM}} -version
 

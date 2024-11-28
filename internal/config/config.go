@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -121,7 +122,8 @@ func GetConfig(f string) (Configuration, error) {
 	}
 
 	if err := validate.Struct(config); err != nil {
-		if _, ok := err.(*validator.InvalidValidationError); ok {
+		var invalidValidationError *validator.InvalidValidationError
+		if errors.As(err, &invalidValidationError) {
 			return Configuration{}, err
 		}
 

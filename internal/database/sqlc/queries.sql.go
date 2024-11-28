@@ -10,8 +10,9 @@ import (
 )
 
 const deleteWatch = `-- name: DeleteWatch :exec
-DELETE FROM watches
-WHERE id=?
+DELETE
+FROM watches
+WHERE id = ?
 `
 
 func (q *Queries) DeleteWatch(ctx context.Context, id int64) error {
@@ -57,8 +58,8 @@ func (q *Queries) GetAllWatches(ctx context.Context) ([]Watch, error) {
 const getWatchByNameAndUrl = `-- name: GetWatchByNameAndUrl :one
 SELECT id, name, url, last_fetch, last_content
 FROM watches
-WHERE name=?
-AND url=?
+WHERE name = ?
+  AND url = ?
 `
 
 type GetWatchByNameAndUrlParams struct {
@@ -81,7 +82,7 @@ func (q *Queries) GetWatchByNameAndUrl(ctx context.Context, arg GetWatchByNameAn
 
 const insertWatch = `-- name: InsertWatch :one
 INSERT INTO watches(name, url, last_fetch, last_content)
-VALUES(?,?,CURRENT_TIMESTAMP,?)
+VALUES (?, ?, CURRENT_TIMESTAMP, ?)
 RETURNING id, name, url, last_fetch, last_content
 `
 
@@ -106,8 +107,9 @@ func (q *Queries) InsertWatch(ctx context.Context, arg InsertWatchParams) (Watch
 
 const updateWatch = `-- name: UpdateWatch :one
 UPDATE watches
-SET last_fetch=CURRENT_TIMESTAMP, last_content=?
-WHERE id=?
+SET last_fetch=CURRENT_TIMESTAMP,
+    last_content=?
+WHERE id = ?
 RETURNING id, name, url, last_fetch, last_content
 `
 

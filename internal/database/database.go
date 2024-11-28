@@ -123,12 +123,12 @@ func newDatabase(ctx context.Context, configuration config.Configuration, logger
 	}
 
 	// set synchronous mode to normal as it's recommended for WAL
-	if _, err := db.ExecContext(ctx, "PRAGMA synchronous(NORMAL);"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA synchronous=NORMAL;"); err != nil {
 		return nil, fmt.Errorf("could not set synchronous: %w", err)
 	}
 
 	// set the busy timeout (ms) - how long a command waits to be executed when the db is locked / busy
-	if _, err := db.ExecContext(ctx, "PRAGMA busy_timeout(5000);"); err != nil {
+	if _, err := db.ExecContext(ctx, "PRAGMA busy_timeout=5000;"); err != nil {
 		return nil, fmt.Errorf("could not set synchronous: %w", err)
 	}
 

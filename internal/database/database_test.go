@@ -21,7 +21,12 @@ func TestNew(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.Remove(file.Name())
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			require.Nil(t, err)
+		}
+	}(file.Name())
 
 	configuration := config.Configuration{
 		Database: file.Name(),
@@ -39,7 +44,12 @@ func TestInsertAndGetLastContent(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.Remove(file.Name())
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			require.Nil(t, err)
+		}
+	}(file.Name())
 
 	configuration := config.Configuration{
 		Database: file.Name(),
@@ -47,7 +57,12 @@ func TestInsertAndGetLastContent(t *testing.T) {
 	ctx := context.Background()
 	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	defer db.Close(1 * time.Second)
+	defer func(db *database.Database, timeout time.Duration) {
+		err := db.Close(timeout)
+		if err != nil {
+			require.Nil(t, err)
+		}
+	}(db, 1*time.Second)
 
 	name := "Test"
 	url := "https://google.com"
@@ -70,7 +85,12 @@ func TestUpdateLastContent(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.Remove(file.Name())
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			require.Nil(t, err)
+		}
+	}(file.Name())
 
 	configuration := config.Configuration{
 		Database: file.Name(),
@@ -78,7 +98,12 @@ func TestUpdateLastContent(t *testing.T) {
 	ctx := context.Background()
 	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	defer db.Close(1 * time.Second)
+	defer func(db *database.Database, timeout time.Duration) {
+		err := db.Close(timeout)
+		if err != nil {
+			require.Nil(t, err)
+		}
+	}(db, 1*time.Second)
 
 	name := "Test"
 	url := "https://google.com"
@@ -105,7 +130,12 @@ func TestPrepareDatabase(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.Remove(file.Name())
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			require.Nil(t, err)
+		}
+	}(file.Name())
 
 	configuration := config.Configuration{
 		Database: file.Name(),
@@ -119,7 +149,12 @@ func TestPrepareDatabase(t *testing.T) {
 	ctx := context.Background()
 	db, err := database.New(ctx, configuration, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	require.Nil(t, err)
-	defer db.Close(1 * time.Second)
+	defer func(db *database.Database, timeout time.Duration) {
+		err := db.Close(timeout)
+		if err != nil {
+			require.Nil(t, err)
+		}
+	}(db, 1*time.Second)
 
 	name := "Test"
 	url := "https://google.com"

@@ -72,7 +72,8 @@ func main() {
 
 	if err != nil {
 		// check if we have a multierror
-		if merr, ok := err.(*multierror.Error); ok {
+		var merr *multierror.Error
+		if errors.As(err, &merr) {
 			for _, e := range merr.Errors {
 				app.logError(e)
 			}
