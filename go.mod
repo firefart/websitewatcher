@@ -19,7 +19,7 @@ require (
 	github.com/sergi/go-diff v1.3.1
 	github.com/stretchr/testify v1.10.0
 	github.com/wneessen/go-mail v0.5.2
-	modernc.org/sqlite v1.34.1
+	modernc.org/sqlite v1.34.2
 )
 
 require (
