@@ -69,6 +69,8 @@ notified in this case.
 
 ## Example
 
+### HTML Diffing
+
 In this example we will monitor [https://go.dev/dl](https://go.dev/dl) for new versions.
 
 As we are only interested in the latest version, we use the global `pattern` to extract the content we want. To play
@@ -214,3 +216,67 @@ Example E-Mail:
 GIT Diff Method (default):
 
 ![screenshot](screenshot_git.png "git diff mode")
+
+### JSON filtering
+
+We can also get the latest download as JSON by calling [https://go.dev/dl/?mode=json](https://go.dev/dl/?mode=json). Websitewatcher can filter
+JSON output using JQ syntax to reduce the output.
+
+You can test your filter using the command line. This for example extracts the latest stable versions of go:
+
+```bash
+curl "https://go.dev/dl/?mode=json" | jq '.[] | .version'
+```
+
+You can then include this filter in the config.
+
+```json
+{
+  "mail": {
+    "server": "in-v3.mailjet.coml",
+    "port": 587,
+    "from": {
+      "name": "websitewatcher",
+      "mail": "websitewatcher@mydomain.com"
+    },
+    "to": ["email@example.com"],
+    "skiptls": false,
+    "user": "user",
+    "password": "pass"
+  },
+  "timeout": "60s",
+  "retry": {
+    "count": 1
+  },
+  "parallel_checks": 5,
+  "database": "db.sqlite3",
+  "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
+  "watches": [{
+    "name": "Golang Downloads",
+    "url": "https://go.dev/dl/?mode=json",
+    "jq": ".[] | .version",
+    "additional_to": ["person@example.com"]
+  }]
+}
+```
+
+Example run with debug output enabled:
+```text
+INFO <database/database.go:105> applied 1 database migrations
+INFO <database/database.go:112> database setup completed version=20240924100627
+INFO <v2@v2.12.4/scheduler.go:169> gocron: new scheduler created
+DEBU <websitewatcher/main.go:178> added task id=20d4d1a1-920f-44df-89d2-916cc472a496 name="Golang Downloads" schedule=@hourly
+DEBU <v2@v2.12.4/scheduler.go:485> gocron: scheduler starting
+INFO <v2@v2.12.4/scheduler.go:523> gocron: scheduler started
+DEBU <v2@v2.12.4/executor.go:79> gocron: executor started
+DEBU <websitewatcher/main.go:196> running new job name="Golang Downloads"
+DEBU <v2@v2.12.4/executor.go:314> gocron: singletonModeRunner starting name=singleton-20d4d1a1-920f-44df-89d2-916cc472a496
+INFO <watch/watch.go:181> checking watch name="Golang Downloads" try=1
+INFO <websitewatcher/main.go:272> new website detected, not comparing name="Golang Downloads"
+DEBU <websitewatcher/main.go:273> website content
+  content=
+  │ [
+  │   "go1.23.4",
+  │   "go1.22.10"
+  │ ]
+```

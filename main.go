@@ -270,6 +270,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		if errors.Is(err, database.ErrNotFound) {
 			// lastContent = nil on new sites not yet processed, so send no email here
 			app.logger.Info("new website detected, not comparing", slog.String("name", w.Name))
+			app.logger.Debug("website content", slog.String("content", string(watchReturn.Body)))
 			if _, err := app.db.InsertWatch(ctx, w.Name, w.URL, watchReturn.Body); err != nil {
 				return err
 			}

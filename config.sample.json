@@ -33,6 +33,12 @@
       "jq": ".result | .[] | select(.name==\"test\")"
     },
     {
+      "name": "Golang Downloads",
+      "url": "https://go.dev/dl/?mode=json",
+      "jq": ".[] | .version",
+      "additional_to": ["person@example.com"]
+    },
+    {
       "name": "aaa",
       "cron": "@hourly",
       "url": "http://aaa.com",
@@ -55,7 +61,7 @@
       "retry_on_match": [
         "error on calling",
         "error executing .+ in memory"
-      ]
+      ],
       "replaces": [
         {
           "pattern": "test .+",
