@@ -24,10 +24,10 @@ import (
 )
 
 type app struct {
-	logger      *slog.Logger
-	config      config.Configuration
-	httpClient  *http.Client
-	mailer      *mail.Mail
+	logger     *slog.Logger
+	config     config.Configuration
+	httpClient *http.Client
+	// mailer      *mail.Mail
 	dryRun      bool
 	db          database.Interface
 	taskmanager *taskmanager.TaskManager
@@ -119,16 +119,16 @@ func (app *app) run(dryRun bool, configFile string) error {
 	}()
 
 	httpClient := http.NewHTTPClient(configuration.Useragent, configuration.Timeout)
-	mailer, err := mail.New(configuration, httpClient, app.logger)
-	if err != nil {
-		return err
-	}
+	//mailer, err := mail.New(configuration, httpClient, app.logger)
+	//if err != nil {
+	//	return err
+	//}
 
 	app.config = configuration
 	app.httpClient = httpClient
 	app.dryRun = dryRun
 	app.db = db
-	app.mailer = mailer
+	// app.mailer = mailer
 	app.taskmanager, err = taskmanager.New(app.logger)
 	if err != nil {
 		return fmt.Errorf("could not create taskmanager: %w", err)
@@ -156,7 +156,12 @@ func (app *app) run(dryRun bool, configFile string) error {
 			if err := app.processWatch(ctx, w); err != nil {
 				app.logError(fmt.Errorf("[%s] error: %w", w.Name, err))
 				if !app.dryRun {
-					if err2 := app.mailer.SendErrorEmail(ctx, w, err); err2 != nil {
+					mailer, err := mail.New(configuration, app.logger)
+					if err != nil {
+						app.logError(fmt.Errorf("[%s] error: %w", w.Name, err))
+						return
+					}
+					if err2 := mailer.SendErrorEmail(ctx, w, err); err2 != nil {
 						app.logError(err2)
 						return
 					}
@@ -245,7 +250,11 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			// send mail to indicate we might have an error
 			if !app.dryRun {
 				app.logger.Info("sending watch error email", slog.String("name", w.Name))
-				if err := app.mailer.SendWatchError(ctx, w, invalidErr); err != nil {
+				mailer, err := mail.New(app.config, app.logger)
+				if err != nil {
+					return err
+				}
+				if err := mailer.SendWatchError(ctx, w, invalidErr); err != nil {
 					return err
 				}
 			}
@@ -281,7 +290,11 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)
 			}
 			text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
-			if err := app.mailer.SendDiffEmail(ctx, w, app.config.DiffMethod, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
+			mailer, err := mail.New(app.config, app.logger)
+			if err != nil {
+				return err
+			}
+			if err := mailer.SendDiffEmail(ctx, w, app.config.DiffMethod, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}

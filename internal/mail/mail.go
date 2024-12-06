@@ -12,20 +12,18 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/diff"
-	"github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/watch"
 
 	gomail "github.com/wneessen/go-mail"
 )
 
 type Mail struct {
-	client     *gomail.Client
-	config     config.Configuration
-	httpClient *http.Client
-	logger     *slog.Logger
+	client *gomail.Client
+	config config.Configuration
+	logger *slog.Logger
 }
 
-func New(config config.Configuration, httpClient *http.Client, logger *slog.Logger) (*Mail, error) {
+func New(config config.Configuration, logger *slog.Logger) (*Mail, error) {
 	var options []gomail.Option
 
 	options = append(options, gomail.WithTimeout(config.Mail.Timeout))
@@ -56,10 +54,9 @@ func New(config config.Configuration, httpClient *http.Client, logger *slog.Logg
 	}
 
 	return &Mail{
-		client:     mailer,
-		config:     config,
-		httpClient: httpClient,
-		logger:     logger,
+		client: mailer,
+		config: config,
+		logger: logger,
 	}, nil
 }
 
@@ -79,11 +76,6 @@ func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, sub
 	textContent := ""
 	var err error
 	switch diffMethod {
-	case "api":
-		htmlContent, err = diff.GenerateHTMLDiffAPI(ctx, m.httpClient, body, text1, text2)
-		if err != nil {
-			return err
-		}
 	case "internal":
 		htmlContent, err = diff.GenerateHTMLDiffInternal(body, text1, text2)
 		if err != nil {

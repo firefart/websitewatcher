@@ -20,7 +20,7 @@ import (
 type Configuration struct {
 	Mail                    MailConfig    `koanf:"mail"`
 	Retry                   RetryConfig   `koanf:"retry"`
-	DiffMethod              string        `koanf:"diff_method" validate:"required,oneof=git internal api"`
+	DiffMethod              string        `koanf:"diff_method" validate:"required,oneof=git internal"`
 	Useragent               string        `koanf:"useragent"`
 	Timeout                 time.Duration `koanf:"timeout"`
 	Database                string        `koanf:"database" validate:"required"`

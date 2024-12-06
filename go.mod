@@ -3,7 +3,6 @@ module github.com/firefart/websitewatcher
 go 1.23
 
 require (
-	github.com/brianvoe/gofakeit/v7 v7.1.2
 	github.com/charmbracelet/log v0.4.0
 	github.com/go-co-op/gocron/v2 v2.12.4
 	github.com/go-playground/validator/v10 v10.23.0
@@ -62,7 +61,7 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20241004144649-1aea3fae8852 // indirect
-	modernc.org/libc v1.61.3 // indirect
+	modernc.org/libc v1.61.4 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect
