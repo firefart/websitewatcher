@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/charmbracelet/log v0.4.0
-	github.com/go-co-op/gocron/v2 v2.12.4
+	github.com/go-co-op/gocron/v2 v2.13.0
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -53,7 +53,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
