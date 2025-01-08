@@ -19,6 +19,7 @@ import (
 
 type Configuration struct {
 	Mail                    MailConfig    `koanf:"mail"`
+	Proxy                   *ProxyConfig  `koanf:"proxy"`
 	Retry                   RetryConfig   `koanf:"retry"`
 	DiffMethod              string        `koanf:"diff_method" validate:"required,oneof=git internal"`
 	Useragent               string        `koanf:"useragent"`
@@ -28,6 +29,13 @@ type Configuration struct {
 	RetryOnMatch            []string      `koanf:"retry_on_match"`
 	Watches                 []WatchConfig `koanf:"watches" validate:"dive"`
 	GracefulTimeout         time.Duration `koanf:"graceful_timeout"`
+}
+
+type ProxyConfig struct {
+	URL      string `koanf:"url" json:"url" validate:"omitempty,url"`
+	Username string `koanf:"username" json:"username" validate:"required_with=Password"`
+	Password string `koanf:"password" json:"password" validate:"required_with=Username"`
+	NoProxy  string `koanf:"no_proxy" json:"no_proxy"`
 }
 
 type MailConfig struct {

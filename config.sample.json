@@ -6,10 +6,18 @@
       "name": "websitewatcher",
       "mail": "a@a.com"
     },
-    "to": ["bbb@bbb.com"],
+    "to": [
+      "bbb@bbb.com"
+    ],
     "user": "",
     "password": "",
     "retries": 3
+  },
+  "proxy": {
+    "url": "http://proxy.com",
+    "username": "user",
+    "password": "pass",
+    "no_proxy": "no_proxy"
   },
   "timeout": "25s",
   "retry": {
@@ -36,14 +44,21 @@
       "name": "Golang Downloads",
       "url": "https://go.dev/dl/?mode=json",
       "jq": ".[] | .version",
-      "additional_to": ["person@example.com"]
+      "additional_to": [
+        "person@example.com"
+      ]
     },
     {
       "name": "aaa",
       "cron": "@hourly",
       "url": "http://aaa.com",
-      "additional_to": ["ddd@ddd.com", "eee@eee.com"],
-      "no_errormail_on_statuscode": [500],
+      "additional_to": [
+        "ddd@ddd.com",
+        "eee@eee.com"
+      ],
+      "no_errormail_on_statuscode": [
+        500
+      ],
       "skip_soft_error_patterns": false,
       "retry_on_match": [
         "error"
