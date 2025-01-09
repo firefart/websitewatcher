@@ -182,7 +182,19 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 		ret, err = w.doHTTP(ctx)
 		if err != nil {
 			w.logger.Error("received error", slog.String("name", w.Name), slog.String("err", err.Error()))
-			continue
+			if i != retries {
+				w.logger.Info("retrying", slog.String("name", w.Name), slog.Int("try", i))
+				// only continue if it's not the last retry
+				continue
+			}
+			// return error if still a retry response on the last iteration
+			return nil, &InvalidResponseError{
+				ErrorMessage: fmt.Sprintf("still an error after %d retries: %v", retries, err),
+				StatusCode:   ret.StatusCode,
+				Body:         ret.Body,
+				Header:       ret.Header,
+				Duration:     ret.Duration,
+			}
 		}
 		// check for additional errors like soft errors and status codes here
 		retryResult, cause, err := w.shouldRetry(ret, config)
