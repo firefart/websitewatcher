@@ -60,7 +60,7 @@ func New(config config.Configuration, logger *slog.Logger) (*Mail, error) {
 	}, nil
 }
 
-func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) error {
+func (m *Mail) SendErrorEmail(ctx context.Context, w *watch.Watch, err error) error {
 	subject := fmt.Sprintf("[ERROR] error in websitewatcher on %s", w.Name)
 	body := fmt.Sprintf("%s", err)
 	for _, to := range m.config.Mail.To {
@@ -71,7 +71,7 @@ func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) err
 	return nil
 }
 
-func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, subject, body, text1, text2 string) error {
+func (m *Mail) SendDiffEmail(ctx context.Context, w *watch.Watch, diffMethod, subject, body, text1, text2 string) error {
 	htmlContent := ""
 	textContent := ""
 	var err error
@@ -92,7 +92,7 @@ func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, sub
 	return m.sendMultipartEmail(ctx, w, subject, textContent, htmlContent)
 }
 
-func (m *Mail) SendWatchError(ctx context.Context, w watch.Watch, ret *watch.InvalidResponseError) error {
+func (m *Mail) SendWatchError(ctx context.Context, w *watch.Watch, ret *watch.InvalidResponseError) error {
 	subject := fmt.Sprintf("Invalid response for %s", w.Name)
 
 	var sb strings.Builder
@@ -131,7 +131,7 @@ func (m *Mail) SendWatchError(ctx context.Context, w watch.Watch, ret *watch.Inv
 	return nil
 }
 
-func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBody string) error {
+func (m *Mail) sendHTMLEmail(ctx context.Context, w *watch.Watch, subject, htmlBody string) error {
 	tos := m.config.Mail.To
 	if len(w.AdditionalTo) > 0 {
 		tos = append(tos, w.AdditionalTo...)
@@ -146,7 +146,7 @@ func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBo
 	return nil
 }
 
-func (m *Mail) sendMultipartEmail(ctx context.Context, w watch.Watch, subject, textBody, htmlBody string) error {
+func (m *Mail) sendMultipartEmail(ctx context.Context, w *watch.Watch, subject, textBody, htmlBody string) error {
 	tos := m.config.Mail.To
 	if len(w.AdditionalTo) > 0 {
 		tos = append(tos, w.AdditionalTo...)

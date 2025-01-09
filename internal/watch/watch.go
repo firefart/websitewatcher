@@ -63,7 +63,7 @@ func (err *InvalidResponseError) Error() string {
 	return fmt.Sprintf("got invalid response on http request: message: %s, status: %d, bodylen: %d", err.ErrorMessage, err.StatusCode, len(err.Body))
 }
 
-func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) Watch {
+func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) *Watch {
 	w := Watch{
 		logger:                  logger,
 		httpClient:              httpClient,
@@ -94,10 +94,10 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		}
 		w.Replaces[i] = r
 	}
-	return w
+	return &w
 }
 
-func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool, string, error) {
+func (w *Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool, string, error) {
 	if ret.StatusCode != 200 {
 		// non 200 status code, retry
 		return true, fmt.Sprintf("statuscode is %d - %s", ret.StatusCode, http.StatusText(ret.StatusCode)), nil
@@ -158,7 +158,7 @@ func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool
 // checkWithRetries runs http.CheckWatch in a loop up to x times (configurable) to retry requests on errors
 // it returns the same values as http.CheckWatch
 // if the last request still results in an error the error is returned
-func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
+func (w *Watch) checkWithRetries(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
 	var ret *ReturnObject
 	var err error
 	retries := config.Retry.Count
@@ -237,7 +237,7 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 	}
 }
 
-func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
+func (w *Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	method := http.MethodGet
 	if w.Method != "" {
 		method = strings.ToUpper(w.Method)
@@ -282,7 +282,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	}, nil
 }
 
-func (w Watch) Process(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
+func (w *Watch) Process(ctx context.Context, config config.Configuration) (*ReturnObject, error) {
 	ret, err := w.checkWithRetries(ctx, config)
 	if err != nil {
 		// if we reach here the last retry resulted in an error,

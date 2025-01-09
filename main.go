@@ -215,7 +215,7 @@ func (app *app) run(dryRun bool, configFile string) error {
 	return nil
 }
 
-func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
+func (app *app) processWatch(ctx context.Context, w *watch.Watch) error {
 	watchReturn, err := w.Process(ctx, app.config)
 	if err != nil {
 		var urlErr *url.Error
