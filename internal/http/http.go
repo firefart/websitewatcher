@@ -20,7 +20,8 @@ func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration,
 	tr := http.DefaultTransport.(*http.Transport)
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	if proxyConfig != nil && proxyConfig.URL != "" {
-		logger.Info("using proxy", slog.String("url", proxyConfig.URL))
+		authenticated := proxyConfig.Username != "" && proxyConfig.Password != ""
+		logger.Info("using proxy", slog.String("url", proxyConfig.URL), slog.Bool("authenticated", authenticated))
 		proxy, err := newProxy(*proxyConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create proxy: %w", err)
