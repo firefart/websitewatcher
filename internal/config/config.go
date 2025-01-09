@@ -32,10 +32,10 @@ type Configuration struct {
 }
 
 type ProxyConfig struct {
-	URL      string `koanf:"url" json:"url" validate:"omitempty,url"`
-	Username string `koanf:"username" json:"username" validate:"required_with=Password"`
-	Password string `koanf:"password" json:"password" validate:"required_with=Username"`
-	NoProxy  string `koanf:"no_proxy" json:"no_proxy"`
+	URL      string `koanf:"url" validate:"omitempty,url"`
+	Username string `koanf:"username" validate:"required_with=Password"`
+	Password string `koanf:"password" validate:"required_with=Username"`
+	NoProxy  string `koanf:"no_proxy"`
 }
 
 type MailConfig struct {
