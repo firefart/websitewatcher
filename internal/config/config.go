@@ -96,6 +96,7 @@ var defaultConfig = Configuration{
 	},
 	DiffMethod:      "git",
 	GracefulTimeout: 5 * time.Second,
+	Useragent:       "websitewatcher / https://github.com/firefart/websitewatcher",
 }
 
 func GetConfig(f string) (Configuration, error) {

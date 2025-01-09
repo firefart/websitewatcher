@@ -3,6 +3,7 @@ package http
 import (
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -14,11 +15,12 @@ type Client struct {
 	client    *http.Client
 }
 
-func NewHTTPClient(userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig) (*Client, error) {
+func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig) (*Client, error) {
 	// use default transport so proxy is respected
 	tr := http.DefaultTransport.(*http.Transport)
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	if proxyConfig != nil && proxyConfig.URL != "" {
+		logger.Info("using proxy", slog.String("url", proxyConfig.URL))
 		proxy, err := newProxy(*proxyConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create proxy: %w", err)

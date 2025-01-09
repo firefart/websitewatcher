@@ -118,7 +118,7 @@ func (app *app) run(dryRun bool, configFile string) error {
 		}
 	}()
 
-	httpClient, err := http.NewHTTPClient(configuration.Useragent, configuration.Timeout, configuration.Proxy)
+	httpClient, err := http.NewHTTPClient(app.logger, configuration.Useragent, configuration.Timeout, configuration.Proxy)
 	if err != nil {
 		return err
 	}

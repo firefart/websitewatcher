@@ -169,7 +169,7 @@ func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlCo
 	m.logger.Debug("sending email", slog.String("subject", subject), slog.String("to", to), slog.String("content-text", textContent), slog.String("html-content", htmlContent))
 
 	msg := gomail.NewMsg(gomail.WithNoDefaultUserAgent())
-	msg.SetUserAgent("websitewatcher / https://github.com/firefart/websitewatcher")
+	msg.SetUserAgent(m.config.Useragent)
 	if err := msg.FromFormat(m.config.Mail.From.Name, m.config.Mail.From.Mail); err != nil {
 		return err
 	}

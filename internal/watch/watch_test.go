@@ -45,11 +45,11 @@ func TestCheck(t *testing.T) {
 			}))
 			defer server.Close()
 
-			client, err := http.NewHTTPClient(tc.UserAgent, 1*time.Second, nil)
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			client, err := http.NewHTTPClient(logger, tc.UserAgent, 1*time.Second, nil)
 			if err != nil {
 				t.Fatalf("NewHTTPClient() got err=%s, want nil", err)
 			}
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 			w := New(
 				config.WatchConfig{
 					Name: "Test",
