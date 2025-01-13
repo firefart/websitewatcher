@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/charmbracelet/log v0.4.0
 	github.com/go-co-op/gocron/v2 v2.14.2
-	github.com/go-playground/validator/v10 v10.23.0
+	github.com/go-playground/validator/v10 v10.24.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/itchyny/gojq v0.12.17
@@ -17,7 +17,7 @@ require (
 	github.com/pressly/goose/v3 v3.24.1
 	github.com/sergi/go-diff v1.3.1
 	github.com/stretchr/testify v1.10.0
-	github.com/wneessen/go-mail v0.6.0
+	github.com/wneessen/go-mail v0.6.1
 	golang.org/x/net v0.34.0
 	modernc.org/sqlite v1.34.4
 )
