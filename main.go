@@ -159,9 +159,9 @@ func (app *app) run(dryRun bool, configFile string) error {
 			if err := app.processWatch(ctx, w); err != nil {
 				app.logError(fmt.Errorf("[%s] error: %w", w.Name, err))
 				if !app.dryRun {
-					mailer, err := mail.New(configuration, app.logger)
-					if err != nil {
-						app.logError(fmt.Errorf("[%s] error: %w", w.Name, err))
+					mailer, mailErr := mail.New(configuration, app.logger)
+					if mailErr != nil {
+						app.logError(fmt.Errorf("[%s] error: %w", w.Name, mailErr))
 						return
 					}
 					if err2 := mailer.SendErrorEmail(ctx, w, err); err2 != nil {
