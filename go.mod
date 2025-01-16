@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/wneessen/go-mail v0.6.1
 	golang.org/x/net v0.34.0
-	modernc.org/sqlite v1.34.4
+	modernc.org/sqlite v1.34.5
 )
 
 require (
@@ -36,7 +36,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
@@ -60,10 +59,7 @@ require (
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/gc/v3 v3.0.0-20250105121824-520be1a3aee6 // indirect
 	modernc.org/libc v1.61.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.8.2 // indirect
-	modernc.org/strutil v1.2.1 // indirect
-	modernc.org/token v1.1.0 // indirect
 )
