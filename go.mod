@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/charmbracelet/log v0.4.0
-	github.com/go-co-op/gocron/v2 v2.14.2
+	github.com/go-co-op/gocron/v2 v2.15.0
 	github.com/go-playground/validator/v10 v10.24.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
