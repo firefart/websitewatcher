@@ -333,7 +333,7 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 			return ret, fmt.Errorf("could not compile pattern %q: %w", w.Pattern, err)
 		}
 		match := re.FindSubmatch(ret.Body)
-		if match == nil || len(match) < 2 {
+		if len(match) < 2 {
 			w.logger.Error("pattern did not match", slog.String("pattern", w.Pattern), slog.String("body", string(ret.Body)))
 			return ret, &InvalidResponseError{
 				ErrorMessage: fmt.Sprintf("pattern %q did not match %s", w.Pattern, string(ret.Body)),
