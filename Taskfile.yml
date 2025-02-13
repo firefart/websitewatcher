@@ -9,54 +9,49 @@ tasks:
       - go mod tidy -v
 
   update:
-    deps: [ generate ]
+    deps: [generate]
     cmds:
       - go get -u
+      - go get -u tool
       - go mod tidy -v
 
   generate:
-    deps: [ sqlc ]
+    deps: [sqlc]
 
   sqlc:
     cmds:
-      - sqlc generate
-
-  setup:
-    cmds:
-      - go install github.com/pressly/goose/v3/cmd/goose@latest
-      - go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-      - go install mvdan.cc/gofumpt@latest
+      - go tool sqlc generate
 
   build:
-    aliases: [ default ]
-    deps: [ deps, generate ]
+    aliases: [default]
+    deps: [deps, generate]
     env:
       CGO_ENABLED: 0
     cmds:
       - go fmt ./...
-      - gofumpt -l -w .
+      - go tool gofumpt -l -w .
       - go vet ./...
       - go build -o {{.PROGRAM}}
 
   test:
-    deps: [ deps, generate ]
+    deps: [deps, generate]
     env:
       CGO_ENABLED: 1 # required by -race
     cmds:
       - go test -race -cover ./...
 
   run:
-    deps: [ build ]
+    deps: [build]
     cmds:
       - ./{{.PROGRAM}} -debug -dry-run -config config.json
 
   configcheck:
-    deps: [ build ]
+    deps: [build]
     cmds:
       - ./{{.PROGRAM}} -config config.json -configcheck
 
   version:
-    deps: [ build ]
+    deps: [build]
     cmds:
       - ./{{.PROGRAM}} -version
 

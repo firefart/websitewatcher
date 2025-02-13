@@ -1,8 +1,6 @@
 package watch
 
 import (
-	"context"
-	"io"
 	"log/slog"
 	gohttp "net/http"
 	"net/http/httptest"
@@ -45,7 +43,7 @@ func TestCheck(t *testing.T) {
 			}))
 			defer server.Close()
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			client, err := http.NewHTTPClient(logger, tc.UserAgent, 1*time.Second, nil)
 			if err != nil {
 				t.Fatalf("NewHTTPClient() got err=%s, want nil", err)
@@ -59,7 +57,7 @@ func TestCheck(t *testing.T) {
 				client,
 			)
 
-			ret, err := w.doHTTP(context.Background())
+			ret, err := w.doHTTP(t.Context())
 			if err != nil {
 				t.Fatalf("CheckWatch() got err=%s, want nil", err)
 			}

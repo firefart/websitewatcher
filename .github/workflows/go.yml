@@ -3,6 +3,7 @@ on: [ push, pull_request ]
 jobs:
   build:
     name: Build
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,9 +24,6 @@ jobs:
 
       - name: Get dependencies
         run: task deps
-
-      - name: Install dependencies
-        run: task setup
 
       - name: Build
         run: task build

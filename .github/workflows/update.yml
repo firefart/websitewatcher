@@ -8,6 +8,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -46,7 +47,7 @@ jobs:
           if [ $exit_status -eq 0 ]; then
             echo "nothing has changed"
           else
-            git add go.mod go.sum internal/database/sqlc/*.go
+            git add .
             git commit -m "auto update from github actions"
             git push origin main
           fi
