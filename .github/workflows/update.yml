@@ -25,9 +25,6 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
-        run: task setup
-
       - name: update
         run: task update
 

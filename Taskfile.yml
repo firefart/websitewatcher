@@ -9,7 +9,7 @@ tasks:
       - go mod tidy -v
 
   update:
-    deps: [generate]
+    deps: [deps, generate]
     cmds:
       - go get -u
       - go get -u tool
