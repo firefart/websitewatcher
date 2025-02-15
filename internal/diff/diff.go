@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html"
 	"os"
 	"os/exec"
 	"path"
@@ -176,7 +177,7 @@ func convertGitDiffToHTML(input string) (string, string, error) {
 			classname = "add"
 		}
 
-		if _, err := builder.WriteString(fmt.Sprintf(`<div class="%s">%s</div>`, classname, text)); err != nil {
+		if _, err := builder.WriteString(fmt.Sprintf(`<div class="%s">%s</div>`, classname, html.EscapeString(text))); err != nil {
 			return "", "", err
 		}
 	}
