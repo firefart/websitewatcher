@@ -17,7 +17,7 @@ require (
 	github.com/pressly/goose/v3 v3.24.1
 	github.com/sergi/go-diff v1.3.1
 	github.com/stretchr/testify v1.10.0
-	github.com/wneessen/go-mail v0.6.1
+	github.com/wneessen/go-mail v0.6.2
 	golang.org/x/net v0.35.0
 	modernc.org/sqlite v1.35.0
 )
