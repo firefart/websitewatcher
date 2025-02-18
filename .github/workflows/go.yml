@@ -5,22 +5,19 @@ jobs:
     name: Build
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: [ "stable" ]
     steps:
-      - name: Set up Go ${{ matrix.go }}
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version: "stable"
 
       - name: Install Task
         uses: arduino/setup-task@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check out code
-        uses: actions/checkout@v4
 
       - name: Get dependencies
         run: task deps
