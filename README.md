@@ -70,6 +70,8 @@ notified in this case.
 | watches.skip_soft_error_patterns   | if set there are no checks for soft errors like default error pages                                                                                                                                                                        |
 | watches.jq                         | apply a jq filter to the response body before applying replaces. Example: `.result &#124; .[] &#124; select(.name=="test")`                                                                                                                |
 | watches.useragent                  | set a custom user agent for this watch only                                                                                                                                                                                                |
+| watches.remove_empty_lines         | automatically replace double newlines with a single newline after all replaces. Used to clean up output.                                                                                                                                   |
+| watches.trim_whitespace            | automatically replace leading and trailing whitespaces after all replaces. Used to clean up output. Runs after remove_empty_lines.                                                                                                         |
 
 ## Example
 
@@ -115,6 +117,8 @@ replace, so it's easier to debug faulty regexes.
     "url": "https://go.dev/dl",
     "additional_to": ["person@example.com"],
     "pattern": "(?s)<table class=\"downloadtable\">(.+?)</table>",
+    "trim_whitespace": true,
+    "remove_empty_lines": true,
     "replaces": [{
         "pattern": "(?s)<thead>.+?</thead>",
         "replace_with": ""
@@ -158,14 +162,6 @@ replace, so it's easier to debug faulty regexes.
       {
         "pattern": "</a>",
         "replace_with": ""
-      },
-      {
-        "pattern": "(?m)^[\\s\\p{Zs}]+|[\\s\\p{Zs}]+$",
-        "replace_with": "\n"
-      },
-      {
-        "pattern": "(?s)\\n\\s*\\n",
-        "replace_with": "\n"
       }
     ]
   }]

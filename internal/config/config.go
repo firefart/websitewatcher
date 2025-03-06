@@ -77,6 +77,8 @@ type WatchConfig struct {
 	SkipSofterrorPatterns   bool              `koanf:"skip_soft_error_patterns"`
 	JQ                      string            `koanf:"jq"`
 	Useragent               string            `koanf:"useragent"`
+	RemoveEmptyLines        bool              `koanf:"remove_empty_lines"`
+	TrimWhitespace          bool              `koanf:"trim_whitespace"`
 }
 
 type ReplaceConfig struct {

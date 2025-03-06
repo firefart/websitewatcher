@@ -17,6 +17,11 @@ import (
 	"github.com/itchyny/gojq"
 )
 
+var (
+	emptyLineRegex      = regexp.MustCompile(`(?s)\n\s*\n`)
+	trimWhitespaceRegex = regexp.MustCompile(`(?m)^[\s\p{Zs}]+|[\s\p{Zs}]+$`)
+)
+
 type Watch struct {
 	httpClient *httpint.Client
 	logger     *slog.Logger
@@ -37,6 +42,8 @@ type Watch struct {
 	SkipSofterrorPatterns   bool
 	JQ                      string
 	UserAgent               string
+	RemoveEmptyLines        bool
+	TrimWhitespace          bool
 }
 
 type Replace struct {
@@ -83,6 +90,8 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		SkipSofterrorPatterns:   c.SkipSofterrorPatterns,
 		JQ:                      c.JQ,
 		UserAgent:               c.Useragent,
+		RemoveEmptyLines:        c.RemoveEmptyLines,
+		TrimWhitespace:          c.TrimWhitespace,
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet
@@ -354,6 +363,16 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		}
 		ret.Body = re.ReplaceAll(ret.Body, []byte(replace.ReplaceWith))
 		w.logger.Debug("after replacement", slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith), slog.String("body", string(ret.Body)))
+	}
+
+	// optionally remove empty lines
+	if w.RemoveEmptyLines {
+		ret.Body = emptyLineRegex.ReplaceAll(ret.Body, []byte("\n"))
+	}
+
+	// optionally trim whitespaces
+	if w.TrimWhitespace {
+		ret.Body = trimWhitespaceRegex.ReplaceAll(ret.Body, []byte(""))
 	}
 
 	return ret, nil

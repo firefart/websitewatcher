@@ -46,7 +46,9 @@
       "jq": ".[] | .version",
       "additional_to": [
         "person@example.com"
-      ]
+      ],
+      "trim_whitespace": true,
+      "remove_empty_lines": true
     },
     {
       "name": "aaa",
