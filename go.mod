@@ -3,7 +3,7 @@ module github.com/firefart/websitewatcher
 go 1.24
 
 require (
-	github.com/charmbracelet/log v0.4.0
+	github.com/charmbracelet/log v0.4.1
 	github.com/go-co-op/gocron/v2 v2.16.0
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/google/uuid v1.6.0
@@ -83,7 +83,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20240311024730-e056997136bb // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20250312104704-fc5197551ca4 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20250313103152-f76a5bd64ecd // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
@@ -104,7 +104,7 @@ require (
 	github.com/wasilibs/go-pgquery v0.0.0-20250219053243-148840c597e6 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20241112172322-ea1f63298f77 // indirect
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.101.0 // indirect
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.101.2 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/otel v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
