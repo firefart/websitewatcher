@@ -17,7 +17,7 @@ See the `config.json.sample` file for all possible configuration options.
 This will add all items from the config to the internal cron system and runs them on the defined intervals until the
 program is stopped.
 The first run of a newly added website does not trigger a diff email. The tool uses a local sqlite database to store the
-previous results. If you compile it by hand you need gcc installed, as the sqlite go library contains some c code.
+previous results. 
 
 To run this tool as a service you can use [websitewatcher.service](websitewatcher.service). Copy it
 to `/etc/systemd/system` and run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.service`.
