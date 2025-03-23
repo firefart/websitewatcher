@@ -86,7 +86,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20240311024730-e056997136bb // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20250321121322-0929f3353f4e // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20250323074040-ca8a0707ab06 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.16.0 // indirect
@@ -131,7 +131,7 @@ require (
 	howett.net/plist v1.0.1 // indirect
 	modernc.org/libc v1.61.13 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.9.0 // indirect
+	modernc.org/memory v1.9.1 // indirect
 	mvdan.cc/gofumpt v0.7.0 // indirect
 )
 
