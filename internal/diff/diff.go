@@ -66,7 +66,7 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	defer func(name string) {
 		_ = os.Remove(name)
 	}(inputFile1.Name())
-	if _, err := inputFile1.WriteString(fmt.Sprintf("%s\n", text1)); err != nil { // add a newline at the end so git does not complain
+	if _, err := fmt.Fprintf(inputFile1, "%s\n", text1); err != nil { // add a newline at the end so git does not complain
 		return nil, fmt.Errorf("could not write inputFile1: %w", err)
 	}
 
@@ -77,7 +77,7 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	defer func(name string) {
 		_ = os.Remove(name)
 	}(inputFile2.Name())
-	if _, err := inputFile2.WriteString(fmt.Sprintf("%s\n", text2)); err != nil { // add a newline at the end so git does not complain
+	if _, err := fmt.Fprintf(inputFile2, "%s\n", text2); err != nil { // add a newline at the end so git does not complain
 		return nil, fmt.Errorf("could not write inputFile2: %w", err)
 	}
 
