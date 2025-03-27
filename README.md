@@ -17,7 +17,7 @@ See the `config.json.sample` file for all possible configuration options.
 This will add all items from the config to the internal cron system and runs them on the defined intervals until the
 program is stopped.
 The first run of a newly added website does not trigger a diff email. The tool uses a local sqlite database to store the
-previous results. 
+previous results.
 
 To run this tool as a service you can use [websitewatcher.service](websitewatcher.service). Copy it
 to `/etc/systemd/system` and run `systemctl daemon-reload` followed by `systemctl enable websitewatcher.service`.
@@ -25,10 +25,12 @@ to `/etc/systemd/system` and run `systemctl daemon-reload` followed by `systemct
 If an error occurs, it will be sent to the global defined `mail.to`. The `watches.additional_to` recipients are not
 notified in this case.
 
+You can also specify the parameter `-mode once` to run all checks immediately after each other without the cron mode. This can be used in a kubernetes setup to run this as a cron job. If an error occurs, the binary will exit with exit code 1.
+
 ## Config Options
 
 | Option                             | Description                                                                                                                                                                                                                                |
-|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | mail.server                        | Mailserver to use                                                                                                                                                                                                                          |
 | mail.port                          | port of the mailserver                                                                                                                                                                                                                     |
 | mail.from.name                     | the from name on sent emails                                                                                                                                                                                                               |
@@ -112,59 +114,62 @@ replace, so it's easier to debug faulty regexes.
   "parallel_checks": 5,
   "database": "db.sqlite3",
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
-  "watches": [{
-    "name": "Golang Downloads",
-    "url": "https://go.dev/dl",
-    "additional_to": ["person@example.com"],
-    "pattern": "(?s)<table class=\"downloadtable\">(.+?)</table>",
-    "trim_whitespace": true,
-    "remove_empty_lines": true,
-    "replaces": [{
-        "pattern": "(?s)<thead>.+?</thead>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "(?s)<th.*?>.+?</th>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "(?s)<td>(Source|Archive|Installer|\\d+MB|Linux|Windows|macOS|FreeBSD|ARMv6|ARM64|ppc64le|x86|x86-64|s390x)</td>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "<td.*?>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "</td>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "<tr.*?>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "</tr>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "<tt>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "</tt>",
-        "replace_with": ""
-      },
-      {
-        "pattern": "<a class=\"download\" href=\".+?\">",
-        "replace_with": ""
-      },
-      {
-        "pattern": "</a>",
-        "replace_with": ""
-      }
-    ]
-  }]
+  "watches": [
+    {
+      "name": "Golang Downloads",
+      "url": "https://go.dev/dl",
+      "additional_to": ["person@example.com"],
+      "pattern": "(?s)<table class=\"downloadtable\">(.+?)</table>",
+      "trim_whitespace": true,
+      "remove_empty_lines": true,
+      "replaces": [
+        {
+          "pattern": "(?s)<thead>.+?</thead>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "(?s)<th.*?>.+?</th>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "(?s)<td>(Source|Archive|Installer|\\d+MB|Linux|Windows|macOS|FreeBSD|ARMv6|ARM64|ppc64le|x86|x86-64|s390x)</td>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "<td.*?>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "</td>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "<tr.*?>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "</tr>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "<tt>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "</tt>",
+          "replace_with": ""
+        },
+        {
+          "pattern": "<a class=\"download\" href=\".+?\">",
+          "replace_with": ""
+        },
+        {
+          "pattern": "</a>",
+          "replace_with": ""
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -251,16 +256,19 @@ You can then include this filter in the config.
   "parallel_checks": 5,
   "database": "db.sqlite3",
   "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33",
-  "watches": [{
-    "name": "Golang Downloads",
-    "url": "https://go.dev/dl/?mode=json",
-    "jq": ".[] | .version",
-    "additional_to": ["person@example.com"]
-  }]
+  "watches": [
+    {
+      "name": "Golang Downloads",
+      "url": "https://go.dev/dl/?mode=json",
+      "jq": ".[] | .version",
+      "additional_to": ["person@example.com"]
+    }
+  ]
 }
 ```
 
 Example run with debug output enabled:
+
 ```text
 INFO <database/database.go:105> applied 1 database migrations
 INFO <database/database.go:112> database setup completed version=20240924100627

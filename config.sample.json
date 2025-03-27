@@ -14,7 +14,7 @@
     "retries": 3
   },
   "proxy": {
-    "url": "http://proxy.com",
+    "url": "http://proxy.doesnotexist:8080",
     "username": "user",
     "password": "pass",
     "no_proxy": "no_proxy"
@@ -85,7 +85,7 @@
           "replace_with": "test124"
         },
         {
-          "pattern": "",
+          "pattern": "test",
           "replace_with": ""
         }
       ]

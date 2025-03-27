@@ -28,9 +28,10 @@ type app struct {
 	config     config.Configuration
 	httpClient *http.Client
 	// mailer      *mail.Mail
-	dryRun      bool
-	db          database.Interface
-	taskmanager *taskmanager.TaskManager
+	dryRun       bool
+	db           database.Interface
+	taskmanager  *taskmanager.TaskManager
+	errorOccured bool // only used in once mode to track if we should exit with an error code
 }
 
 func main() {
@@ -40,12 +41,14 @@ func main() {
 	var dryRun bool
 	var version bool
 	var configCheckMode bool
+	var runMode string
 	flag.BoolVar(&debugMode, "debug", false, "Enable DEBUG mode")
 	flag.StringVar(&configFilename, "config", "", "config file to use")
 	flag.BoolVar(&jsonOutput, "json", false, "output in json instead")
 	flag.BoolVar(&dryRun, "dry-run", false, "dry-run - send no emails")
 	flag.BoolVar(&configCheckMode, "configcheck", false, "just check the config")
 	flag.BoolVar(&version, "version", false, "show version")
+	flag.StringVar(&runMode, "mode", "cron", "runmode: cron or once")
 	flag.Parse()
 
 	if version {
@@ -67,9 +70,8 @@ func main() {
 	if configCheckMode {
 		err = configCheck(configFilename)
 	} else {
-		err = app.run(dryRun, configFilename)
+		err = app.run(dryRun, configFilename, runMode)
 	}
-
 	if err != nil {
 		// check if we have a multierror
 		var merr *multierror.Error
@@ -83,9 +85,15 @@ func main() {
 		app.logError(err)
 		os.Exit(1)
 	}
+
+	// ensure we exit with an error code if an error occurred in once mode
+	if runMode == "once" && app.errorOccured {
+		os.Exit(1)
+	}
 }
 
 func (app *app) logError(err error) {
+	app.errorOccured = true
 	app.logger.Error("error occurred", slog.String("err", err.Error()))
 }
 
@@ -94,9 +102,13 @@ func configCheck(configFilename string) error {
 	return err
 }
 
-func (app *app) run(dryRun bool, configFile string) error {
+func (app *app) run(dryRun bool, configFile string, runMode string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer cancel()
+
+	if runMode != "cron" && runMode != "once" {
+		return fmt.Errorf("invalid runmode %q, must be either cron or once", runMode)
+	}
 
 	if configFile == "" {
 		return fmt.Errorf("please supply a config file")
@@ -122,10 +134,6 @@ func (app *app) run(dryRun bool, configFile string) error {
 	if err != nil {
 		return err
 	}
-	//mailer, err := mail.New(configuration, httpClient, app.logger)
-	//if err != nil {
-	//	return err
-	//}
 
 	app.config = configuration
 	app.httpClient = httpClient
@@ -172,44 +180,60 @@ func (app *app) run(dryRun bool, configFile string) error {
 				return
 			}
 		}
-
-		entryID, err := app.taskmanager.AddTask(w.Name, w.Cron, job)
-		if err != nil {
-			app.logError(err)
-			continue
-		}
-		app.logger.Debug("added task", slog.String("id", entryID.String()), slog.String("name", w.Name), slog.String("schedule", w.Cron))
-
-		// determine if it's a new job that has never been run
-		for _, tmp := range newEntries {
-			if tmp.Name == wc.Name && tmp.URL == wc.URL {
-				firstRunners[entryID] = wc.Name
-				break
+		switch runMode {
+		case "once":
+			// check the context in once mode to bail out on error or ctrl+c
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
 			}
-		}
-	}
-
-	// all tasks added, start the cron
-	app.taskmanager.Start()
-
-	// if it's a new job run it manually to add a baseline to the database
-	// also run as a go func so the program does not block
-	for entryID, entryName := range firstRunners {
-		go func(id uuid.UUID, name string) {
-			app.logger.Debug("running new job", slog.String("name", name))
-			if err := app.taskmanager.RunJob(id); err != nil {
+			app.logger.Info("running watch immediately", slog.String("name", w.Name))
+			job()
+		case "cron":
+			entryID, err := app.taskmanager.AddTask(w.Name, w.Cron, job)
+			if err != nil {
 				app.logError(err)
-				return
+				continue
 			}
-		}(entryID, entryName)
+			app.logger.Debug("added task", slog.String("id", entryID.String()), slog.String("name", w.Name), slog.String("schedule", w.Cron))
+
+			// determine if it's a new job that has never been run
+			for _, tmp := range newEntries {
+				if tmp.Name == wc.Name && tmp.URL == wc.URL {
+					firstRunners[entryID] = wc.Name
+					break
+				}
+			}
+		default:
+			return fmt.Errorf("invalid runmode %q, must be either cron or once", runMode)
+		}
 	}
 
-	// wait for ctrl+c
-	<-ctx.Done()
-	cancel()
+	// taskmanager is only used in cron mode
+	if runMode == "cron" {
+		// all tasks added, start the cron
+		app.taskmanager.Start()
+		// if it's a new job run it manually to add a baseline to the database
+		// also run as a go func so the program does not block
+		for entryID, entryName := range firstRunners {
+			go func(id uuid.UUID, name string) {
+				app.logger.Debug("running new job", slog.String("name", name))
+				if err := app.taskmanager.RunJob(id); err != nil {
+					app.logError(err)
+					return
+				}
+			}(entryID, entryName)
+		}
 
-	if err := app.taskmanager.Stop(); err != nil {
-		return fmt.Errorf("error stopping taskmanager: %w", err)
+		// wait for ctrl+c, only in cron mode
+		<-ctx.Done()
+		cancel()
+
+		if err := app.taskmanager.Stop(); err != nil {
+			return fmt.Errorf("error stopping taskmanager: %w", err)
+		}
+
 	}
 
 	return nil

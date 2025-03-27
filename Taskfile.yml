@@ -45,6 +45,11 @@ tasks:
     cmds:
       - ./{{.PROGRAM}} -debug -dry-run -config config.json
 
+  run-once:
+    deps: [build]
+    cmds:
+      - ./{{.PROGRAM}} -debug -dry-run -config config.json -mode once
+
   configcheck:
     deps: [build]
     cmds:

@@ -41,8 +41,10 @@ func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration,
 func (c *Client) Do(req *http.Request, userAgent string) (*http.Response, error) {
 	if userAgent != "" {
 		req.Header.Set("User-Agent", userAgent)
-	} else {
+	} else if c.userAgent != "" {
 		req.Header.Set("User-Agent", c.userAgent)
+	} else {
+		req.Header.Set("User-Agent", config.DefaultUseragent)
 	}
 	return c.client.Do(req)
 }

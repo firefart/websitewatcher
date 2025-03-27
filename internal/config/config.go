@@ -17,6 +17,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+const DefaultUseragent = "websitewatcher / https://github.com/firefart/websitewatcher"
+
 type Configuration struct {
 	Mail                    MailConfig    `koanf:"mail"`
 	Proxy                   *ProxyConfig  `koanf:"proxy"`
@@ -98,7 +100,7 @@ var defaultConfig = Configuration{
 	},
 	DiffMethod:      "git",
 	GracefulTimeout: 5 * time.Second,
-	Useragent:       "websitewatcher / https://github.com/firefart/websitewatcher",
+	Useragent:       DefaultUseragent,
 }
 
 func GetConfig(f string) (Configuration, error) {
