@@ -185,7 +185,8 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 			// check the context in once mode to bail out on error or ctrl+c
 			select {
 			case <-ctx.Done():
-				return nil
+				app.errorOccured = true
+				return fmt.Errorf("execution cancelled before all jobs were run")
 			default:
 			}
 			app.logger.Info("running watch immediately", slog.String("name", w.Name))
