@@ -76,7 +76,7 @@ func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, subject, body s
 	if err != nil {
 		return fmt.Errorf("error on creating text content: %w", err)
 	}
-	htmlContent, err := d.HTML(body)
+	htmlContent, err := d.HTML(ctx, body)
 	if err != nil {
 		return fmt.Errorf("error on creating html content: %w", err)
 	}
