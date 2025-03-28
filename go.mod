@@ -14,12 +14,12 @@ require (
 	github.com/knadh/koanf/providers/structs v0.1.0
 	github.com/knadh/koanf/v2 v2.1.2
 	github.com/mattn/go-isatty v0.0.20
-	github.com/pressly/goose/v3 v3.24.1
+	github.com/pressly/goose/v3 v3.24.2
 	github.com/sergi/go-diff v1.3.1
 	github.com/stretchr/testify v1.10.0
 	github.com/wneessen/go-mail v0.6.2
-	golang.org/x/net v0.37.0
-	modernc.org/sqlite v1.36.2
+	golang.org/x/net v0.38.0
+	modernc.org/sqlite v1.36.3
 )
 
 require (
@@ -86,7 +86,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20240311024730-e056997136bb // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20250327090126-979f142e5031 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20250328115024-6e5a6d2a93f2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.16.0 // indirect
