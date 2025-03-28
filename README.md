@@ -46,7 +46,6 @@ You can also specify the parameter `-mode once` to run all checks immediately af
 | timeout                            | timeout for http requests                                                                                                                                                                                                                  |
 | retry.count                        | number of retries on http errors                                                                                                                                                                                                           |
 | retry.delay                        | time to sleep between retries                                                                                                                                                                                                              |
-| diff_method                        | Diffing mode to use. Can either be "internal" to use a golang library or "git" to use a localy installed git. Defaults to git.                                                                                                             |
 | database                           | filename of the database                                                                                                                                                                                                                   |
 | no_errormail_on_statuscode         | if we get this status code after all retries do not send an error email                                                                                                                                                                    |
 | useragent                          | useragent header to use for outgoing http requests                                                                                                                                                                                         |
@@ -218,9 +217,7 @@ go1.20.windows-arm64.msi
 
 Example E-Mail:
 
-GIT Diff Method (default):
-
-![screenshot](screenshot_git.png "git diff mode")
+![screenshot](screenshot_git.png "git diff")
 
 ### JSON filtering
 

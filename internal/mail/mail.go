@@ -65,29 +65,20 @@ func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) err
 	body := fmt.Sprintf("%s", err)
 	for _, to := range m.config.Mail.To {
 		if err := m.send(ctx, to, subject, body, ""); err != nil {
-			return err
+			return fmt.Errorf("error on sending email: %w", err)
 		}
 	}
 	return nil
 }
 
-func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, diffMethod, subject, body, text1, text2 string) error {
-	htmlContent := ""
-	textContent := ""
-	var err error
-	switch diffMethod {
-	case "internal":
-		htmlContent, err = diff.GenerateHTMLDiffInternal(body, text1, text2)
-		if err != nil {
-			return err
-		}
-	case "git":
-		textContent, htmlContent, err = diff.GenerateDiffGit(ctx, body, text1, text2)
-		if err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("invalid diff method %s", diffMethod)
+func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, subject, body string, d *diff.Diff) error {
+	textContent, err := d.Text(body)
+	if err != nil {
+		return fmt.Errorf("error on creating text content: %w", err)
+	}
+	htmlContent, err := d.HTML(body)
+	if err != nil {
+		return fmt.Errorf("error on creating html content: %w", err)
 	}
 	return m.sendMultipartEmail(ctx, w, subject, textContent, htmlContent)
 }

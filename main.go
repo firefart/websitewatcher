@@ -15,6 +15,7 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/database"
+	"github.com/firefart/websitewatcher/internal/diff"
 	"github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/mail"
 	"github.com/firefart/websitewatcher/internal/taskmanager"
@@ -280,15 +281,15 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				app.logger.Info("sending watch error email", slog.String("name", w.Name))
 				mailer, err := mail.New(app.config, app.logger)
 				if err != nil {
-					return err
+					return fmt.Errorf("could not create mailer: %w", err)
 				}
 				if err := mailer.SendWatchError(ctx, w, invalidErr); err != nil {
-					return err
+					return fmt.Errorf("could not send error email: %w", err)
 				}
 			}
 			return nil
 		default:
-			return err
+			return fmt.Errorf("could not process watch: %w", err)
 		}
 	}
 
@@ -300,12 +301,12 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			app.logger.Info("new website detected, not comparing", slog.String("name", w.Name))
 			app.logger.Debug("website content", slog.String("content", string(watchReturn.Body)))
 			if _, err := app.db.InsertWatch(ctx, w.Name, w.URL, watchReturn.Body); err != nil {
-				return err
+				return fmt.Errorf("could not insert new watch: %w", err)
 			}
 			return nil
 		}
 		// other error, just return it
-		return err
+		return fmt.Errorf("could not get last content: %w", err)
 	}
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
@@ -321,9 +322,13 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
 			mailer, err := mail.New(app.config, app.logger)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not create mailer: %w", err)
 			}
-			if err := mailer.SendDiffEmail(ctx, w, app.config.DiffMethod, subject, text, string(lastContent), string(watchReturn.Body)); err != nil {
+			d, err := diff.GenerateDiff(ctx, string(lastContent), string(watchReturn.Body))
+			if err != nil {
+				return fmt.Errorf("could not create diff: %w", err)
+			}
+			if err := mailer.SendDiffEmail(ctx, w, subject, text, d); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 		}
@@ -333,7 +338,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 
 	// update database entry if we did not have any errors
 	if err := app.db.UpdateLastContent(ctx, watchID, watchReturn.Body); err != nil {
-		return err
+		return fmt.Errorf("could not update last content: %w", err)
 	}
 
 	return nil

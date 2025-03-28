@@ -24,7 +24,6 @@
     "count": 3,
     "delay": "10s"
   },
-  "diff_method": "git",
   "database": "db.sqlite3",
   "watches": [
     {

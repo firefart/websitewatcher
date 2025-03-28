@@ -23,7 +23,6 @@ type Configuration struct {
 	Mail                    MailConfig    `koanf:"mail"`
 	Proxy                   *ProxyConfig  `koanf:"proxy"`
 	Retry                   RetryConfig   `koanf:"retry"`
-	DiffMethod              string        `koanf:"diff_method" validate:"required,oneof=git internal"`
 	Useragent               string        `koanf:"useragent"`
 	Timeout                 time.Duration `koanf:"timeout"`
 	Database                string        `koanf:"database" validate:"required"`
@@ -98,7 +97,6 @@ var defaultConfig = Configuration{
 		Retries: 3,
 		Timeout: 10 * time.Second,
 	},
-	DiffMethod:      "git",
 	GracefulTimeout: 5 * time.Second,
 	Useragent:       DefaultUseragent,
 }
@@ -147,7 +145,7 @@ func GetConfig(f string) (Configuration, error) {
 		return Configuration{}, resultErr
 	}
 
-	if config.DiffMethod == "git" && !helper.IsGitInstalled() {
+	if !helper.IsGitInstalled() {
 		return Configuration{}, fmt.Errorf("diff mode git requires git to be installed")
 	}
 
