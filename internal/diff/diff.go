@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html"
 	"os"
 	"os/exec"
 	"path"
@@ -37,27 +36,6 @@ const (
 	LineModeMetadata  LineMode = "metadata"
 )
 
-const gitDiffCSS = `
-	div {
-		font-family: monospace;
-		padding-left: 0.5em;
-    padding-right: 0.5em;
-	}
-	div.container {
-		display: inline-block;
-	}
-	div.default {}
-	div.add {
-		background-color: #c8f0da;
-	}
-	div.delete {
-		background-color: #ffcbbd;
-	}
-	div.changes {
-		background-color: lightyellow;
-	}
-`
-
 func (d Diff) Text(body string) (string, error) {
 	builder := strings.Builder{}
 	for _, line := range d.Lines {
@@ -69,33 +47,12 @@ func (d Diff) Text(body string) (string, error) {
 	return fmt.Sprintf("%s\n%s", body, builder.String()), nil
 }
 
-func (d Diff) HTML(body string) (string, error) {
-	builder := strings.Builder{}
-	for _, line := range d.Lines {
-		var classname string
-		switch line.LineMode {
-		case LineModeAdded:
-			classname = "add"
-		case LineModeRemoved:
-			classname = "delete"
-		case LineModeMetadata:
-			classname = "changes"
-		case LineModeUnchanged:
-			classname = "default"
-		default:
-			return "", fmt.Errorf("unknown line mode %q", line.LineMode)
-		}
-		if _, err := builder.WriteString(fmt.Sprintf(`<div class="%s">%s</div>`, html.EscapeString(classname), html.EscapeString(line.Content))); err != nil {
-			return "", err
-		}
+func (d Diff) HTML(ctx context.Context, body string) (string, error) {
+	var buf bytes.Buffer
+	if err := HTMLDiff(&d, body).Render(ctx, &buf); err != nil {
+		return "", fmt.Errorf("could not render HTML diff: %w", err)
 	}
-
-	body = html.EscapeString(body)
-	body = strings.ReplaceAll(body, "\n", "<br>\n")
-	htmlContainer := fmt.Sprintf(`<div class="container">%s</div>`, builder.String())
-	htmlBody := fmt.Sprintf("<html><head><style>%s</style></head><body>%s<br><br>\n%s</body></html>", gitDiffCSS, body, htmlContainer)
-
-	return htmlBody, nil
+	return buf.String(), nil
 }
 
 func GenerateDiff(ctx context.Context, text1, text2 string) (*Diff, error) {

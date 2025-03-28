@@ -1,0 +1,91 @@
+package diff
+
+templ HTMLDiff(d *Diff, body string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Diff</title>
+			<style>
+      body {
+        font-family: monospace;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+
+      .diff-container {
+        max-width: 800px;
+        margin: 20px auto;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      div.body {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+      }
+
+      div.diff {
+        margin: 0;
+        padding: 10px;
+        word-wrap: break-word;
+      }
+
+      .line {
+        display: block;
+        padding: 5px 10px;
+        border-left: 4px solid transparent;
+      }
+
+      .line.unchanged {
+        background-color: #f8f9fa;
+      }
+
+      .line.added {
+        background-color: #e6ffed;
+        border-left-color: #28a745;
+      }
+
+      .line.removed {
+        background-color: #ffeef0;
+        border-left-color: #d73a49;
+      }
+
+      .line.metadata {
+        background-color: #fffbe7;
+        border-left-color: #d7bf3a;
+      }
+    </style>
+		</head>
+		<body>
+			<div class="diff-container">
+				if body != "" {
+					<div class="body">
+						{ body }
+					</div>
+				}
+				<div class="diff">
+					for _, line := range d.Lines {
+						var classname string
+						switch line.LineMode {
+							case LineModeAdded:
+								<code class="line added">{ line.Content }</code>
+							case LineModeRemoved:
+								<code class="line removed">{ line.Content }</code>
+							case LineModeMetadata:
+								<code class="line metadata">{ line.Content }</code>
+							case LineModeUnchanged:
+								<code class="line unchanged">{ line.Content }</code>
+						}
+					}
+				</div>
+			</div>
+		</body>
+	</html>
+}

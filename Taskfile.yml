@@ -16,11 +16,16 @@ tasks:
       - go mod tidy -v
 
   generate:
-    deps: [sqlc]
+    deps: [sqlc, templ]
 
   sqlc:
     cmds:
       - go tool sqlc generate
+
+  templ:
+    cmds:
+      - go tool templ generate
+      - go tool templ fmt .
 
   build:
     aliases: [default]
