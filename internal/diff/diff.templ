@@ -29,6 +29,8 @@ templ HTMLDiff(d *Diff, body string) {
         padding: 10px;
         background-color: #f8f9fa;
         border-bottom: 1px solid #ddd;
+        white-space: pre-wrap;
+        word-wrap: break-word;
       }
 
       div.diff {
@@ -72,7 +74,6 @@ templ HTMLDiff(d *Diff, body string) {
 				}
 				<div class="diff">
 					for _, line := range d.Lines {
-						var classname string
 						switch line.LineMode {
 							case LineModeAdded:
 								<code class="line added">{ line.Content }</code>

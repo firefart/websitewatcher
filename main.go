@@ -310,24 +310,26 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	}
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
+		text := fmt.Sprintf("Name: %s\nURL: %s", w.Name, w.URL)
+		if w.Description != "" {
+			text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)
+		}
+		text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
+		d, err := diff.GenerateDiff(ctx, string(lastContent), string(watchReturn.Body))
+		if err != nil {
+			return fmt.Errorf("could not create diff: %w", err)
+		}
+
 		if app.dryRun {
 			app.logger.Info("Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
+			// app.logger.Debug(d.HTML(ctx, text))
 		} else {
-			subject := fmt.Sprintf("[%s] change detected", w.Name)
 			app.logger.Info("sending diff email", slog.String("name", w.Name))
-			text := fmt.Sprintf("Name: %s\nURL: %s", w.Name, w.URL)
-			if w.Description != "" {
-				text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)
-			}
-			text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
 			mailer, err := mail.New(app.config, app.logger)
 			if err != nil {
 				return fmt.Errorf("could not create mailer: %w", err)
 			}
-			d, err := diff.GenerateDiff(ctx, string(lastContent), string(watchReturn.Body))
-			if err != nil {
-				return fmt.Errorf("could not create diff: %w", err)
-			}
+			subject := fmt.Sprintf("[%s] change detected", w.Name)
 			if err := mailer.SendDiffEmail(ctx, w, subject, text, d); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
