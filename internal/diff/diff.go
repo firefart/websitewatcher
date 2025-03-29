@@ -19,12 +19,12 @@ import (
 var indexRe = regexp.MustCompile(`^index [A-Fa-f0-9]+\.\.[A-Fa-f0-9]+ [0-9]+$`)
 
 type Diff struct {
-	Lines []Line `json:"lines"`
+	Lines []Line
 }
 
 type Line struct {
-	Content  string   `json:"content"`
-	LineMode LineMode `json:"line_mode"`
+	Content  string
+	LineMode LineMode
 }
 
 type LineMode string
