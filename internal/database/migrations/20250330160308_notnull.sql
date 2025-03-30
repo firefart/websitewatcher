@@ -20,6 +20,7 @@ CREATE TABLE watches
 );
 INSERT INTO watches SELECT id, name, url, last_fetch, last_content FROM watches_backup;
 DROP TABLE watches_backup;
+CREATE UNIQUE INDEX idx_name_url ON watches (name, url);
 -- +goose StatementEnd
 
 -- +goose Down
