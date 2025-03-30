@@ -14,6 +14,7 @@ import (
 
 	"github.com/firefart/websitewatcher/internal/config"
 	httpint "github.com/firefart/websitewatcher/internal/http"
+	"github.com/firefart/websitewatcher/internal/webhook"
 	"github.com/itchyny/gojq"
 )
 
@@ -44,7 +45,7 @@ type Watch struct {
 	UserAgent               string
 	RemoveEmptyLines        bool
 	TrimWhitespace          bool
-	Webhooks                []string
+	Webhooks                []webhook.Webhook
 }
 
 type Replace struct {
@@ -93,7 +94,7 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		UserAgent:               c.Useragent,
 		RemoveEmptyLines:        c.RemoveEmptyLines,
 		TrimWhitespace:          c.TrimWhitespace,
-		Webhooks:                c.Webhooks,
+		Webhooks:                make([]webhook.Webhook, len(c.Webhooks)),
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet
@@ -104,6 +105,14 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 			ReplaceWith: x.ReplaceWith,
 		}
 		w.Replaces[i] = r
+	}
+	for i, x := range c.Webhooks {
+		w.Webhooks[i] = webhook.Webhook{
+			URL:       x.URL,
+			Header:    x.Header,
+			Method:    x.Method,
+			Useragent: x.Useragent,
+		}
 	}
 	return w
 }

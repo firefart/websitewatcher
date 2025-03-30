@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -12,48 +13,69 @@ import (
 	httpint "github.com/firefart/websitewatcher/internal/http"
 )
 
-type webhookData struct {
-	Name            string        `json:"name"`
-	URL             string        `json:"url"`
-	Description     string        `json:"description"`
-	Diff            []webhookDiff `json:"diff"`
-	RequestDuration time.Duration `json:"request_duration"`
-	StatusCode      int           `json:"status_code"`
-	BodyLength      int           `json:"body_length"`
+type Webhook struct {
+	URL       string
+	Header    map[string]string
+	Method    string
+	Useragent string
 }
 
-type webhookDiff struct {
+type webhookJSON struct {
+	Name            string            `json:"name"`
+	URL             string            `json:"url"`
+	Description     string            `json:"description"`
+	Diff            []webhookJSONDiff `json:"diff"`
+	RequestDuration time.Duration     `json:"request_duration"`
+	StatusCode      int               `json:"status_code"`
+	BodyLength      int               `json:"body_length"`
+}
+
+type webhookJSONDiff struct {
 	Content string `json:"content"`
 	Mode    string `json:"mode"`
 }
 
-func Send(ctx context.Context, httpClient *httpint.Client, url string, d *diff.Diff, meta *diff.Metadata) error {
-	data := webhookData{
-		Name:            meta.Name,
-		URL:             meta.URL,
-		Description:     meta.Description,
-		RequestDuration: meta.RequestDuration,
-		StatusCode:      meta.StatusCode,
-		BodyLength:      meta.BodyLength,
-		Diff:            make([]webhookDiff, 0, len(d.Lines)),
-	}
-	for i, line := range d.Lines {
-		data.Diff[i] = webhookDiff{
-			Content: line.Content,
-			Mode:    string(line.LineMode),
+func Send(ctx context.Context, httpClient *httpint.Client, wh Webhook, d *diff.Diff, meta *diff.Metadata) error {
+	var data io.Reader
+	// we only need the payload on post, put or patch
+	if wh.Method == http.MethodPost || wh.Method == http.MethodPut || wh.Method == http.MethodPatch {
+		postData := webhookJSON{
+			Name:            meta.Name,
+			URL:             meta.URL,
+			Description:     meta.Description,
+			RequestDuration: meta.RequestDuration,
+			StatusCode:      meta.StatusCode,
+			BodyLength:      meta.BodyLength,
+			Diff:            make([]webhookJSONDiff, 0, len(d.Lines)),
 		}
+		for i, line := range d.Lines {
+			postData.Diff[i] = webhookJSONDiff{
+				Content: line.Content,
+				Mode:    string(line.LineMode),
+			}
+		}
+		jsonValue, err := json.Marshal(postData)
+		if err != nil {
+			return fmt.Errorf("failed to marshal webhook data: %w", err)
+		}
+		data = bytes.NewReader(jsonValue)
 	}
-	jsonValue, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("failed to marshal webhook data: %w", err)
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(jsonValue))
+
+	req, err := http.NewRequestWithContext(ctx, wh.Method, wh.URL, data)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	// if we have a body, set the content type
+	if data != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
-	resp, err := httpClient.Do(req, "")
+	// allow for custom headers
+	for k, v := range wh.Header {
+		req.Header.Set(k, v)
+	}
+
+	resp, err := httpClient.Do(req, wh.Useragent)
 	if err != nil {
 		return err
 	}

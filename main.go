@@ -338,7 +338,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 			for _, wh := range w.Webhooks {
-				app.logger.Info("sending webhook", slog.String("name", w.Name), slog.String("url", wh))
+				app.logger.Info("sending webhook", slog.String("name", w.Name), slog.String("url", wh.URL))
 				if err := webhook.Send(ctx, app.httpClient, wh, d, &m); err != nil {
 					return fmt.Errorf("could not send webhook: %w", err)
 				}

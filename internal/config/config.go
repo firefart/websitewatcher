@@ -81,7 +81,14 @@ type WatchConfig struct {
 	Useragent               string            `koanf:"useragent"`
 	RemoveEmptyLines        bool              `koanf:"remove_empty_lines"`
 	TrimWhitespace          bool              `koanf:"trim_whitespace"`
-	Webhooks                []string          `koanf:"webhooks" validate:"dive,url"`
+	Webhooks                []WebhookConfig   `koanf:"webhooks" validate:"dive"`
+}
+
+type WebhookConfig struct {
+	URL       string            `koanf:"url" validate:"required,url"`
+	Header    map[string]string `koanf:"header"`
+	Method    string            `koanf:"method" validate:"required,uppercase,oneof=GET POST PUT PATCH DELETE"`
+	Useragent string            `koanf:"useragent"`
 }
 
 type ReplaceConfig struct {

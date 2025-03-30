@@ -6,6 +6,8 @@ differ.
 It also supports extracting only a particular content from the website via regex and capture groups and also to replace
 content based on a regex (for example to patch out CSRF tokens before comparing).
 
+You can also trigger some webhooks when a website differs.
+
 See the `config.json.sample` file for all possible configuration options.
 
 ## Usage
@@ -73,6 +75,11 @@ You can also specify the parameter `-mode once` to run all checks immediately af
 | watches.useragent                  | set a custom user agent for this watch only                                                                                                                                                                                                |
 | watches.remove_empty_lines         | automatically replace double newlines with a single newline after all replaces. Used to clean up output.                                                                                                                                   |
 | watches.trim_whitespace            | automatically replace leading and trailing whitespaces after all replaces. Used to clean up output. Runs after remove_empty_lines.                                                                                                         |
+| watches.webhooks                   | an array of webhooks to call when a website differs                                                                                                                                                                                        |
+| watches.webhooks.url               | a url to send a webhook to if a website differs                                                                                                                                                                                            |
+| watches.webhooks.header            | additional headers to set on the webhook                                                                                                                                                                                                   |
+| watches.webhooks.method            | GET POST PUT PATCH or DELETE. If it's POST, PUT or PATCH the diff is encoded as json and send in the body                                                                                                                                  |
+| watcher.webhooks.useragent         | Custom useragent to set on this webhook. Uses the default if left empty                                                                                                                                                                    |
 
 ## Example
 
