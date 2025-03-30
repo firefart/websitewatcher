@@ -28,6 +28,7 @@ type webhookJSON struct {
 	RequestDuration time.Duration     `json:"request_duration"`
 	StatusCode      int               `json:"status_code"`
 	BodyLength      int               `json:"body_length"`
+	LastFetch       time.Time         `json:"last_fetch"`
 }
 
 type webhookJSONDiff struct {
@@ -47,6 +48,7 @@ func Send(ctx context.Context, httpClient *httpint.Client, wh Webhook, d *diff.D
 			StatusCode:      meta.StatusCode,
 			BodyLength:      meta.BodyLength,
 			Diff:            make([]webhookJSONDiff, 0, len(d.Lines)),
+			LastFetch:       meta.LastFetch,
 		}
 		for i, line := range d.Lines {
 			postData.Diff[i] = webhookJSONDiff{

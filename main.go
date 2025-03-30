@@ -34,6 +34,7 @@ type app struct {
 	db           database.Interface
 	taskmanager  *taskmanager.TaskManager
 	errorOccured bool // only used in once mode to track if we should exit with an error code
+	timezone     *time.Location
 }
 
 func main() {
@@ -141,7 +142,17 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 	app.httpClient = httpClient
 	app.dryRun = dryRun
 	app.db = db
-	// app.mailer = mailer
+
+	if configuration.Location != "" {
+		tz, err := time.LoadLocation(configuration.Location)
+		if err != nil {
+			return fmt.Errorf("could not load timezone %q: %w", configuration.Location, err)
+		}
+		app.timezone = tz
+	} else {
+		app.timezone = time.UTC
+	}
+
 	app.taskmanager, err = taskmanager.New(app.logger)
 	if err != nil {
 		return fmt.Errorf("could not create taskmanager: %w", err)
@@ -294,7 +305,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		}
 	}
 
-	watchID, lastContent, err := app.db.GetLastContent(ctx, w.Name, w.URL)
+	watchID, lastFetch, lastContent, err := app.db.GetLastContent(ctx, w.Name, w.URL)
 	if err != nil {
 		// if it's a new website not yet in the database only process new entries and ignore old ones
 		if errors.Is(err, database.ErrNotFound) {
@@ -318,6 +329,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			RequestDuration: watchReturn.Duration.Round(time.Millisecond),
 			StatusCode:      watchReturn.StatusCode,
 			BodyLength:      len(watchReturn.Body),
+			LastFetch:       lastFetch.In(app.timezone),
 		}
 		d, err := diff.GenerateDiff(ctx, string(lastContent), string(watchReturn.Body))
 		if err != nil {

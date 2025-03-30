@@ -43,6 +43,7 @@ type Metadata struct {
 	RequestDuration time.Duration
 	StatusCode      int
 	BodyLength      int
+	LastFetch       time.Time
 }
 
 func (d Diff) Text(body string) (string, error) {

@@ -69,10 +69,11 @@ func TestInsertAndGetLastContent(t *testing.T) {
 	require.Nil(t, err)
 	require.Positive(t, watchID)
 
-	id, lastContent, err := db.GetLastContent(t.Context(), name, url)
+	id, lastFetch, lastContent, err := db.GetLastContent(t.Context(), name, url)
 	require.Nil(t, err)
 	require.Equal(t, content, lastContent)
 	require.Equal(t, watchID, id)
+	require.WithinDuration(t, time.Now(), lastFetch, 10*time.Second)
 }
 
 func TestUpdateLastContent(t *testing.T) {
@@ -113,10 +114,11 @@ func TestUpdateLastContent(t *testing.T) {
 	err = db.UpdateLastContent(t.Context(), watchID, newContent)
 	require.Nil(t, err)
 
-	id, lastContent, err := db.GetLastContent(t.Context(), name, url)
+	id, lastFetch, lastContent, err := db.GetLastContent(t.Context(), name, url)
 	require.Nil(t, err)
 	require.Equal(t, newContent, lastContent)
 	require.Equal(t, watchID, id)
+	require.WithinDuration(t, time.Now(), lastFetch, 10*time.Second)
 }
 
 func TestPrepareDatabase(t *testing.T) {

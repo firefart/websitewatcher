@@ -76,7 +76,7 @@ func (m *Mail) SendDiffEmail(ctx context.Context, subject string, d *diff.Diff, 
 	if meta.Description != "" {
 		text = fmt.Sprintf("%s\nDescription: %s", text, meta.Description)
 	}
-	text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, meta.RequestDuration, meta.StatusCode, meta.BodyLength)
+	text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nLast Fetch: %s", text, meta.RequestDuration, meta.StatusCode, meta.BodyLength, meta.LastFetch.Format(time.RFC1123))
 
 	textContent, err := d.Text(text)
 	if err != nil {

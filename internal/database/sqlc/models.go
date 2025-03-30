@@ -5,13 +5,13 @@
 package sqlc
 
 import (
-	"database/sql"
+	"time"
 )
 
 type Watch struct {
 	ID          int64
 	Name        string
 	Url         string
-	LastFetch   sql.NullTime
+	LastFetch   time.Time
 	LastContent []byte
 }

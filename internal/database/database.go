@@ -27,7 +27,7 @@ var embedMigrations embed.FS
 
 type Interface interface {
 	Close(timeout time.Duration) error
-	GetLastContent(ctx context.Context, name, url string) (int64, []byte, error)
+	GetLastContent(ctx context.Context, name, url string) (int64, time.Time, []byte, error)
 	InsertWatch(ctx context.Context, name, url string, content []byte) (int64, error)
 	UpdateLastContent(ctx context.Context, id int64, content []byte) error
 	PrepareDatabase(ctx context.Context, c config.Configuration) ([]config.WatchConfig, int, error)
@@ -146,18 +146,18 @@ func (db *Database) Close(timeout time.Duration) error {
 	return errors.Join(err1, err2, err3, err4)
 }
 
-func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64, []byte, error) {
+func (db *Database) GetLastContent(ctx context.Context, name, url string) (int64, time.Time, []byte, error) {
 	watch, err := db.reader.GetWatchByNameAndUrl(ctx, sqlc.GetWatchByNameAndUrlParams{
 		Name: name,
 		Url:  url,
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return -1, nil, ErrNotFound
+			return -1, time.Now(), nil, ErrNotFound
 		}
-		return -1, nil, err
+		return -1, time.Now(), nil, err
 	}
-	return watch.ID, watch.LastContent, nil
+	return watch.ID, watch.LastFetch, watch.LastContent, nil
 }
 
 func (db *Database) InsertWatch(ctx context.Context, name, url string, content []byte) (int64, error) {
