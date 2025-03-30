@@ -41,7 +41,7 @@ tasks:
   test:
     deps: [deps, generate]
     env:
-      CGO_ENABLED: 1 # required by -race
+      CGO_ENABLED: 1
     cmds:
       - go test -race -cover ./...
 
