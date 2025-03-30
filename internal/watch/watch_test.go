@@ -12,6 +12,8 @@ import (
 )
 
 func TestCheck(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string]struct {
 		UserAgent     string
 		ServerContent string
@@ -44,7 +46,7 @@ func TestCheck(t *testing.T) {
 			defer server.Close()
 
 			logger := slog.New(slog.DiscardHandler)
-			client, err := http.NewHTTPClient(logger, tc.UserAgent, 1*time.Second, nil)
+			client, err := http.NewHTTPClient(t.Context(), logger, tc.UserAgent, 1*time.Second, nil)
 			if err != nil {
 				t.Fatalf("NewHTTPClient() got err=%s, want nil", err)
 			}

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
@@ -12,8 +13,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/firefart/websitewatcher/internal/helper"
 )
 
 var indexRe = regexp.MustCompile(`^index [A-Fa-f0-9]+\.\.[A-Fa-f0-9]+ [0-9]+$`)
@@ -80,37 +79,39 @@ func GenerateDiff(ctx context.Context, text1, text2 string) (*Diff, error) {
 		// 		index 8d30a96..fed39cb 100644
 		// 		--- a/tmp/websitewatcher_SQINZHLunW/538847876
 		// 		+++ b/tmp/websitewatcher_SQINZHLunW/4036934040
-		if strings.HasPrefix(text, "diff --git") {
+		switch {
+		case strings.HasPrefix(text, "diff --git"):
 			continue
-		} else if indexRe.MatchString(text) {
+		case indexRe.MatchString(text):
 			continue
-		} else if strings.HasPrefix(text, "---") {
+		case strings.HasPrefix(text, "---"):
 			continue
-		} else if strings.HasPrefix(text, "+++") {
+		case strings.HasPrefix(text, "+++"):
 			continue
-		} else if strings.HasPrefix(text, "@@") {
+		case strings.HasPrefix(text, "@@"):
 			diff.Lines = append(diff.Lines, Line{
 				Content:  text,
 				LineMode: LineModeMetadata,
 			})
 			continue
-		} else if strings.HasPrefix(text, "-") {
+		case strings.HasPrefix(text, "-"):
 			diff.Lines = append(diff.Lines, Line{
 				Content:  text,
 				LineMode: LineModeRemoved,
 			})
 			continue
-		} else if strings.HasPrefix(text, "+") {
+		case strings.HasPrefix(text, "+"):
 			diff.Lines = append(diff.Lines, Line{
 				Content:  text,
 				LineMode: LineModeAdded,
 			})
 			continue
+		default:
+			diff.Lines = append(diff.Lines, Line{
+				Content:  text,
+				LineMode: LineModeUnchanged,
+			})
 		}
-		diff.Lines = append(diff.Lines, Line{
-			Content:  text,
-			LineMode: LineModeUnchanged,
-		})
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -121,7 +122,7 @@ func GenerateDiff(ctx context.Context, text1, text2 string) (*Diff, error) {
 }
 
 func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
-	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", helper.RandStringRunes(10))) // nolint:gomnd
+	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", rand.Text()))
 	err := os.Mkdir(tmpdir, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("could not create temp dir %q: %w", tmpdir, err)
@@ -159,7 +160,7 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := exec.CommandContext(
+	cmd := exec.CommandContext( // nolint:gosec
 		ctx,
 		"git",
 		"diff",

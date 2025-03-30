@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"log"
 	"log/slog"
 	"os"
 	"testing"
@@ -15,14 +14,14 @@ import (
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	file, err := os.CreateTemp("", "*.sqlite")
+	file, err := os.CreateTemp(t.TempDir(), "*.sqlite")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	defer func(name string) {
 		err := os.Remove(name)
 		if err != nil {
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}(file.Name())
 
@@ -30,22 +29,22 @@ func TestNew(t *testing.T) {
 		Database: file.Name(),
 	}
 	db, err := database.New(t.Context(), configuration, slog.New(slog.DiscardHandler))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	err = db.Close(1 * time.Second)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestInsertAndGetLastContent(t *testing.T) {
 	t.Parallel()
 
-	file, err := os.CreateTemp("", "*.sqlite")
+	file, err := os.CreateTemp(t.TempDir(), "*.sqlite")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	defer func(name string) {
 		err := os.Remove(name)
 		if err != nil {
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}(file.Name())
 
@@ -53,11 +52,11 @@ func TestInsertAndGetLastContent(t *testing.T) {
 		Database: file.Name(),
 	}
 	db, err := database.New(t.Context(), configuration, slog.New(slog.DiscardHandler))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	defer func(db *database.Database, timeout time.Duration) {
 		err := db.Close(timeout)
 		if err != nil {
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}(db, 1*time.Second)
 
@@ -66,11 +65,11 @@ func TestInsertAndGetLastContent(t *testing.T) {
 	content := []byte("test")
 
 	watchID, err := db.InsertWatch(t.Context(), name, url, content)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Positive(t, watchID)
 
 	id, lastFetch, lastContent, err := db.GetLastContent(t.Context(), name, url)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, content, lastContent)
 	require.Equal(t, watchID, id)
 	require.WithinDuration(t, time.Now(), lastFetch, 10*time.Second)
@@ -79,14 +78,14 @@ func TestInsertAndGetLastContent(t *testing.T) {
 func TestUpdateLastContent(t *testing.T) {
 	t.Parallel()
 
-	file, err := os.CreateTemp("", "*.sqlite")
+	file, err := os.CreateTemp(t.TempDir(), "*.sqlite")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	defer func(name string) {
 		err := os.Remove(name)
 		if err != nil {
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}(file.Name())
 
@@ -94,11 +93,11 @@ func TestUpdateLastContent(t *testing.T) {
 		Database: file.Name(),
 	}
 	db, err := database.New(t.Context(), configuration, slog.New(slog.DiscardHandler))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	defer func(db *database.Database, timeout time.Duration) {
 		err := db.Close(timeout)
 		if err != nil {
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}(db, 1*time.Second)
 
@@ -108,14 +107,14 @@ func TestUpdateLastContent(t *testing.T) {
 	newContent := []byte("firefart.at")
 
 	watchID, err := db.InsertWatch(t.Context(), name, url, content)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Positive(t, watchID)
 
 	err = db.UpdateLastContent(t.Context(), watchID, newContent)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	id, lastFetch, lastContent, err := db.GetLastContent(t.Context(), name, url)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, newContent, lastContent)
 	require.Equal(t, watchID, id)
 	require.WithinDuration(t, time.Now(), lastFetch, 10*time.Second)
@@ -124,14 +123,14 @@ func TestUpdateLastContent(t *testing.T) {
 func TestPrepareDatabase(t *testing.T) {
 	t.Parallel()
 
-	file, err := os.CreateTemp("", "*.sqlite")
+	file, err := os.CreateTemp(t.TempDir(), "*.sqlite")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	defer func(name string) {
 		err := os.Remove(name)
 		if err != nil {
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}(file.Name())
 
@@ -145,11 +144,11 @@ func TestPrepareDatabase(t *testing.T) {
 		},
 	}
 	db, err := database.New(t.Context(), configuration, slog.New(slog.DiscardHandler))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	defer func(db *database.Database, timeout time.Duration) {
 		err := db.Close(timeout)
 		if err != nil {
-			require.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}(db, 1*time.Second)
 
@@ -158,13 +157,13 @@ func TestPrepareDatabase(t *testing.T) {
 	content := []byte("test")
 
 	watchID, err := db.InsertWatch(t.Context(), name, url, content)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Positive(t, watchID)
 
 	newWatches, deletedEntries, err := db.PrepareDatabase(t.Context(), configuration)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, deletedEntries)
 	require.Len(t, newWatches, 1)
-	require.Equal(t, newWatches[0].Name, "New")
-	require.Equal(t, newWatches[0].URL, "New")
+	require.Equal(t, "New", newWatches[0].Name)
+	require.Equal(t, "New", newWatches[0].URL)
 }

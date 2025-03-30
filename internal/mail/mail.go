@@ -35,16 +35,17 @@ func New(config config.Configuration, logger *slog.Logger) (*Mail, error) {
 	}
 	if config.Mail.SkipTLS {
 		options = append(options, gomail.WithTLSConfig(&tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: true, // nolint:gosec
 		}))
 	}
 
 	// use either tls, starttls, or starttls with fallback to plaintext
-	if config.Mail.TLS {
+	switch {
+	case config.Mail.TLS:
 		options = append(options, gomail.WithSSL())
-	} else if config.Mail.StartTLS {
+	case config.Mail.StartTLS:
 		options = append(options, gomail.WithTLSPolicy(gomail.TLSMandatory))
-	} else {
+	default:
 		options = append(options, gomail.WithTLSPolicy(gomail.TLSOpportunistic))
 	}
 
@@ -160,10 +161,10 @@ func (m *Mail) sendMultipartEmail(ctx context.Context, subject, textBody, htmlBo
 
 func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlContent string) error {
 	if textContent == "" && htmlContent == "" {
-		return fmt.Errorf("need a content to send email")
+		return errors.New("need a content to send email")
 	}
 
-	m.logger.Debug("sending email", slog.String("subject", subject), slog.String("to", to), slog.String("content-text", textContent), slog.String("html-content", htmlContent))
+	m.logger.DebugContext(ctx, "sending email", slog.String("subject", subject), slog.String("to", to), slog.String("content-text", textContent), slog.String("html-content", htmlContent))
 
 	msg := gomail.NewMsg(gomail.WithNoDefaultUserAgent())
 	msg.SetUserAgent(m.config.Useragent)
@@ -191,7 +192,7 @@ func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlCo
 		if errors.Is(err, context.Canceled) {
 			return err
 		}
-		m.logger.Error("error on sending email", slog.String("subject", subject), slog.Int("try", i), slog.String("err", err.Error()))
+		m.logger.ErrorContext(ctx, "error on sending email", slog.String("subject", subject), slog.Int("try", i), slog.String("err", err.Error()))
 	}
 	return fmt.Errorf("could not send mail %q after %d retries. Last error: %w", subject, m.config.Mail.Retries, err)
 }

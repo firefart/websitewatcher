@@ -37,6 +37,11 @@ type app struct {
 	timezone     *time.Location
 }
 
+const (
+	runModeCron = "cron"
+	runModeOnce = "once"
+)
+
 func main() {
 	var debugMode bool
 	var configFilename string
@@ -51,16 +56,16 @@ func main() {
 	flag.BoolVar(&dryRun, "dry-run", false, "dry-run - send no emails")
 	flag.BoolVar(&configCheckMode, "configcheck", false, "just check the config")
 	flag.BoolVar(&version, "version", false, "show version")
-	flag.StringVar(&runMode, "mode", "cron", "runmode: cron or once")
+	flag.StringVar(&runMode, "mode", runModeCron, "runmode: cron or once")
 	flag.Parse()
 
 	if version {
 		buildInfo, ok := debug.ReadBuildInfo()
 		if !ok {
-			fmt.Println("Unable to determine version information")
+			fmt.Println("Unable to determine version information") // nolint:forbidigo
 			os.Exit(1)
 		}
-		fmt.Printf("%s", buildInfo)
+		fmt.Printf("%s", buildInfo) // nolint:forbidigo
 		os.Exit(0)
 	}
 
@@ -90,7 +95,7 @@ func main() {
 	}
 
 	// ensure we exit with an error code if an error occurred in once mode
-	if runMode == "once" && app.errorOccured {
+	if runMode == runModeOnce && app.errorOccured {
 		os.Exit(1)
 	}
 }
@@ -109,12 +114,12 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer cancel()
 
-	if runMode != "cron" && runMode != "once" {
+	if runMode != runModeCron && runMode != runModeOnce {
 		return fmt.Errorf("invalid runmode %q, must be either cron or once", runMode)
 	}
 
 	if configFile == "" {
-		return fmt.Errorf("please supply a config file")
+		return errors.New("please supply a config file")
 	}
 
 	configuration, err := config.GetConfig(configFile)
@@ -129,11 +134,11 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 
 	defer func() {
 		if err := db.Close(configuration.GracefulTimeout); err != nil {
-			app.logger.Error("error on database close", slog.String("err", err.Error()))
+			app.logger.ErrorContext(ctx, "error on database close", slog.String("err", err.Error()))
 		}
 	}()
 
-	httpClient, err := http.NewHTTPClient(app.logger, configuration.Useragent, configuration.Timeout, configuration.Proxy)
+	httpClient, err := http.NewHTTPClient(ctx, app.logger, configuration.Useragent, configuration.Timeout, configuration.Proxy)
 	if err != nil {
 		return err
 	}
@@ -164,13 +169,13 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 		return fmt.Errorf("[CLEANUP] %w", err)
 	}
 	if deletedRows > 0 {
-		app.logger.Info("removed old entries from database", slog.Int("deleted-rows", deletedRows))
+		app.logger.InfoContext(ctx, "removed old entries from database", slog.Int("deleted-rows", deletedRows))
 	}
 
 	firstRunners := make(map[uuid.UUID]string)
 	for _, wc := range configuration.Watches {
 		if wc.Disabled {
-			app.logger.Info("skipping watch because it's disabled", slog.String("name", wc.Name))
+			app.logger.InfoContext(ctx, "skipping watch because it's disabled", slog.String("name", wc.Name))
 			continue
 		}
 
@@ -194,23 +199,23 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 			}
 		}
 		switch runMode {
-		case "once":
+		case runModeOnce:
 			// check the context in once mode to bail out on error or ctrl+c
 			select {
 			case <-ctx.Done():
 				app.errorOccured = true
-				return fmt.Errorf("execution cancelled before all jobs were run")
+				return errors.New("execution cancelled before all jobs were run")
 			default:
 			}
-			app.logger.Info("running watch immediately", slog.String("name", w.Name))
+			app.logger.InfoContext(ctx, "running watch immediately", slog.String("name", w.Name))
 			job()
-		case "cron":
+		case runModeCron:
 			entryID, err := app.taskmanager.AddTask(w.Name, w.Cron, job)
 			if err != nil {
 				app.logError(err)
 				continue
 			}
-			app.logger.Debug("added task", slog.String("id", entryID.String()), slog.String("name", w.Name), slog.String("schedule", w.Cron))
+			app.logger.DebugContext(ctx, "added task", slog.String("id", entryID.String()), slog.String("name", w.Name), slog.String("schedule", w.Cron))
 
 			// determine if it's a new job that has never been run
 			for _, tmp := range newEntries {
@@ -225,14 +230,14 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 	}
 
 	// taskmanager is only used in cron mode
-	if runMode == "cron" {
+	if runMode == runModeCron {
 		// all tasks added, start the cron
 		app.taskmanager.Start()
 		// if it's a new job run it manually to add a baseline to the database
 		// also run as a go func so the program does not block
 		for entryID, entryName := range firstRunners {
 			go func(id uuid.UUID, name string) {
-				app.logger.Debug("running new job", slog.String("name", name))
+				app.logger.DebugContext(ctx, "running new job", slog.String("name", name))
 				if err := app.taskmanager.RunJob(id); err != nil {
 					app.logError(err)
 					return
@@ -247,7 +252,6 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 		if err := app.taskmanager.Stop(); err != nil {
 			return fmt.Errorf("error stopping taskmanager: %w", err)
 		}
-
 	}
 
 	return nil
@@ -263,11 +267,11 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			// ignore timeout errors so outer mail will not send emails on, them
 			// we also do not update the database, so we keep the old, non timeout
 			// content in there
-			app.logger.Info("watch timed out, ignoring", slog.String("name", w.Name))
+			app.logger.InfoContext(ctx, "watch timed out, ignoring", slog.String("name", w.Name))
 			return nil
 		case errors.As(err, &invalidErr):
 			// we still have an error or soft error after all retries
-			app.logger.Error("invalid response", slog.String("name", w.Name), slog.String("error-message", invalidErr.ErrorMessage), slog.Int("error-code", invalidErr.StatusCode), slog.String("error-body", string(invalidErr.Body)), slog.Duration("duration", invalidErr.Duration))
+			app.logger.ErrorContext(ctx, "invalid response", slog.String("name", w.Name), slog.String("error-message", invalidErr.ErrorMessage), slog.Int("error-code", invalidErr.StatusCode), slog.String("error-body", string(invalidErr.Body)), slog.Duration("duration", invalidErr.Duration))
 
 			// do not send error emails on these status codes
 			ignoreStatusCode := false
@@ -284,13 +288,13 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			}
 			// if statuscode is ignored, do not send email
 			if ignoreStatusCode {
-				app.logger.Info("not sending error mail because status is excluded", slog.String("name", w.Name), slog.Int("status-code", invalidErr.StatusCode))
+				app.logger.InfoContext(ctx, "not sending error mail because status is excluded", slog.String("name", w.Name), slog.Int("status-code", invalidErr.StatusCode))
 				return nil
 			}
 
 			// send mail to indicate we might have an error
 			if !app.dryRun {
-				app.logger.Info("sending watch error email", slog.String("name", w.Name))
+				app.logger.InfoContext(ctx, "sending watch error email", slog.String("name", w.Name))
 				mailer, err := mail.New(app.config, app.logger)
 				if err != nil {
 					return fmt.Errorf("could not create mailer: %w", err)
@@ -310,10 +314,10 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		// if it's a new website not yet in the database only process new entries and ignore old ones
 		if errors.Is(err, database.ErrNotFound) {
 			// lastContent = nil on new sites not yet processed, so send no email here
-			app.logger.Info("new website detected, not comparing", slog.String("name", w.Name))
-			app.logger.Debug("website content", slog.String("content", string(watchReturn.Body)))
-			if _, err := app.db.InsertWatch(ctx, w.Name, w.URL, watchReturn.Body); err != nil {
-				return fmt.Errorf("could not insert new watch: %w", err)
+			app.logger.InfoContext(ctx, "new website detected, not comparing", slog.String("name", w.Name))
+			app.logger.DebugContext(ctx, "website content", slog.String("content", string(watchReturn.Body)))
+			if _, err2 := app.db.InsertWatch(ctx, w.Name, w.URL, watchReturn.Body); err2 != nil {
+				return fmt.Errorf("could not insert new watch: %w", err2)
 			}
 			return nil
 		}
@@ -337,10 +341,10 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 		}
 
 		if app.dryRun {
-			app.logger.Info("Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
-			// app.logger.Debug(d.HTML(ctx, text))
+			app.logger.InfoContext(ctx, "Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
+			// app.logger.DebugContext(ctx, d.HTML(ctx, text))
 		} else {
-			app.logger.Info("sending diff email", slog.String("name", w.Name))
+			app.logger.InfoContext(ctx, "sending diff email", slog.String("name", w.Name))
 			mailer, err := mail.New(app.config, app.logger)
 			if err != nil {
 				return fmt.Errorf("could not create mailer: %w", err)
@@ -350,14 +354,14 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				return fmt.Errorf("error on sending email: %w", err)
 			}
 			for _, wh := range w.Webhooks {
-				app.logger.Info("sending webhook", slog.String("name", w.Name), slog.String("url", wh.URL))
+				app.logger.InfoContext(ctx, "sending webhook", slog.String("name", w.Name), slog.String("url", wh.URL))
 				if err := webhook.Send(ctx, app.httpClient, wh, d, &m); err != nil {
 					return fmt.Errorf("could not send webhook: %w", err)
 				}
 			}
 		}
 	} else {
-		app.logger.Info("no change detected", slog.String("name", w.Name))
+		app.logger.InfoContext(ctx, "no change detected", slog.String("name", w.Name))
 	}
 
 	// update database entry if we did not have any errors

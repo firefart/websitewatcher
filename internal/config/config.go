@@ -97,7 +97,7 @@ type ReplaceConfig struct {
 	ReplaceWith string `koanf:"replace_with"`
 }
 
-var defaultConfig = Configuration{
+var defaultConfig = Configuration{ // nolint:gochecknoglobals
 	Retry: RetryConfig{
 		Count: 3,
 		Delay: 3 * time.Second,
@@ -149,14 +149,14 @@ func GetConfig(f string) (Configuration, error) {
 		}
 
 		var resultErr error
-		for _, err := range err.(validator.ValidationErrors) {
+		for _, err := range err.(validator.ValidationErrors) { // nolint:errcheck,errorlint
 			resultErr = multierror.Append(resultErr, err)
 		}
 		return Configuration{}, resultErr
 	}
 
 	if !helper.IsGitInstalled() {
-		return Configuration{}, fmt.Errorf("diff mode git requires git to be installed")
+		return Configuration{}, errors.New("diff mode git requires git to be installed")
 	}
 
 	// check for uniqueness

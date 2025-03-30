@@ -47,7 +47,7 @@ func New(ctx context.Context, configuration config.Configuration, logger *slog.L
 	if strings.ToLower(configuration.Database) == ":memory:" {
 		// not possible because of the two db instances, with in memory they
 		// would be separate instances
-		return nil, fmt.Errorf("in memory databases are not supported")
+		return nil, errors.New("in memory databases are not supported")
 	}
 
 	reader, err := newDatabase(ctx, configuration, logger, true)
@@ -102,14 +102,14 @@ func newDatabase(ctx context.Context, configuration config.Configuration, logger
 		}
 
 		if len(result) > 0 {
-			logger.Info(fmt.Sprintf("applied %d database migrations", len(result)))
+			logger.InfoContext(ctx, fmt.Sprintf("applied %d database migrations", len(result)))
 		}
 
 		version, err := prov.GetDBVersion(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not get current database version: %w", err)
 		}
-		logger.Info("database setup completed", slog.Int64("version", version))
+		logger.InfoContext(ctx, "database setup completed", slog.Int64("version", version))
 	}
 
 	// shrink and defrag the database (must be run before the checkpoint)

@@ -1,7 +1,9 @@
 package http
 
 import (
+	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -15,13 +17,16 @@ type Client struct {
 	client    *http.Client
 }
 
-func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig) (*Client, error) {
+func NewHTTPClient(ctx context.Context, logger *slog.Logger, userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig) (*Client, error) {
 	// use default transport so proxy is respected
-	tr := http.DefaultTransport.(*http.Transport)
-	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	tr, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil, errors.New("failed to cast default transport to http.Transport")
+	}
+	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // nolint:gosec
 	if proxyConfig != nil && proxyConfig.URL != "" {
 		authenticated := proxyConfig.Username != "" && proxyConfig.Password != ""
-		logger.Info("using proxy", slog.String("url", proxyConfig.URL), slog.Bool("authenticated", authenticated))
+		logger.InfoContext(ctx, "using proxy", slog.String("url", proxyConfig.URL), slog.Bool("authenticated", authenticated))
 		proxy, err := newProxy(*proxyConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create proxy: %w", err)
@@ -39,11 +44,12 @@ func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration,
 }
 
 func (c *Client) Do(req *http.Request, userAgent string) (*http.Response, error) {
-	if userAgent != "" {
+	switch {
+	case userAgent != "":
 		req.Header.Set("User-Agent", userAgent)
-	} else if c.userAgent != "" {
+	case c.userAgent != "":
 		req.Header.Set("User-Agent", c.userAgent)
-	} else {
+	default:
 		req.Header.Set("User-Agent", config.DefaultUseragent)
 	}
 	return c.client.Do(req)
