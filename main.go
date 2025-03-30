@@ -20,6 +20,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/mail"
 	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
+	"github.com/firefart/websitewatcher/internal/webhook"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 )
@@ -310,11 +311,14 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	}
 
 	if !bytes.Equal(lastContent, watchReturn.Body) {
-		text := fmt.Sprintf("Name: %s\nURL: %s", w.Name, w.URL)
-		if w.Description != "" {
-			text = fmt.Sprintf("%s\nDescription: %s", text, w.Description)
+		m := diff.Metadata{
+			Name:            w.Name,
+			URL:             w.URL,
+			Description:     w.Description,
+			RequestDuration: watchReturn.Duration.Round(time.Millisecond),
+			StatusCode:      watchReturn.StatusCode,
+			BodyLength:      len(watchReturn.Body),
 		}
-		text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, watchReturn.Duration.Round(time.Millisecond), watchReturn.StatusCode, len(watchReturn.Body))
 		d, err := diff.GenerateDiff(ctx, string(lastContent), string(watchReturn.Body))
 		if err != nil {
 			return fmt.Errorf("could not create diff: %w", err)
@@ -330,8 +334,14 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				return fmt.Errorf("could not create mailer: %w", err)
 			}
 			subject := fmt.Sprintf("[%s] change detected", w.Name)
-			if err := mailer.SendDiffEmail(ctx, w, subject, text, d); err != nil {
+			if err := mailer.SendDiffEmail(ctx, subject, d, &m, w.AdditionalTo); err != nil {
 				return fmt.Errorf("error on sending email: %w", err)
+			}
+			for _, wh := range w.Webhooks {
+				app.logger.Info("sending webhook", slog.String("name", w.Name), slog.String("url", wh))
+				if err := webhook.Send(ctx, app.httpClient, wh, d, &m); err != nil {
+					return fmt.Errorf("could not send webhook: %w", err)
+				}
 			}
 		}
 	} else {

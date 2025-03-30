@@ -44,6 +44,7 @@ type Watch struct {
 	UserAgent               string
 	RemoveEmptyLines        bool
 	TrimWhitespace          bool
+	Webhooks                []string
 }
 
 type Replace struct {
@@ -92,6 +93,7 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		UserAgent:               c.Useragent,
 		RemoveEmptyLines:        c.RemoveEmptyLines,
 		TrimWhitespace:          c.TrimWhitespace,
+		Webhooks:                c.Webhooks,
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet

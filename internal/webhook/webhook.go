@@ -6,17 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/firefart/websitewatcher/internal/diff"
 	httpint "github.com/firefart/websitewatcher/internal/http"
-	"github.com/firefart/websitewatcher/internal/watch"
 )
 
 type webhookData struct {
-	Name        string        `json:"name"`
-	URL         string        `json:"url"`
-	Description string        `json:"description"`
-	Diff        []webhookDiff `json:"diff"`
+	Name            string        `json:"name"`
+	URL             string        `json:"url"`
+	Description     string        `json:"description"`
+	Diff            []webhookDiff `json:"diff"`
+	RequestDuration time.Duration `json:"request_duration"`
+	StatusCode      int           `json:"status_code"`
+	BodyLength      int           `json:"body_length"`
 }
 
 type webhookDiff struct {
@@ -24,12 +27,15 @@ type webhookDiff struct {
 	Mode    string `json:"mode"`
 }
 
-func Send(ctx context.Context, httpClient *httpint.Client, url string, w *watch.Watch, d *diff.Diff) error {
+func Send(ctx context.Context, httpClient *httpint.Client, url string, d *diff.Diff, meta *diff.Metadata) error {
 	data := webhookData{
-		Name:        w.Name,
-		URL:         w.URL,
-		Description: w.Description,
-		Diff:        make([]webhookDiff, 0, len(d.Lines)),
+		Name:            meta.Name,
+		URL:             meta.URL,
+		Description:     meta.Description,
+		RequestDuration: meta.RequestDuration,
+		StatusCode:      meta.StatusCode,
+		BodyLength:      meta.BodyLength,
+		Diff:            make([]webhookDiff, 0, len(d.Lines)),
 	}
 	for i, line := range d.Lines {
 		data.Diff[i] = webhookDiff{

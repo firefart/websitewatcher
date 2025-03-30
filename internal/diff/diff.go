@@ -36,6 +36,15 @@ const (
 	LineModeMetadata  LineMode = "metadata"
 )
 
+type Metadata struct {
+	Name            string
+	URL             string
+	Description     string
+	RequestDuration time.Duration
+	StatusCode      int
+	BodyLength      int
+}
+
 func (d Diff) Text(body string) (string, error) {
 	builder := strings.Builder{}
 	for _, line := range d.Lines {

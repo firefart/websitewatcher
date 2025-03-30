@@ -71,16 +71,22 @@ func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) err
 	return nil
 }
 
-func (m *Mail) SendDiffEmail(ctx context.Context, w watch.Watch, subject, body string, d *diff.Diff) error {
-	textContent, err := d.Text(body)
+func (m *Mail) SendDiffEmail(ctx context.Context, subject string, d *diff.Diff, meta *diff.Metadata, additionalTo []string) error {
+	text := fmt.Sprintf("Name: %s\nURL: %s", meta.Name, meta.URL)
+	if meta.Description != "" {
+		text = fmt.Sprintf("%s\nDescription: %s", text, meta.Description)
+	}
+	text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d", text, meta.RequestDuration, meta.StatusCode, meta.BodyLength)
+
+	textContent, err := d.Text(text)
 	if err != nil {
 		return fmt.Errorf("error on creating text content: %w", err)
 	}
-	htmlContent, err := d.HTML(ctx, body)
+	htmlContent, err := d.HTML(ctx, text)
 	if err != nil {
 		return fmt.Errorf("error on creating html content: %w", err)
 	}
-	return m.sendMultipartEmail(ctx, w, subject, textContent, htmlContent)
+	return m.sendMultipartEmail(ctx, subject, textContent, htmlContent, additionalTo)
 }
 
 func (m *Mail) SendWatchError(ctx context.Context, w watch.Watch, ret *watch.InvalidResponseError) error {
@@ -137,10 +143,10 @@ func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBo
 	return nil
 }
 
-func (m *Mail) sendMultipartEmail(ctx context.Context, w watch.Watch, subject, textBody, htmlBody string) error {
+func (m *Mail) sendMultipartEmail(ctx context.Context, subject, textBody, htmlBody string, additionalTo []string) error {
 	tos := m.config.Mail.To
-	if len(w.AdditionalTo) > 0 {
-		tos = append(tos, w.AdditionalTo...)
+	if len(additionalTo) > 0 {
+		tos = append(tos, additionalTo...)
 	}
 
 	for _, to := range tos {
