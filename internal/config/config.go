@@ -15,6 +15,7 @@ import (
 	"github.com/knadh/koanf/v2"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/itchyny/gojq"
 )
 
 const DefaultUseragent = "websitewatcher / https://github.com/firefart/websitewatcher"
@@ -157,6 +158,16 @@ func GetConfig(f string) (Configuration, error) {
 			return Configuration{}, fmt.Errorf("name and url combinations need to be unique. Please use another name or url for entry %s", wc.Name)
 		}
 		tmpArray = append(tmpArray, key)
+	}
+
+	// check for valid jq filters
+	for _, wc := range config.Watches {
+		if wc.JQ != "" {
+			_, err := gojq.Parse(wc.JQ)
+			if err != nil {
+				return Configuration{}, fmt.Errorf("invalid jq filter %s: %w", wc.JQ, err)
+			}
+		}
 	}
 
 	return config, nil
