@@ -31,7 +31,7 @@ type Configuration struct {
 	RetryOnMatch            []string      `koanf:"retry_on_match"`
 	Watches                 []WatchConfig `koanf:"watches" validate:"dive"`
 	GracefulTimeout         time.Duration `koanf:"graceful_timeout"`
-	Location                string        `koanf:"location" validate:"timezone"`
+	Location                string        `koanf:"location" validate:"omitempty,timezone"`
 }
 
 type ProxyConfig struct {

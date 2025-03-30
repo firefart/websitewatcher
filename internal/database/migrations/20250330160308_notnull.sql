@@ -1,6 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
-BEGIN TRANSACTION;
 CREATE TEMPORARY TABLE watches_backup
 (
     id           INTEGER NOT NULL PRIMARY KEY,
@@ -21,7 +20,6 @@ CREATE TABLE watches
 );
 INSERT INTO watches SELECT id, name, url, last_fetch, last_content FROM watches_backup;
 DROP TABLE watches_backup;
-COMMIT;
 -- +goose StatementEnd
 
 -- +goose Down

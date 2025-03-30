@@ -25,6 +25,7 @@
     "delay": "10s"
   },
   "database": "db.sqlite3",
+  "location": "Europe/Vienna",
   "watches": [
     {
       "name": "Jokes",
@@ -37,7 +38,17 @@
     {
       "name": "JSON Example",
       "url": "https://domain.com/test.json",
-      "jq": ".result | .[] | select(.name==\"test\")"
+      "jq": ".result | .[] | select(.name==\"test\")",
+      "webhooks": [
+        {
+          "url": "https://example.com/webhook",
+          "method": "POST",
+          "header": {
+            "Content-Type": "application/json"
+          },
+          "useragent": "custom useragent"
+        }
+      ]
     },
     {
       "name": "Golang Downloads",
