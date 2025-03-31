@@ -14,3 +14,5 @@ jobs:
       - uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
+          # DL3007: Using latest is prone to errors if the image will ever update. Pin the version explicitly to a release tag
+          ignore: DL3007
