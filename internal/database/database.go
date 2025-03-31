@@ -102,14 +102,14 @@ func newDatabase(ctx context.Context, configuration config.Configuration, logger
 		}
 
 		if len(result) > 0 {
-			logger.InfoContext(ctx, fmt.Sprintf("applied %d database migrations", len(result)))
+			logger.Info( fmt.Sprintf("applied %d database migrations", len(result)))
 		}
 
 		version, err := prov.GetDBVersion(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not get current database version: %w", err)
 		}
-		logger.InfoContext(ctx, "database setup completed", slog.Int64("version", version))
+		logger.Info( "database setup completed", slog.Int64("version", version))
 	}
 
 	// shrink and defrag the database (must be run before the checkpoint)

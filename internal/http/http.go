@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -17,7 +16,7 @@ type Client struct {
 	client    *http.Client
 }
 
-func NewHTTPClient(ctx context.Context, logger *slog.Logger, userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig) (*Client, error) {
+func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig) (*Client, error) {
 	// use default transport so proxy is respected
 	tr, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
@@ -26,7 +25,7 @@ func NewHTTPClient(ctx context.Context, logger *slog.Logger, userAgent string, t
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // nolint:gosec
 	if proxyConfig != nil && proxyConfig.URL != "" {
 		authenticated := proxyConfig.Username != "" && proxyConfig.Password != ""
-		logger.InfoContext(ctx, "using proxy", slog.String("url", proxyConfig.URL), slog.Bool("authenticated", authenticated))
+		logger.Info("using proxy", slog.String("url", proxyConfig.URL), slog.Bool("authenticated", authenticated))
 		proxy, err := newProxy(*proxyConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create proxy: %w", err)

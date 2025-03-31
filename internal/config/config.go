@@ -97,7 +97,7 @@ type ReplaceConfig struct {
 	ReplaceWith string `koanf:"replace_with"`
 }
 
-var defaultConfig = Configuration{ // nolint:gochecknoglobals
+var defaultConfig = Configuration{
 	Retry: RetryConfig{
 		Count: 3,
 		Delay: 3 * time.Second,
@@ -148,8 +148,12 @@ func GetConfig(f string) (Configuration, error) {
 			return Configuration{}, err
 		}
 
+		var valErr validator.ValidationErrors
+		if ok := errors.As(err, &valErr); !ok {
+			return Configuration{}, fmt.Errorf("could not cast err to ValidationErrors: %w", err)
+		}
 		var resultErr error
-		for _, err := range err.(validator.ValidationErrors) { // nolint:errcheck,errorlint
+		for _, err := range valErr {
 			resultErr = multierror.Append(resultErr, err)
 		}
 		return Configuration{}, resultErr

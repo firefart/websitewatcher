@@ -188,22 +188,22 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 		// no sleep on first try
 		if i > 1 {
 			if retryDelay > 0 {
-				w.logger.InfoContext(ctx, "retrying", slog.String("name", w.Name), slog.Duration("delay", retryDelay))
+				w.logger.Info("retrying", slog.String("name", w.Name), slog.Duration("delay", retryDelay))
 				select {
 				case <-ctx.Done():
 					return nil, ctx.Err()
 				case <-time.After(retryDelay):
 				}
 			} else {
-				w.logger.InfoContext(ctx, "retrying without delay", slog.String("name", w.Name))
+				w.logger.Info("retrying without delay", slog.String("name", w.Name))
 			}
 		}
-		w.logger.InfoContext(ctx, "checking watch", slog.String("name", w.Name), slog.Int("try", i))
+		w.logger.Info("checking watch", slog.String("name", w.Name), slog.Int("try", i))
 		ret, err = w.doHTTP(ctx)
 		if err != nil {
-			w.logger.ErrorContext(ctx, "received error", slog.String("name", w.Name), slog.String("err", err.Error()))
+			w.logger.Error("received error", slog.String("name", w.Name), slog.String("err", err.Error()))
 			if i != retries {
-				w.logger.InfoContext(ctx, "retrying", slog.String("name", w.Name), slog.Int("try", i))
+				w.logger.Info("retrying", slog.String("name", w.Name), slog.Int("try", i))
 				// only continue if it's not the last retry
 				continue
 			}
@@ -223,7 +223,7 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 		}
 
 		if retryResult {
-			w.logger.InfoContext(ctx, "retry check", slog.String("name", w.Name), slog.String("cause", cause))
+			w.logger.Info("retry check", slog.String("name", w.Name), slog.String("cause", cause))
 			if i != retries {
 				// only continue if it's not the last retry
 				continue
@@ -284,7 +284,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			w.logger.ErrorContext(ctx, "error on body close", slog.String("err", err.Error()))
+			w.logger.Error("error on body close", slog.String("err", err.Error()))
 		}
 	}()
 	duration := time.Since(start)
@@ -354,7 +354,7 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		}
 		match := re.FindSubmatch(ret.Body)
 		if len(match) < 2 {
-			w.logger.ErrorContext(ctx, "pattern did not match", slog.String("pattern", w.Pattern), slog.String("body", string(ret.Body)))
+			w.logger.Error("pattern did not match", slog.String("pattern", w.Pattern), slog.String("body", string(ret.Body)))
 			return ret, &InvalidResponseError{
 				ErrorMessage: fmt.Sprintf("pattern %q did not match %s", w.Pattern, string(ret.Body)),
 				StatusCode:   ret.StatusCode,
@@ -367,13 +367,13 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 	}
 
 	for _, replace := range w.Replaces {
-		w.logger.DebugContext(ctx, "replacing", slog.String("name", w.Name), slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith))
+		w.logger.Debug("replacing", slog.String("name", w.Name), slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith))
 		re, err := regexp.Compile(replace.Pattern)
 		if err != nil {
 			return ret, fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
 		}
 		ret.Body = re.ReplaceAll(ret.Body, []byte(replace.ReplaceWith))
-		w.logger.DebugContext(ctx, "after replacement", slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith), slog.String("body", string(ret.Body)))
+		w.logger.Debug("after replacement", slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith), slog.String("body", string(ret.Body)))
 	}
 
 	// optionally remove empty lines
