@@ -342,7 +342,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 
 		if app.dryRun {
 			app.logger.Info("Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
-			// app.logger.Debug(d.HTML(ctx, text))
+			// app.logger.Debug(d.HTML(ctx, fmt.Sprintf("%s\n%s", w.Name, w.URL)))
 		} else {
 			app.logger.Info("sending diff email", slog.String("name", w.Name))
 			mailer, err := mail.New(app.config, app.logger)
