@@ -350,7 +350,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			if err != nil {
 				return fmt.Errorf("could not create html diff: %w", err)
 			}
-			if err := os.WriteFile(dumpFile, []byte(h), 0o644); err != nil {
+			if err := os.WriteFile(dumpFile, []byte(h), 0o600); err != nil {
 				return fmt.Errorf("could not write diff file: %w", err)
 			}
 			app.logger.Info("dumped html diff to file", slog.String("file", dumpFile))
