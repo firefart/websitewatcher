@@ -1,12 +1,13 @@
 package diff
 
+import "strings"
+
 templ HTMLDiff(d *Diff, body string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Diff</title>
 			<style>
       body {
         font-family: monospace;
@@ -29,7 +30,6 @@ templ HTMLDiff(d *Diff, body string) {
         padding: 10px;
         background-color: #f8f9fa;
         border-bottom: 1px solid #ddd;
-        white-space: pre-wrap;
         word-wrap: break-word;
       }
 
@@ -69,20 +69,22 @@ templ HTMLDiff(d *Diff, body string) {
 			<div class="diff-container">
 				if body != "" {
 					<div class="body">
-						{ body }
+						for l := range strings.Lines(body) {
+							<div>{ l }</div>
+						}
 					</div>
 				}
 				<div class="diff">
 					for _, line := range d.Lines {
 						switch line.LineMode {
 							case LineModeAdded:
-								<code class="line added">{ line.Content }</code>
+								<div class="line added">{ line.Content }</div>
 							case LineModeRemoved:
-								<code class="line removed">{ line.Content }</code>
+								<div class="line removed">{ line.Content }</div>
 							case LineModeMetadata:
-								<code class="line metadata">{ line.Content }</code>
+								<div class="line metadata">{ line.Content }</div>
 							case LineModeUnchanged:
-								<code class="line unchanged">{ line.Content }</code>
+								<div class="line unchanged">{ line.Content }</div>
 						}
 					}
 				</div>
