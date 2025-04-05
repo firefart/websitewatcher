@@ -70,7 +70,7 @@ templ HTMLDiff(d *Diff, body string) {
 				if body != "" {
 					<div class="body">
 						for l := range strings.Lines(body) {
-							<div>{ l }</div>
+							<div>{ strings.TrimSpace(l) }</div>
 						}
 					</div>
 				}
