@@ -34,3 +34,4 @@ config.json
 .vscode/
 websitewatcher
 dist/
+*.html

@@ -45,7 +45,16 @@ type Metadata struct {
 	LastFetch       time.Time
 }
 
-func (d Diff) Text(body string) (string, error) {
+func (m Metadata) String() string {
+	text := fmt.Sprintf("Name: %s\nURL: %s", m.Name, m.URL)
+	if m.Description != "" {
+		text = fmt.Sprintf("%s\nDescription: %s", text, m.Description)
+	}
+	text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nLast Fetch: %s", text, m.RequestDuration, m.StatusCode, m.BodyLength, m.LastFetch.Format(time.RFC1123))
+	return text
+}
+
+func (d Diff) Text(meta *Metadata) (string, error) {
 	builder := strings.Builder{}
 	for _, line := range d.Lines {
 		if _, err := builder.WriteString(fmt.Sprintf("%s\n", line.Content)); err != nil {
@@ -53,12 +62,12 @@ func (d Diff) Text(body string) (string, error) {
 		}
 	}
 
-	return fmt.Sprintf("%s\n%s", body, builder.String()), nil
+	return fmt.Sprintf("%s\n%s", meta.String(), builder.String()), nil
 }
 
-func (d Diff) HTML(ctx context.Context, body string) (string, error) {
+func (d Diff) HTML(ctx context.Context, meta *Metadata) (string, error) {
 	var buf bytes.Buffer
-	if err := HTMLDiff(&d, body).Render(ctx, &buf); err != nil {
+	if err := HTMLDiff(&d, meta.String()).Render(ctx, &buf); err != nil {
 		return "", fmt.Errorf("could not render HTML diff: %w", err)
 	}
 	return buf.String(), nil

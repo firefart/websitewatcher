@@ -73,17 +73,11 @@ func (m *Mail) SendErrorEmail(ctx context.Context, w watch.Watch, err error) err
 }
 
 func (m *Mail) SendDiffEmail(ctx context.Context, subject string, d *diff.Diff, meta *diff.Metadata, additionalTo []string) error {
-	text := fmt.Sprintf("Name: %s\nURL: %s", meta.Name, meta.URL)
-	if meta.Description != "" {
-		text = fmt.Sprintf("%s\nDescription: %s", text, meta.Description)
-	}
-	text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nLast Fetch: %s", text, meta.RequestDuration, meta.StatusCode, meta.BodyLength, meta.LastFetch.Format(time.RFC1123))
-
-	textContent, err := d.Text(text)
+	textContent, err := d.Text(meta)
 	if err != nil {
 		return fmt.Errorf("error on creating text content: %w", err)
 	}
-	htmlContent, err := d.HTML(ctx, text)
+	htmlContent, err := d.HTML(ctx, meta)
 	if err != nil {
 		return fmt.Errorf("error on creating html content: %w", err)
 	}

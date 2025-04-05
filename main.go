@@ -26,11 +26,11 @@ import (
 )
 
 type app struct {
-	logger     *slog.Logger
-	config     config.Configuration
-	httpClient *http.Client
-	// mailer      *mail.Mail
+	logger       *slog.Logger
+	config       config.Configuration
+	httpClient   *http.Client
 	dryRun       bool
+	dumpHTML     bool
 	db           database.Interface
 	taskmanager  *taskmanager.TaskManager
 	errorOccured bool // only used in once mode to track if we should exit with an error code
@@ -47,6 +47,7 @@ func main() {
 	var configFilename string
 	var jsonOutput bool
 	var dryRun bool
+	var dumpHTML bool
 	var version bool
 	var configCheckMode bool
 	var runMode string
@@ -54,6 +55,7 @@ func main() {
 	flag.StringVar(&configFilename, "config", "", "config file to use")
 	flag.BoolVar(&jsonOutput, "json", false, "output in json instead")
 	flag.BoolVar(&dryRun, "dry-run", false, "dry-run - send no emails")
+	flag.BoolVar(&dumpHTML, "dump-html", false, "dump the html diff to a file")
 	flag.BoolVar(&configCheckMode, "configcheck", false, "just check the config")
 	flag.BoolVar(&version, "version", false, "show version")
 	flag.StringVar(&runMode, "mode", runModeCron, "runmode: cron or once")
@@ -78,7 +80,7 @@ func main() {
 	if configCheckMode {
 		err = configCheck(configFilename)
 	} else {
-		err = app.run(dryRun, configFilename, runMode)
+		err = app.run(dryRun, dumpHTML, configFilename, runMode)
 	}
 	if err != nil {
 		// check if we have a multierror
@@ -110,7 +112,7 @@ func configCheck(configFilename string) error {
 	return err
 }
 
-func (app *app) run(dryRun bool, configFile string, runMode string) error {
+func (app *app) run(dryRun, dumpHTML bool, configFile string, runMode string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer cancel()
 
@@ -146,6 +148,7 @@ func (app *app) run(dryRun bool, configFile string, runMode string) error {
 	app.config = configuration
 	app.httpClient = httpClient
 	app.dryRun = dryRun
+	app.dumpHTML = dumpHTML
 	app.db = db
 
 	if configuration.Location != "" {
@@ -340,9 +343,21 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			return fmt.Errorf("could not create diff: %w", err)
 		}
 
+		if app.dumpHTML {
+			// dump the diff to a file
+			dumpFile := fmt.Sprintf("dump_%s_%s.html", time.Now().Format("20060102150405"), w.Name)
+			h, err := d.HTML(ctx, &m)
+			if err != nil {
+				return fmt.Errorf("could not create html diff: %w", err)
+			}
+			if err := os.WriteFile(dumpFile, []byte(h), 0o644); err != nil {
+				return fmt.Errorf("could not write diff file: %w", err)
+			}
+			app.logger.Info("dumped html diff to file", slog.String("file", dumpFile))
+		}
+
 		if app.dryRun {
 			app.logger.Info("Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
-			// app.logger.Debug(d.HTML(ctx, fmt.Sprintf("%s\n%s", w.Name, w.URL)))
 		} else {
 			app.logger.Info("sending diff email", slog.String("name", w.Name))
 			mailer, err := mail.New(app.config, app.logger)

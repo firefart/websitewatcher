@@ -15,6 +15,7 @@ LICENSE
 *.sh
 *.yaml
 *.yml
+*.html
 .github/
 .devcontainer/
 .gitignore
