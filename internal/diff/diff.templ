@@ -84,7 +84,19 @@ templ HTMLDiff(d *Diff, body string) {
 							case LineModeMetadata:
 								<div class="line metadata">{ line.Content }</div>
 							case LineModeUnchanged:
-								<div class="line unchanged">{ line.Content }</div>
+								<div class="line unchanged">
+									// an unchanged line starts with a space to accomodate for the + and - on the other lines.
+									// Convert this first space to a non-breaking space so some email clients and html
+									// parsers will not remove the leading space
+									// w3m for example will remove the leading space (w3m -dump <file>), but not the nbsp
+									if len(line.Content) > 0 && line.Content[0] == ' ' {
+										// output the raw non breaking space and the line with the first character removed
+										@templ.Raw("&nbsp;")
+										{ line.Content[1:] }
+									} else {
+										{ line.Content }
+									}
+								</div>
 						}
 					}
 				</div>

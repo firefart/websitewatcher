@@ -29,6 +29,10 @@ notified in this case.
 
 You can also specify the parameter `-mode once` to run all checks immediately after each other without the cron mode. This can be used in a kubernetes setup to run this as a cron job. If an error occurs, the binary will exit with exit code 1.
 
+### Example Screenshot of a diff E-Mail
+
+![screenshot](screenshot.png "screenshot")
+
 ## Config Options
 
 | Option                             | Description                                                                                                                                                                                                                                |
@@ -222,10 +226,6 @@ go1.20.windows-arm64.zip
 go1.20.windows-arm64.msi
 3b520f5ef57fb8e0032eeeec5da1665644daa6499234412e91ab1eb44b05881a
 ```
-
-Example E-Mail:
-
-![screenshot](screenshot_git.png "git diff")
 
 ### JSON filtering
 
