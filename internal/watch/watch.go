@@ -208,12 +208,17 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 				continue
 			}
 			// return error if still a retry response on the last iteration
+			if ret != nil {
+				return nil, &InvalidResponseError{
+					ErrorMessage: fmt.Sprintf("still an error after %d retries: %v", retries, err),
+					StatusCode:   ret.StatusCode,
+					Body:         ret.Body,
+					Header:       ret.Header,
+					Duration:     ret.Duration,
+				}
+			}
 			return nil, &InvalidResponseError{
 				ErrorMessage: fmt.Sprintf("still an error after %d retries: %v", retries, err),
-				StatusCode:   ret.StatusCode,
-				Body:         ret.Body,
-				Header:       ret.Header,
-				Duration:     ret.Duration,
 			}
 		}
 		// check for additional errors like soft errors and status codes here
