@@ -79,6 +79,7 @@ type WatchConfig struct {
 	RetryOnMatch            []string          `koanf:"retry_on_match"`
 	SkipSofterrorPatterns   bool              `koanf:"skip_soft_error_patterns"`
 	JQ                      string            `koanf:"jq"`
+	ExtractBody             bool              `koanf:"extract_body"`
 	Useragent               string            `koanf:"useragent"`
 	RemoveEmptyLines        bool              `koanf:"remove_empty_lines"`
 	TrimWhitespace          bool              `koanf:"trim_whitespace"`
@@ -175,6 +176,9 @@ func GetConfig(f string) (Configuration, error) {
 
 	// check for valid jq filters
 	for _, wc := range config.Watches {
+		if wc.JQ != "" && wc.ExtractBody {
+			return Configuration{}, errors.New("jq filter and extract body cannot be used at the same time")
+		}
 		if wc.JQ != "" {
 			_, err := gojq.Parse(wc.JQ)
 			if err != nil {

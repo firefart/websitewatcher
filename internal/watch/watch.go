@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -16,6 +17,7 @@ import (
 	httpint "github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/webhook"
 	"github.com/itchyny/gojq"
+	"golang.org/x/net/html"
 )
 
 var (
@@ -42,6 +44,7 @@ type Watch struct {
 	RetryOnMatch            []string
 	SkipSofterrorPatterns   bool
 	JQ                      string
+	ExtractBody             bool
 	UserAgent               string
 	RemoveEmptyLines        bool
 	TrimWhitespace          bool
@@ -91,6 +94,7 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		RetryOnMatch:            c.RetryOnMatch,
 		SkipSofterrorPatterns:   c.SkipSofterrorPatterns,
 		JQ:                      c.JQ,
+		ExtractBody:             c.ExtractBody,
 		UserAgent:               c.Useragent,
 		RemoveEmptyLines:        c.RemoveEmptyLines,
 		TrimWhitespace:          c.TrimWhitespace,
@@ -355,6 +359,12 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 			return nil, fmt.Errorf("could not remarshal json: %w", err)
 		}
 		ret.Body = j2
+	} else if w.ExtractBody {
+		body, err := extractBody(ret.Body)
+		if err != nil {
+			return nil, fmt.Errorf("could not extract body: %w", err)
+		}
+		ret.Body = body
 	}
 
 	// extract content
@@ -398,4 +408,32 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 	}
 
 	return ret, nil
+}
+
+func extractBody(inputBody []byte) ([]byte, error) {
+	doc, err := html.Parse(bytes.NewReader(inputBody))
+	if err != nil {
+		return nil, fmt.Errorf("could not parse html: %w", err)
+	}
+	var body *html.Node
+	var crawler func(*html.Node)
+	crawler = func(node *html.Node) {
+		if node.Type == html.ElementNode && node.Data == "body" {
+			body = node
+			return
+		}
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			crawler(child)
+		}
+	}
+	crawler(doc)
+	if body == nil {
+		return nil, errors.New("could not find body in html")
+	}
+	var buf bytes.Buffer
+	w := io.Writer(&buf)
+	if err := html.Render(w, body); err != nil {
+		return nil, fmt.Errorf("could not render body: %w", err)
+	}
+	return buf.Bytes(), nil
 }

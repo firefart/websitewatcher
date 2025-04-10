@@ -4,11 +4,14 @@ import (
 	"log/slog"
 	gohttp "net/http"
 	"net/http/httptest"
+	"regexp"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
 	"github.com/firefart/websitewatcher/internal/http"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCheck(t *testing.T) {
@@ -69,6 +72,47 @@ func TestCheck(t *testing.T) {
 			contentString := string(ret.Body)
 			if contentString != tc.WantContent {
 				t.Errorf("CheckWatch() got content %s, want %s", contentString, tc.WantContent)
+			}
+		})
+	}
+}
+
+func TestExtractBody(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{
+			input: `
+			<!DOCTYPE html>
+<html>
+<head>
+<title>
+Title of the document
+</title>
+</head>
+<body>body content<p>more content</p></body>
+</html>
+`,
+			want: `<body>bodycontent<p>morecontent</p></body>`,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			t.Parallel()
+
+			gotBytes, err := extractBody([]byte(tc.input))
+			require.NoError(t, err)
+			// remove all whitespaces and newlines for comparison
+			// as the renderer intruoduces newlines and spaces
+			re := regexp.MustCompile(`\s+`)
+			out := re.ReplaceAll(gotBytes, []byte(""))
+			got := string(out)
+			if got != tc.want {
+				t.Errorf("extractBody() got:\n%s, want:\n%s", got, tc.want)
 			}
 		})
 	}
