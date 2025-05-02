@@ -3,7 +3,7 @@ module github.com/firefart/websitewatcher
 go 1.24
 
 require (
-	github.com/a-h/templ v0.3.857
+	github.com/a-h/templ v0.3.865
 	github.com/charmbracelet/log v0.4.1
 	github.com/go-co-op/gocron/v2 v2.16.1
 	github.com/go-playground/validator/v10 v10.26.0
@@ -91,7 +91,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20240311024730-e056997136bb // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20250430074133-5865d158698b // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20250501143621-a50a2323f4ba // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
