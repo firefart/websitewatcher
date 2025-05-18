@@ -76,11 +76,14 @@ func (d Diff) HTML(ctx context.Context, meta *Metadata) (string, error) {
 func GenerateDiff(ctx context.Context, text1, text2 string) (*Diff, error) {
 	rawDiff, err := diffGit(ctx, text1, text2)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not generate git diff: %w", err)
 	}
 
 	var diff Diff
 	scanner := bufio.NewScanner(bytes.NewReader(rawDiff))
+	// we need to increase the buffer size to be on the safe side
+	scanBuf := make([]byte, 4096)
+	scanner.Buffer(scanBuf, len(rawDiff))
 	for scanner.Scan() {
 		text := scanner.Text()
 		// filter out unneeded stuff like
@@ -124,7 +127,7 @@ func GenerateDiff(ctx context.Context, text1, text2 string) (*Diff, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not scan diff: %w", err)
 	}
 
 	return &diff, nil

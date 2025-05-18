@@ -30,7 +30,7 @@ type app struct {
 	config       config.Configuration
 	httpClient   *http.Client
 	dryRun       bool
-	dumpHTML     bool
+	dumpDiffHTML bool
 	db           database.Interface
 	taskmanager  *taskmanager.TaskManager
 	errorOccured bool // only used in once mode to track if we should exit with an error code
@@ -47,7 +47,7 @@ func main() {
 	var configFilename string
 	var jsonOutput bool
 	var dryRun bool
-	var dumpHTML bool
+	var dumpDiffHTML bool
 	var version bool
 	var configCheckMode bool
 	var runMode string
@@ -55,7 +55,7 @@ func main() {
 	flag.StringVar(&configFilename, "config", "", "config file to use")
 	flag.BoolVar(&jsonOutput, "json", false, "output in json instead")
 	flag.BoolVar(&dryRun, "dry-run", false, "dry-run - send no emails")
-	flag.BoolVar(&dumpHTML, "dump-html", false, "dump the html diff to a file")
+	flag.BoolVar(&dumpDiffHTML, "dump-diff-html", false, "dump the html diff to a file")
 	flag.BoolVar(&configCheckMode, "configcheck", false, "just check the config")
 	flag.BoolVar(&version, "version", false, "show version")
 	flag.StringVar(&runMode, "mode", runModeCron, "runmode: cron or once")
@@ -80,7 +80,7 @@ func main() {
 	if configCheckMode {
 		err = configCheck(configFilename)
 	} else {
-		err = app.run(dryRun, dumpHTML, configFilename, runMode)
+		err = app.run(dryRun, dumpDiffHTML, configFilename, runMode)
 	}
 	if err != nil {
 		// check if we have a multierror
@@ -112,7 +112,7 @@ func configCheck(configFilename string) error {
 	return err
 }
 
-func (app *app) run(dryRun, dumpHTML bool, configFile string, runMode string) error {
+func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer cancel()
 
@@ -148,7 +148,7 @@ func (app *app) run(dryRun, dumpHTML bool, configFile string, runMode string) er
 	app.config = configuration
 	app.httpClient = httpClient
 	app.dryRun = dryRun
-	app.dumpHTML = dumpHTML
+	app.dumpDiffHTML = dumpDiffHTML
 	app.db = db
 
 	if configuration.Location != "" {
@@ -343,7 +343,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			return fmt.Errorf("could not create diff: %w", err)
 		}
 
-		if app.dumpHTML {
+		if app.dumpDiffHTML {
 			// dump the diff to a file
 			dumpFile := fmt.Sprintf("dump_%s_%s.html", time.Now().Format("20060102150405"), w.Name)
 			h, err := d.HTML(ctx, &m)

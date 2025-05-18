@@ -48,12 +48,12 @@ tasks:
   run:
     deps: [build]
     cmds:
-      - ./{{.PROGRAM}} -debug -dump-html -dry-run -config config.json
+      - ./{{.PROGRAM}} -debug -dump-diff-html -dry-run -config config.json
 
   run-once:
     deps: [build]
     cmds:
-      - ./{{.PROGRAM}} -debug -dump-html -dry-run -config config.json -mode once
+      - ./{{.PROGRAM}} -debug -dump-diff-html -dry-run -config config.json -mode once
 
   configcheck:
     deps: [build]
