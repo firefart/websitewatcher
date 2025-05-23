@@ -42,20 +42,22 @@ type ProxyConfig struct {
 }
 
 type MailConfig struct {
-	Server string `koanf:"server" validate:"required"`
-	Port   int    `koanf:"port" validate:"required,gt=0,lte=65535"`
-	From   struct {
-		Name string `koanf:"name" validate:"required"`
-		Mail string `koanf:"mail" validate:"required,email"`
-	} `koanf:"from"`
-	To       []string      `koanf:"to" validate:"required,dive,email"`
-	User     string        `koanf:"user"`
-	Password string        `koanf:"password"`
-	TLS      bool          `koanf:"tls"`
-	StartTLS bool          `koanf:"starttls"`
-	SkipTLS  bool          `koanf:"skiptls"`
-	Retries  int           `koanf:"retries" validate:"required"`
-	Timeout  time.Duration `koanf:"timeout"`
+	Server   string         `koanf:"server" validate:"required"`
+	Port     int            `koanf:"port" validate:"required,gt=0,lte=65535"`
+	From     MailConfigFrom `koanf:"from"`
+	To       []string       `koanf:"to" validate:"required,dive,email"`
+	User     string         `koanf:"user"`
+	Password string         `koanf:"password"`
+	TLS      bool           `koanf:"tls"`
+	StartTLS bool           `koanf:"starttls"`
+	SkipTLS  bool           `koanf:"skiptls"`
+	Retries  int            `koanf:"retries" validate:"required"`
+	Timeout  time.Duration  `koanf:"timeout"`
+}
+
+type MailConfigFrom struct {
+	Name string `koanf:"name" validate:"required"`
+	Mail string `koanf:"mail" validate:"required,email"`
 }
 
 type RetryConfig struct {

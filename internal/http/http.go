@@ -22,6 +22,7 @@ func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration,
 	if !ok {
 		return nil, errors.New("failed to cast default transport to http.Transport")
 	}
+	tr = tr.Clone()
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // nolint:gosec
 	if proxyConfig != nil && proxyConfig.URL != "" {
 		authenticated := proxyConfig.Username != "" && proxyConfig.Password != ""

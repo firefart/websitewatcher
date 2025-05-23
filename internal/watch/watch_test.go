@@ -117,3 +117,91 @@ Title of the document
 		})
 	}
 }
+func TestEmptyLineRegex(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Single empty line",
+			input:    "line1\n\nline2",
+			expected: "line1\nline2",
+		},
+		{
+			name:     "Multiple consecutive empty lines",
+			input:    "line1\n\n\n\nline2",
+			expected: "line1\nline2",
+		},
+		{
+			name:     "Empty lines with spaces",
+			input:    "line1\n  \n\t\n\nline2",
+			expected: "line1\nline2",
+		},
+		{
+			name:     "Empty lines with mixed whitespace",
+			input:    "line1\n \t \n   \n\t\t\nline2",
+			expected: "line1\nline2",
+		},
+		{
+			name:     "No empty lines",
+			input:    "line1\nline2\nline3",
+			expected: "line1\nline2\nline3",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Only newlines",
+			input:    "\n\n\n",
+			expected: "\n",
+		},
+		{
+			name:     "Empty lines at beginning",
+			input:    "\n\nline1\nline2",
+			expected: "\nline1\nline2",
+		},
+		{
+			name:     "Empty lines at end",
+			input:    "line1\nline2\n\n\n",
+			expected: "line1\nline2\n",
+		},
+		{
+			name:     "Multiple sections with empty lines",
+			input:    "section1\n\n\nsection2\n\nsection3\n\n\n\nsection4",
+			expected: "section1\nsection2\nsection3\nsection4",
+		},
+		{
+			name:     "Lines with only whitespace characters",
+			input:    "line1\n   \n\t\t\n  \t  \nline2",
+			expected: "line1\nline2",
+		},
+		{
+			name:     "Windows line endings with empty lines",
+			input:    "line1\r\n\r\n\r\nline2",
+			expected: "line1\r\nline2",
+		},
+		{
+			name:     "Mixed content with various empty line patterns",
+			input:    "start\n\n  \n\nmiddle\n\t\n \nend\n\n",
+			expected: "start\nmiddle\nend\n",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := emptyLineRegex.ReplaceAll([]byte(tc.input), []byte("\n"))
+			got := string(result)
+
+			if got != tc.expected {
+				t.Errorf("emptyLineRegex.ReplaceAll() = %q, want %q", got, tc.expected)
+			}
+		})
+	}
+}
