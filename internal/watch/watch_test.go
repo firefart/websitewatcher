@@ -117,6 +117,7 @@ Title of the document
 		})
 	}
 }
+
 func TestEmptyLineRegex(t *testing.T) {
 	t.Parallel()
 

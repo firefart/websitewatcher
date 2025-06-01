@@ -162,7 +162,7 @@ func TestReplaceConfig(t *testing.T) {
 			// Create temporary config file
 			tmpDir := t.TempDir()
 			configFile := filepath.Join(tmpDir, "config.json")
-			err := os.WriteFile(configFile, []byte(tc.configJSON), 0644)
+			err := os.WriteFile(configFile, []byte(tc.configJSON), 0o644)
 			require.NoError(t, err)
 
 			// Test GetConfig

@@ -3,10 +3,11 @@ module github.com/firefart/websitewatcher
 go 1.24
 
 require (
-	github.com/a-h/templ v0.3.865
+	github.com/a-h/templ v0.3.887
 	github.com/charmbracelet/log v0.4.2
 	github.com/go-co-op/gocron/v2 v2.16.2
 	github.com/go-playground/validator/v10 v10.26.0
+	github.com/goforj/godump v1.0.5
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/itchyny/gojq v0.12.17

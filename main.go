@@ -21,6 +21,7 @@ import (
 	"github.com/firefart/websitewatcher/internal/taskmanager"
 	"github.com/firefart/websitewatcher/internal/watch"
 	"github.com/firefart/websitewatcher/internal/webhook"
+	"github.com/goforj/godump"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 )
@@ -128,6 +129,8 @@ func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string
 	if err != nil {
 		return err
 	}
+
+	app.logger.Debug(godump.DumpStr(configuration))
 
 	db, err := database.New(ctx, configuration, app.logger)
 	if err != nil {
