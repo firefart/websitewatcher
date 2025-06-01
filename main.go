@@ -264,6 +264,7 @@ func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string
 }
 
 func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
+	app.logger.Debug(godump.DumpStr(w))
 	watchReturn, err := w.Process(ctx, app.config)
 	if err != nil {
 		var urlErr *url.Error
