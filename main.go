@@ -130,7 +130,7 @@ func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string
 		return err
 	}
 
-	app.logger.Debug(godump.DumpStr(configuration))
+	app.logger.Debug(fmt.Sprintf("config: %s", godump.DumpStr(configuration)))
 
 	db, err := database.New(ctx, configuration, app.logger)
 	if err != nil {
@@ -264,9 +264,10 @@ func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string
 }
 
 func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
-	app.logger.Debug(godump.DumpStr(w))
+	app.logger.Debug(fmt.Sprintf("watch: %s", godump.DumpStr(w)))
 	watchReturn, err := w.Process(ctx, app.config)
 	if err != nil {
+		app.logger.Debug(godump.DumpStr(err))
 		var urlErr *url.Error
 		var invalidErr *watch.InvalidResponseError
 		switch {
@@ -315,6 +316,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			return fmt.Errorf("could not process watch: %w", err)
 		}
 	}
+	app.logger.Debug(fmt.Sprintf("watchreturn: %s", godump.DumpStr(watchReturn)))
 
 	watchID, lastFetch, lastContent, err := app.db.GetLastContent(ctx, w.Name, w.URL)
 	if err != nil {
