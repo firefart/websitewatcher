@@ -16,7 +16,6 @@ import (
 	"github.com/firefart/websitewatcher/internal/config"
 	httpint "github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/webhook"
-	"github.com/goforj/godump"
 	"github.com/itchyny/gojq"
 	"golang.org/x/net/html"
 )
@@ -320,8 +319,6 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		// the InvalidResponseError is handled by the calling function
 		return nil, err
 	}
-
-	w.logger.Debug(godump.DumpStr(ret))
 
 	// check if we need to do some jq magic
 	if w.JQ != "" {
