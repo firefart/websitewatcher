@@ -1,5 +1,8 @@
 name: Hadolint
 
+permissions:
+  contents: read
+
 on:
   push:
     paths:
