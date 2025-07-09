@@ -82,6 +82,7 @@ type WatchConfig struct {
 	SkipSofterrorPatterns   bool              `koanf:"skip_soft_error_patterns"`
 	JQ                      string            `koanf:"jq"`
 	ExtractBody             bool              `koanf:"extract_body"`
+	HTML2Text               bool              `koanf:"html2text"`
 	Useragent               string            `koanf:"useragent"`
 	RemoveEmptyLines        bool              `koanf:"remove_empty_lines"`
 	TrimWhitespace          bool              `koanf:"trim_whitespace"`

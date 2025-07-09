@@ -65,6 +65,7 @@
       "cron": "@hourly",
       "url": "http://aaa.com",
       "extract_body": true,
+      "html2text": true,
       "additional_to": [
         "ddd@ddd.com",
         "eee@eee.com"

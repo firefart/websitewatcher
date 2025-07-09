@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
+	"github.com/firefart/websitewatcher/internal/helper"
 	httpint "github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/webhook"
 	"github.com/itchyny/gojq"
@@ -49,6 +50,7 @@ type Watch struct {
 	RemoveEmptyLines        bool
 	TrimWhitespace          bool
 	Webhooks                []webhook.Webhook
+	HTML2Text               bool
 }
 
 type Replace struct {
@@ -99,6 +101,7 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		RemoveEmptyLines:        c.RemoveEmptyLines,
 		TrimWhitespace:          c.TrimWhitespace,
 		Webhooks:                make([]webhook.Webhook, len(c.Webhooks)),
+		HTML2Text:               c.HTML2Text,
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet
@@ -385,6 +388,15 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 			}
 		}
 		ret.Body = match[1]
+	}
+
+	// convert html to text if requested
+	if w.HTML2Text {
+		h, err := helper.HTML2Text(bytes.NewReader(ret.Body))
+		if err != nil {
+			return ret, fmt.Errorf("could not convert html to text: %w", err)
+		}
+		ret.Body = []byte(h)
 	}
 
 	for _, replace := range w.Replaces {
