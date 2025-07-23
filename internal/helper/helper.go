@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os/exec"
@@ -8,8 +9,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func IsGitInstalled() bool {
-	cmd := exec.Command("git", "--version")
+func IsGitInstalled(ctx context.Context) bool {
+	cmd := exec.CommandContext(ctx, "git", "--version")
 	if err := cmd.Run(); err != nil {
 		return false
 	}

@@ -77,11 +77,14 @@ func main() {
 		logger: logger,
 	}
 
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer cancel()
+
 	var err error
 	if configCheckMode {
-		err = configCheck(configFilename)
+		err = configCheck(ctx, configFilename)
 	} else {
-		err = app.run(dryRun, dumpDiffHTML, configFilename, runMode)
+		err = app.run(ctx, dryRun, dumpDiffHTML, configFilename, runMode)
 	}
 	if err != nil {
 		// check if we have a multierror
@@ -90,16 +93,16 @@ func main() {
 			for _, e := range merr.Errors {
 				app.logError(e)
 			}
-			os.Exit(1)
+			os.Exit(1) // nolint: gocritic
 		}
 		// a normal error
 		app.logError(err)
-		os.Exit(1)
+		os.Exit(1) // nolint: gocritic
 	}
 
 	// ensure we exit with an error code if an error occurred in once mode
 	if runMode == runModeOnce && app.errorOccured {
-		os.Exit(1)
+		os.Exit(1) // nolint: gocritic
 	}
 }
 
@@ -108,15 +111,12 @@ func (app *app) logError(err error) {
 	app.logger.Error("error occurred", slog.String("err", err.Error()))
 }
 
-func configCheck(configFilename string) error {
-	_, err := config.GetConfig(configFilename)
+func configCheck(ctx context.Context, configFilename string) error {
+	_, err := config.GetConfig(ctx, configFilename)
 	return err
 }
 
-func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string) error {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
-	defer cancel()
-
+func (app *app) run(ctx context.Context, dryRun, dumpDiffHTML bool, configFile string, runMode string) error {
 	if runMode != runModeCron && runMode != runModeOnce {
 		return fmt.Errorf("invalid runmode %q, must be either cron or once", runMode)
 	}
@@ -125,7 +125,7 @@ func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string
 		return errors.New("please supply a config file")
 	}
 
-	configuration, err := config.GetConfig(configFile)
+	configuration, err := config.GetConfig(ctx, configFile)
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,6 @@ func (app *app) run(dryRun, dumpDiffHTML bool, configFile string, runMode string
 
 		// wait for ctrl+c, only in cron mode
 		<-ctx.Done()
-		cancel()
 
 		if err := app.taskmanager.Stop(); err != nil {
 			return fmt.Errorf("error stopping taskmanager: %w", err)

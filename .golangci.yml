@@ -168,6 +168,9 @@ linters:
           - noctx
           - wrapcheck
         path: _test\.go
+      - linters:
+          - noctx
+        text: "log/slog.Logger"
     paths:
       - third_party$
       - builtin$

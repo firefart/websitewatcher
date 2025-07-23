@@ -166,7 +166,7 @@ func TestReplaceConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			// Test GetConfig
-			config, err := GetConfig(configFile)
+			config, err := GetConfig(t.Context(), configFile)
 
 			if tc.wantErr {
 				require.Error(t, err)

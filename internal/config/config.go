@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -115,7 +116,7 @@ var defaultConfig = Configuration{
 	Useragent:       DefaultUseragent,
 }
 
-func GetConfig(f string) (Configuration, error) {
+func GetConfig(ctx context.Context, f string) (Configuration, error) {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	k := koanf.NewWithConf(koanf.Conf{
@@ -163,7 +164,7 @@ func GetConfig(f string) (Configuration, error) {
 		return Configuration{}, resultErr
 	}
 
-	if !helper.IsGitInstalled() {
+	if !helper.IsGitInstalled(ctx) {
 		return Configuration{}, errors.New("diff mode git requires git to be installed")
 	}
 
