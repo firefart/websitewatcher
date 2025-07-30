@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/a-h/templ v0.3.924
 	github.com/charmbracelet/log v0.4.2
-	github.com/go-co-op/gocron/v2 v2.16.2
+	github.com/go-co-op/gocron/v2 v2.16.3
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/goforj/godump v1.5.0
 	github.com/google/uuid v1.6.0
@@ -28,7 +28,7 @@ require (
 	cel.dev/expr v0.24.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.67.0 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.39.0 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.40.1 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
@@ -94,7 +94,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20250729112438-5a0343f6525d // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20250730121216-e9e8a04fe716 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
