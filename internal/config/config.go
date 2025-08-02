@@ -87,6 +87,7 @@ type WatchConfig struct {
 	Useragent               string            `koanf:"useragent"`
 	RemoveEmptyLines        bool              `koanf:"remove_empty_lines"`
 	TrimWhitespace          bool              `koanf:"trim_whitespace"`
+	ParseRSS                bool              `koanf:"parse_rss"`
 	Webhooks                []WebhookConfig   `koanf:"webhooks" validate:"dive"`
 }
 

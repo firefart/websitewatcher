@@ -18,6 +18,7 @@ import (
 	httpint "github.com/firefart/websitewatcher/internal/http"
 	"github.com/firefart/websitewatcher/internal/webhook"
 	"github.com/itchyny/gojq"
+	"github.com/mmcdole/gofeed"
 	"golang.org/x/net/html"
 )
 
@@ -51,6 +52,7 @@ type Watch struct {
 	TrimWhitespace          bool
 	Webhooks                []webhook.Webhook
 	HTML2Text               bool
+	ParseRSS                bool
 }
 
 type Replace struct {
@@ -102,6 +104,7 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		TrimWhitespace:          c.TrimWhitespace,
 		Webhooks:                make([]webhook.Webhook, len(c.Webhooks)),
 		HTML2Text:               c.HTML2Text,
+		ParseRSS:                c.ParseRSS,
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet
@@ -323,8 +326,9 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		return nil, err
 	}
 
+	switch {
 	// check if we need to do some jq magic
-	if w.JQ != "" {
+	case w.JQ != "":
 		query, err := gojq.Parse(w.JQ)
 		if err != nil {
 			return nil, fmt.Errorf("invalid jq query: %w", err)
@@ -362,12 +366,23 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 			return nil, fmt.Errorf("could not remarshal json: %w", err)
 		}
 		ret.Body = j2
-	} else if w.ExtractBody {
+	case w.ExtractBody:
 		body, err := extractBody(ret.Body)
 		if err != nil {
 			return nil, fmt.Errorf("could not extract body: %w", err)
 		}
 		ret.Body = body
+	case w.ParseRSS:
+		fp := gofeed.NewParser()
+		feed, err := fp.Parse(bytes.NewReader(ret.Body))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse rss feed: %w", err)
+		}
+		if feed == nil {
+			return nil, errors.New("parsed rss feed is nil")
+		}
+		s := feedToString(feed)
+		ret.Body = []byte(s)
 	}
 
 	// extract content
@@ -448,4 +463,22 @@ func extractBody(inputBody []byte) ([]byte, error) {
 		return nil, fmt.Errorf("could not render body: %w", err)
 	}
 	return buf.Bytes(), nil
+}
+
+func feedToString(feed *gofeed.Feed) string {
+	if feed == nil {
+		return ""
+	}
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Title: %s\n", feed.Title))
+	sb.WriteString(fmt.Sprintf("Link: %s\n", feed.Link))
+	sb.WriteString(fmt.Sprintf("Description: %s\n", feed.Description))
+	sb.WriteString(fmt.Sprintf("Published: %s\n", feed.Published))
+	for _, item := range feed.Items {
+		sb.WriteString("\nItem:\n")
+		sb.WriteString(fmt.Sprintf("Title: %s\n", item.Title))
+		sb.WriteString(fmt.Sprintf("Link: %s\n", item.Link))
+		sb.WriteString(fmt.Sprintf("Description: %s\n", item.Description))
+	}
+	return sb.String()
 }
