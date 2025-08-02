@@ -470,15 +470,129 @@ func feedToString(feed *gofeed.Feed) string {
 		return ""
 	}
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Title: %s\n", feed.Title))
-	sb.WriteString(fmt.Sprintf("Link: %s\n", feed.Link))
-	sb.WriteString(fmt.Sprintf("Description: %s\n", feed.Description))
-	sb.WriteString(fmt.Sprintf("Published: %s\n", feed.Published))
+	if feed.Title == "" {
+		sb.WriteString(fmt.Sprintf("Title: %s\n", feed.Title))
+	}
+	if feed.Description == "" {
+		sb.WriteString(fmt.Sprintf("Description: %s\n", feed.Description))
+	}
+	if feed.Link == "" {
+		sb.WriteString(fmt.Sprintf("Link: %s\n", feed.Link))
+	}
+	if feed.FeedLink != "" {
+		sb.WriteString(fmt.Sprintf("Feed Link: %s\n", feed.FeedLink))
+	}
+	if len(feed.Links) > 0 {
+		sb.WriteString("Links:\n")
+		for _, link := range feed.Links {
+			sb.WriteString(fmt.Sprintf("- %s\n", link))
+		}
+	}
+	if feed.Updated != "" {
+		sb.WriteString(fmt.Sprintf("Updated: %s\n", feed.Updated))
+	}
+	if feed.Published != "" {
+		sb.WriteString(fmt.Sprintf("Published: %s\n", feed.Published))
+	}
+	if feed.Author != nil {
+		sb.WriteString(fmt.Sprintf("Author: %s\n", feed.Author.Name))
+		if feed.Author.Email != "" {
+			sb.WriteString(fmt.Sprintf("Author Email: %s\n", feed.Author.Email))
+		}
+	}
+	if len(feed.Authors) > 0 {
+		sb.WriteString("Authors:\n")
+		for _, author := range feed.Authors {
+			sb.WriteString(fmt.Sprintf("- %s\n", author.Name))
+			if author.Email != "" {
+				sb.WriteString(fmt.Sprintf("  Email: %s\n", author.Email))
+			}
+		}
+	}
+	if feed.Language != "" {
+		sb.WriteString(fmt.Sprintf("Language: %s\n", feed.Language))
+	}
+	if feed.Image != nil {
+		sb.WriteString(fmt.Sprintf("Image: %s\n", feed.Image.URL))
+		if feed.Image.Title != "" {
+			sb.WriteString(fmt.Sprintf("Image Title: %s\n", feed.Image.Title))
+		}
+		if feed.Image.URL != "" {
+			sb.WriteString(fmt.Sprintf("Image URL: %s\n", feed.Image.URL))
+		}
+	}
+	if feed.Copyright != "" {
+		sb.WriteString(fmt.Sprintf("Copyright: %s\n", feed.Copyright))
+	}
+	if feed.Generator != "" {
+		sb.WriteString(fmt.Sprintf("Generator: %s\n", feed.Generator))
+	}
+	if len(feed.Categories) > 0 {
+		sb.WriteString("Categories:\n")
+		for _, category := range feed.Categories {
+			sb.WriteString(fmt.Sprintf("- %s\n", category))
+		}
+	}
+
 	for _, item := range feed.Items {
 		sb.WriteString("\nItem:\n")
-		sb.WriteString(fmt.Sprintf("Title: %s\n", item.Title))
-		sb.WriteString(fmt.Sprintf("Link: %s\n", item.Link))
-		sb.WriteString(fmt.Sprintf("Description: %s\n", item.Description))
+		if item.Title != "" {
+			sb.WriteString(fmt.Sprintf("Title: %s\n", item.Title))
+		}
+		if item.Description != "" {
+			sb.WriteString(fmt.Sprintf("Description: %s\n", item.Description))
+		}
+		if item.Content != "" {
+			sb.WriteString(fmt.Sprintf("Content: %s\n", item.Content))
+		}
+		if item.Link != "" {
+			sb.WriteString(fmt.Sprintf("Link: %s\n", item.Link))
+		}
+		if len(item.Links) > 0 {
+			sb.WriteString("Links:\n")
+			for _, link := range item.Links {
+				sb.WriteString(fmt.Sprintf("- %s\n", link))
+			}
+		}
+		if item.Updated != "" {
+			sb.WriteString(fmt.Sprintf("Updated: %s\n", item.Updated))
+		}
+		if item.Published != "" {
+			sb.WriteString(fmt.Sprintf("Published: %s\n", item.Published))
+		}
+		if item.Author != nil {
+			sb.WriteString(fmt.Sprintf("Author: %s\n", item.Author.Name))
+			if item.Author.Email != "" {
+				sb.WriteString(fmt.Sprintf("Author Email: %s\n", item.Author.Email))
+			}
+		}
+		if len(item.Authors) > 0 {
+			sb.WriteString("Authors:\n")
+			for _, author := range item.Authors {
+				sb.WriteString(fmt.Sprintf("- %s\n", author.Name))
+				if author.Email != "" {
+					sb.WriteString(fmt.Sprintf("  Email: %s\n", author.Email))
+				}
+			}
+		}
+		if item.GUID != "" {
+			sb.WriteString(fmt.Sprintf("GUID: %s\n", item.GUID))
+		}
+		if item.Image != nil {
+			sb.WriteString(fmt.Sprintf("Image: %s\n", item.Image.URL))
+			if item.Image.Title != "" {
+				sb.WriteString(fmt.Sprintf("Image Title: %s\n", item.Image.Title))
+			}
+			if item.Image.URL != "" {
+				sb.WriteString(fmt.Sprintf("Image URL: %s\n", item.Image.URL))
+			}
+		}
+		if len(item.Categories) > 0 {
+			sb.WriteString("Categories:\n")
+			for _, category := range item.Categories {
+				sb.WriteString(fmt.Sprintf("- %s\n", category))
+			}
+		}
 	}
 	return sb.String()
 }
