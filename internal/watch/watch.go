@@ -19,7 +19,6 @@ import (
 	"github.com/firefart/websitewatcher/internal/webhook"
 	"github.com/itchyny/gojq"
 	"github.com/mmcdole/gofeed"
-	"golang.org/x/net/html"
 )
 
 var (
@@ -326,8 +325,38 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		return nil, err
 	}
 
+	// first do some extracting and parsing
 	switch {
-	// check if we need to do some jq magic
+	case w.Pattern != "":
+		content, err := helper.ExtractContent(bytes.NewReader(ret.Body), w.Pattern)
+		if err != nil {
+			return nil, fmt.Errorf("could not extract content with pattern %s: %w", w.Pattern, err)
+		}
+		ret.Body = []byte(content)
+	case w.ExtractBody:
+		body, err := helper.ExtractContent(bytes.NewReader(ret.Body), "body")
+		if err != nil {
+			return nil, fmt.Errorf("could not extract body: %w", err)
+		}
+		ret.Body = []byte(body)
+	case w.ParseRSS:
+		fp := gofeed.NewParser()
+		feed, err := fp.Parse(bytes.NewReader(ret.Body))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse rss feed: %w", err)
+		}
+		if feed == nil {
+			return nil, errors.New("parsed rss feed is nil")
+		}
+		s := feedToString(feed)
+		ret.Body = []byte(s)
+	}
+
+	w.logger.Debug("after extraction", slog.String("name", w.Name), slog.String("body", string(ret.Body)))
+
+	// seconfly do some replacements and transformations
+	// this is done in a separate step to for example extract some json from the body first
+	switch {
 	case w.JQ != "":
 		query, err := gojq.Parse(w.JQ)
 		if err != nil {
@@ -366,47 +395,8 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 			return nil, fmt.Errorf("could not remarshal json: %w", err)
 		}
 		ret.Body = j2
-	case w.ExtractBody:
-		body, err := extractBody(ret.Body)
-		if err != nil {
-			return nil, fmt.Errorf("could not extract body: %w", err)
-		}
-		ret.Body = body
-	case w.ParseRSS:
-		fp := gofeed.NewParser()
-		feed, err := fp.Parse(bytes.NewReader(ret.Body))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse rss feed: %w", err)
-		}
-		if feed == nil {
-			return nil, errors.New("parsed rss feed is nil")
-		}
-		s := feedToString(feed)
-		ret.Body = []byte(s)
-	}
-
-	// extract content
-	if w.Pattern != "" {
-		re, err := regexp.Compile(w.Pattern)
-		if err != nil {
-			return ret, fmt.Errorf("could not compile pattern %q: %w", w.Pattern, err)
-		}
-		match := re.FindSubmatch(ret.Body)
-		if len(match) < 2 {
-			w.logger.Error("pattern did not match", slog.String("pattern", w.Pattern), slog.String("body", string(ret.Body)))
-			return ret, &InvalidResponseError{
-				ErrorMessage: fmt.Sprintf("pattern %q did not match %s", w.Pattern, string(ret.Body)),
-				StatusCode:   ret.StatusCode,
-				Header:       ret.Header,
-				Body:         ret.Body,
-				Duration:     ret.Duration,
-			}
-		}
-		ret.Body = match[1]
-	}
-
 	// convert html to text if requested
-	if w.HTML2Text {
+	case w.HTML2Text:
 		h, err := helper.HTML2Text(bytes.NewReader(ret.Body))
 		if err != nil {
 			return ret, fmt.Errorf("could not convert html to text: %w", err)
@@ -435,34 +425,6 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 	}
 
 	return ret, nil
-}
-
-func extractBody(inputBody []byte) ([]byte, error) {
-	doc, err := html.Parse(bytes.NewReader(inputBody))
-	if err != nil {
-		return nil, fmt.Errorf("could not parse html: %w", err)
-	}
-	var body *html.Node
-	var crawler func(*html.Node)
-	crawler = func(node *html.Node) {
-		if node.Type == html.ElementNode && node.Data == "body" {
-			body = node
-			return
-		}
-		for child := node.FirstChild; child != nil; child = child.NextSibling {
-			crawler(child)
-		}
-	}
-	crawler(doc)
-	if body == nil {
-		return nil, errors.New("could not find body in html")
-	}
-	var buf bytes.Buffer
-	w := io.Writer(&buf)
-	if err := html.Render(w, body); err != nil {
-		return nil, fmt.Errorf("could not render body: %w", err)
-	}
-	return buf.Bytes(), nil
 }
 
 func feedToString(feed *gofeed.Feed) string {
