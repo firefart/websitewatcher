@@ -339,17 +339,6 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 			return nil, fmt.Errorf("could not extract body: %w", err)
 		}
 		ret.Body = []byte(body)
-	case w.ParseRSS:
-		fp := gofeed.NewParser()
-		feed, err := fp.Parse(bytes.NewReader(ret.Body))
-		if err != nil {
-			return nil, fmt.Errorf("could not parse rss feed: %w", err)
-		}
-		if feed == nil {
-			return nil, errors.New("parsed rss feed is nil")
-		}
-		s := feedToString(feed)
-		ret.Body = []byte(s)
 	}
 
 	w.logger.Debug("after extraction", slog.String("name", w.Name), slog.String("body", string(ret.Body)))
@@ -395,6 +384,17 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 			return nil, fmt.Errorf("could not remarshal json: %w", err)
 		}
 		ret.Body = j2
+	case w.ParseRSS:
+		fp := gofeed.NewParser()
+		feed, err := fp.Parse(bytes.NewReader(ret.Body))
+		if err != nil {
+			return nil, fmt.Errorf("could not parse rss feed: %w", err)
+		}
+		if feed == nil {
+			return nil, errors.New("parsed rss feed is nil")
+		}
+		s := feedToString(feed)
+		ret.Body = []byte(s)
 	// convert html to text if requested
 	case w.HTML2Text:
 		h, err := helper.HTML2Text(bytes.NewReader(ret.Body))
