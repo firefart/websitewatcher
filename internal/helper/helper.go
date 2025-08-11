@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	xhtml "golang.org/x/net/html"
 )
 
 func IsGitInstalled(ctx context.Context) bool {
@@ -44,15 +43,16 @@ func ExtractContent(html io.Reader, query string) (string, error) {
 		return "", fmt.Errorf("no content found for query: %s", query)
 	}
 
-	node := content.Get(0)
-	if node == nil {
-		return "", fmt.Errorf("no child nodes found for query: %s", query)
-	}
-	b := new(strings.Builder)
-	if err := xhtml.Render(b, node); err != nil {
-		return "", fmt.Errorf("could not render content: %w", err)
+	// Check if this is a script tag - if so, return the text content
+	if content.Is("script") {
+		return strings.TrimSpace(content.Text()), nil
 	}
 
-	// Remove leading and trailing whitespace as the parser might add some
-	return strings.TrimSpace(b.String()), nil
+	// For other elements, get the HTML content but preserve entities
+	innerHTML, err := content.Html()
+	if err != nil {
+		return "", fmt.Errorf("could not extract HTML content: %w", err)
+	}
+
+	return strings.TrimSpace(innerHTML), nil
 }

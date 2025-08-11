@@ -29,9 +29,7 @@ Title of the document
 <body>body content<p>more content</p></body>
 </html>
 `,
-			want: `<body>body content<p>more content</p>
-
-</body>`,
+			want: `body content<p>more content</p>`,
 		},
 		{
 			selector: "#__NEXT_DATA__",
@@ -40,9 +38,25 @@ Title of the document
 {"a":{"a":"a"}}
 </script>
 <div id="outer">&lt;<div id="inner">&gt;</div> </div>`,
-			want: `<script id="__NEXT_DATA__" type="application/json">
+			want: `{"a":{"a":"a"}}`,
+		},
+		{
+			selector: "#inner",
+			input: `<div>masdknmflasdf</div>
+<script id="__NEXT_DATA__" type="application/json">
 {"a":{"a":"a"}}
-</script>`,
+</script>
+<div id="outer">&lt;<div id="inner">&gt;</div> </div>`,
+			want: `&gt;`,
+		},
+		{
+			selector: "#outer",
+			input: `<div>masdknmflasdf</div>
+<script id="__NEXT_DATA__" type="application/json">
+{"a":{"a":"a"}}
+</script>
+<div id="outer">&lt;<div id="inner">&gt;</div> </div>`,
+			want: `&lt;<div id="inner">&gt;</div>`,
 		},
 	}
 
