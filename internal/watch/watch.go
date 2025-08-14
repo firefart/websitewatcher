@@ -497,7 +497,7 @@ func feedToString(feed *gofeed.Feed) string {
 	}
 
 	for _, item := range feed.Items {
-		sb.WriteString("\nItem:\n")
+		sb.WriteString("\n\n\nItem:\n")
 		if item.Title != "" {
 			sb.WriteString(fmt.Sprintf("Title: %s\n", item.Title))
 		}
