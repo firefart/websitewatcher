@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os/exec"
@@ -10,7 +9,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func IsGitInstalled(ctx context.Context) bool {
+func IsGitInstalled() bool {
 	_, err := exec.LookPath("git")
 	return err == nil
 }

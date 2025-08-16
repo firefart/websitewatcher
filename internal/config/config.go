@@ -165,7 +165,7 @@ func GetConfig(ctx context.Context, f string) (Configuration, error) {
 		return Configuration{}, resultErr
 	}
 
-	if !helper.IsGitInstalled(ctx) {
+	if !helper.IsGitInstalled() {
 		return Configuration{}, errors.New("diff mode git requires git to be installed")
 	}
 
