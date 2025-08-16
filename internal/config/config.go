@@ -1,7 +1,6 @@
 package config
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -117,7 +116,7 @@ var defaultConfig = Configuration{
 	Useragent:       DefaultUseragent,
 }
 
-func GetConfig(ctx context.Context, f string) (Configuration, error) {
+func GetConfig(f string) (Configuration, error) {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	k := koanf.NewWithConf(koanf.Conf{

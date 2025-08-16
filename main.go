@@ -82,7 +82,7 @@ func main() {
 
 	var err error
 	if configCheckMode {
-		err = configCheck(ctx, configFilename)
+		err = configCheck(configFilename)
 	} else {
 		err = app.run(ctx, dryRun, dumpDiffHTML, configFilename, runMode)
 	}
@@ -111,8 +111,8 @@ func (app *app) logError(err error) {
 	app.logger.Error("error occurred", slog.String("err", err.Error()))
 }
 
-func configCheck(ctx context.Context, configFilename string) error {
-	_, err := config.GetConfig(ctx, configFilename)
+func configCheck(configFilename string) error {
+	_, err := config.GetConfig(configFilename)
 	return err
 }
 
@@ -125,7 +125,7 @@ func (app *app) run(ctx context.Context, dryRun, dumpDiffHTML bool, configFile s
 		return errors.New("please supply a config file")
 	}
 
-	configuration, err := config.GetConfig(ctx, configFile)
+	configuration, err := config.GetConfig(configFile)
 	if err != nil {
 		return err
 	}
