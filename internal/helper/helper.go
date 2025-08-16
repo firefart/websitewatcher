@@ -11,11 +11,8 @@ import (
 )
 
 func IsGitInstalled(ctx context.Context) bool {
-	cmd := exec.CommandContext(ctx, "git", "--version")
-	if err := cmd.Run(); err != nil {
-		return false
-	}
-	return true
+	_, err := exec.LookPath("git")
+	return err == nil
 }
 
 // HTML2Text converts HTML content from an io.Reader to plain text with all script and style tags removed.
