@@ -66,6 +66,9 @@ linters:
     - wastedassign
     - whitespace
   settings:
+    gomoddirectives:
+      replace-allow-list:
+        - github.com/pingcap/tidb/pkg/parser
     depguard:
       rules:
         deprecated:
