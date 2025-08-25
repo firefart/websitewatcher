@@ -18,8 +18,8 @@ require (
 	github.com/knadh/koanf/v2 v2.2.2
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mmcdole/gofeed v1.3.0
-	github.com/pressly/goose/v3 v3.24.3
-	github.com/stretchr/testify v1.10.0
+	github.com/pressly/goose/v3 v3.25.0
+	github.com/stretchr/testify v1.11.0
 	github.com/wneessen/go-mail v0.6.2
 	golang.org/x/net v0.43.0
 	modernc.org/sqlite v1.38.2
@@ -46,7 +46,7 @@ require (
 	github.com/cubicdaiya/gonp v1.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/elastic/go-sysinfo v1.15.3 // indirect
+	github.com/elastic/go-sysinfo v1.15.4 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
