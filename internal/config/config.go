@@ -180,6 +180,14 @@ func GetConfig(f string) (Configuration, error) {
 
 	// check for valid jq filters
 	for _, wc := range config.Watches {
+		if wc.ExtractBody && wc.Pattern != "" {
+			return Configuration{}, errors.New("pattern and extractbody can't be used together")
+		}
+
+		if (wc.ParseRSS && wc.JQ != "") || (wc.ParseRSS && wc.HTML2Text) || (wc.JQ != "" && wc.HTML2Text) {
+			return Configuration{}, errors.New("parse_rss, jq filter and html2text cannot be used at the same time")
+		}
+
 		if wc.JQ != "" && wc.ExtractBody {
 			return Configuration{}, errors.New("jq filter and extract body cannot be used at the same time")
 		}

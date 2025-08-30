@@ -133,101 +133,82 @@ replace, so it's easier to debug faulty regexes.
       "name": "Golang Downloads",
       "url": "https://go.dev/dl",
       "additional_to": ["person@example.com"],
-      "pattern": "(?s)<table class=\"downloadtable\">(.+?)</table>",
+      "pattern": "table.downloadtable",
+      "html2text": true,
       "trim_whitespace": true,
-      "remove_empty_lines": true,
-      "replaces": [
-        {
-          "pattern": "(?s)<thead>.+?</thead>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "(?s)<th.*?>.+?</th>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "(?s)<td>(Source|Archive|Installer|\\d+MB|Linux|Windows|macOS|FreeBSD|ARMv6|ARM64|ppc64le|x86|x86-64|s390x)</td>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "<td.*?>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "</td>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "<tr.*?>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "</tr>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "<tt>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "</tt>",
-          "replace_with": ""
-        },
-        {
-          "pattern": "<a class=\"download\" href=\".+?\">",
-          "replace_with": ""
-        },
-        {
-          "pattern": "</a>",
-          "replace_with": ""
-        }
-      ]
+      "remove_empty_lines": true
     }
   ]
 }
 ```
 
-This would produce (as of go version 1.20) the following cleaned up output:
+This would produce (as of go version 1.25) the following cleaned up output:
 
 ```text
-go1.20.src.tar.gz
-3a29ff0421beaf6329292b8a46311c9fbf06c800077ceddef5fb7f8d5b1ace33
-go1.20.darwin-amd64.tar.gz
-777025500f62d14bb5a4923072cd97431887961d24de08433a60c2fe1120531d
-go1.20.darwin-amd64.pkg
-650748a8785ececab2161abd3b5d7b036c021111c6dbaaaee982f28a1b699eb4
-go1.20.darwin-arm64.tar.gz
-32864d6fe888714ca7b421b5997269c7f6349d7e2675c3a399133e521787608b
-go1.20.darwin-arm64.pkg
-ca64e724e5a5a60f16a1201d7db2b626a5653c9ac93a3567e8676903c97fd1ef
-go1.20.linux-386.tar.gz
-1420582fb43a15dbe94760fdd92171315414c4afc21ffe9d3b5875f9386ebe53
-go1.20.linux-amd64.tar.gz
-5a9ebcc65c1cce56e0d2dc616aff4c4cedcfbda8cc6f0288cc08cda3b18dcbf1
-go1.20.linux-arm64.tar.gz
-17700b6e5108e2a2c3b1a43cd865d3f9c66b7f1c5f0cec26d3672cc131cc0994
-go1.20.linux-armv6l.tar.gz
-ee8550213c62812f90dbfd3d098195adedd450379fd4d3bb2c85607fd5a2d283
-go1.20.windows-386.zip
-9c303e312391eb04b4a1bab9b93b0839e05313068293c26b3a65ec6d24be99ce
-go1.20.windows-386.msi
-37d7279cd68817c416661280c5daabe8298cf76c631e38aaebe9d1efeaf4257b
-go1.20.windows-amd64.zip
-e8f6d8bbcf3df58d2ba29818e13b04c2e42ba2e4d90d580720b21c34d10bbf68
-go1.20.windows-amd64.msi
-179ec1b55d3c1b014595a72fc5f7f59d7c00f9732cc227b47dfe13e6cc633c7c
-go1.20.freebsd-386.tar.gz
-2f3c68213fa785d0ebfa4e50de5ea8f4baf5d9c12f5783c59e1ee370e35755ae
-go1.20.freebsd-amd64.tar.gz
-8c5ccff790dda019e070a6a13745aba0c1ea0e3d47076bacf9fb1e0b34cc731f
-go1.20.linux-ppc64le.tar.gz
-bccbf89c83e0aab2911e57217159bf0fc49bb07c6eebd2c23ae30af18fc5368b
-go1.20.linux-s390x.tar.gz
-4460deffbc01fe5f31fe226d296e366c0d6059b280743aea49bf81ab62ab8be8
-go1.20.windows-arm64.zip
-2421b2ade9b68517f962f0ea4fb27b68b5321b334fb1b353de25be5b2ee90cba
-go1.20.windows-arm64.msi
-3b520f5ef57fb8e0032eeeec5da1665644daa6499234412e91ab1eb44b05881a
+File name
+Kind
+OS
+Arch
+Size
+SHA256 Checksum
+go1.25.0.src.tar.gz
+Source
+30MB
+4bd01e91297207bfa450ea40d4d5a93b1b531a5e438473b2a06e18e077227225
+go1.25.0.darwin-amd64.tar.gz
+Archive
+macOS
+x86-64
+58MB
+5bd60e823037062c2307c71e8111809865116714d6f6b410597cf5075dfd80ef
+go1.25.0.darwin-amd64.pkg
+Installer
+macOS
+x86-64
+59MB
+95e836238bcf8f9a71bffea43344cbd35ee1f16db3aaced2f98dbac045d102db
+go1.25.0.darwin-arm64.tar.gz
+Archive
+macOS
+ARM64
+55MB
+[..snip..]
+go1.25.0.plan9-386.tar.gz
+Archive
+plan9
+x86
+54MB
+46f8cef02086cf04bf186c5912776b56535178d4cb319cd19c9fdbdd29231986
+go1.25.0.plan9-amd64.tar.gz
+Archive
+plan9
+x86-64
+56MB
+29b34391d84095e44608a228f63f2f88113a37b74a79781353ec043dfbcb427b
+go1.25.0.plan9-arm.tar.gz
+Archive
+plan9
+arm
+54MB
+0a047107d13ebe7943aaa6d54b1d7bbd2e45e68ce449b52915a818da715799c2
+go1.25.0.solaris-amd64.tar.gz
+Archive
+solaris
+x86-64
+56MB
+9977f9e4351984364a3b2b78f8b88bfd1d339812356d5237678514594b7d3611
+go1.25.0.windows-arm64.zip
+Archive
+Windows
+ARM64
+62MB
+27bab004c72b3d7bd05a69b6ec0fc54a309b4b78cc569dd963d8b3ec28bfdb8c
+go1.25.0.windows-arm64.msi
+Installer
+Windows
+ARM64
+52MB
+357d030b217ff68e700b6cfc56097bc21ad493bb45b79733a052d112f5031ed9
 ```
 
 ### JSON filtering

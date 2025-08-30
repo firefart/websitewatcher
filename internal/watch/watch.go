@@ -404,6 +404,8 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		ret.Body = []byte(h)
 	}
 
+	w.logger.Debug("after parsing", slog.String("name", w.Name), slog.String("body", string(ret.Body)))
+
 	for _, replace := range w.Replaces {
 		w.logger.Debug("replacing", slog.String("name", w.Name), slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith))
 		re, err := regexp.Compile(replace.Pattern)
@@ -414,6 +416,8 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 		w.logger.Debug("after replacement", slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith), slog.String("body", string(ret.Body)))
 	}
 
+	w.logger.Debug("after replacing", slog.String("name", w.Name), slog.String("body", string(ret.Body)))
+
 	// optionally remove empty lines
 	if w.RemoveEmptyLines {
 		ret.Body = emptyLineRegex.ReplaceAll(ret.Body, []byte("\n"))
@@ -423,6 +427,8 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 	if w.TrimWhitespace {
 		ret.Body = trimWhitespaceRegex.ReplaceAll(ret.Body, []byte(""))
 	}
+
+	w.logger.Debug("final result", slog.String("name", w.Name), slog.String("body", string(ret.Body)))
 
 	return ret, nil
 }
