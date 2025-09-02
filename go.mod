@@ -2,9 +2,6 @@ module github.com/firefart/websitewatcher
 
 go 1.25
 
-// prevent updating parser version automatically until a new version of sqlc is released
-replace github.com/pingcap/tidb/pkg/parser => github.com/pingcap/tidb/pkg/parser v0.0.0-20250324122243-d51e00e5bbf0
-
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/a-h/templ v0.3.943
