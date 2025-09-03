@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/a-h/templ v0.3.943
 	github.com/charmbracelet/log v0.4.2
-	github.com/go-co-op/gocron/v2 v2.16.4
+	github.com/go-co-op/gocron/v2 v2.16.5
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/goforj/godump v1.6.0
 	github.com/google/uuid v1.6.0
@@ -99,7 +99,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20250902110740-56bb6feb9905 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20250903115206-9825dfebc98a // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -110,7 +110,7 @@ require (
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cobra v1.10.1 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/sqlc-dev/sqlc v1.30.0 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
 	github.com/tetratelabs/wazero v1.9.0 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20250519101544-1f330d77b70f // indirect
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.115.3 // indirect
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.115.4 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
@@ -144,7 +144,7 @@ require (
 	modernc.org/libc v1.66.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	mvdan.cc/gofumpt v0.8.0 // indirect
+	mvdan.cc/gofumpt v0.9.0 // indirect
 )
 
 tool (
