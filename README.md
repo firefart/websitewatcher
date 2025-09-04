@@ -41,7 +41,7 @@ Here is a list of my current usecases
 - Checking for router updates
 - Checking DDOS targets and filter them on the targets that interest you
 - Various RSS feeds
-- Monitor sites on the TOR network using a TOR HTTP proxy ((https://github.com/firefart/zwiebelproxy)[https://github.com/firefart/zwiebelproxy])
+- Monitor sites on the TOR network using a TOR HTTP proxy ([https://github.com/firefart/zwiebelproxy](https://github.com/firefart/zwiebelproxy))
 
 ### Example Screenshot of a diff E-Mail
 
