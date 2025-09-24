@@ -29,7 +29,6 @@ import (
 type app struct {
 	logger       *slog.Logger
 	config       config.Configuration
-	httpClient   *http.Client
 	dryRun       bool
 	dumpDiffHTML bool
 	db           database.Interface
@@ -143,13 +142,7 @@ func (app *app) run(ctx context.Context, dryRun, dumpDiffHTML bool, configFile s
 		}
 	}()
 
-	httpClient, err := http.NewHTTPClient(app.logger, configuration.Useragent, configuration.Timeout, configuration.Proxy)
-	if err != nil {
-		return err
-	}
-
 	app.config = configuration
-	app.httpClient = httpClient
 	app.dryRun = dryRun
 	app.dumpDiffHTML = dumpDiffHTML
 	app.db = db
@@ -185,6 +178,10 @@ func (app *app) run(ctx context.Context, dryRun, dumpDiffHTML bool, configFile s
 			continue
 		}
 
+		httpClient, err := http.NewHTTPClient(app.logger, configuration.Useragent, configuration.Timeout, configuration.Proxy)
+		if err != nil {
+			return fmt.Errorf("could not create http client: %w", err)
+		}
 		w := watch.New(wc, app.logger, httpClient)
 
 		job := func() {
@@ -372,7 +369,11 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			}
 			for _, wh := range w.Webhooks {
 				app.logger.Info("sending webhook", slog.String("name", w.Name), slog.String("url", wh.URL))
-				if err := webhook.Send(ctx, app.httpClient, wh, d, &m); err != nil {
+				httpClient, err := http.NewHTTPClient(app.logger, app.config.Useragent, app.config.Timeout, app.config.Proxy)
+				if err != nil {
+					return fmt.Errorf("could not create http client for webhook: %w", err)
+				}
+				if err := webhook.Send(ctx, httpClient, wh, d, &m); err != nil {
 					return fmt.Errorf("could not send webhook: %w", err)
 				}
 			}
