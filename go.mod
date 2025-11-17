@@ -3,7 +3,7 @@ module github.com/firefart/websitewatcher
 go 1.25
 
 require (
-	github.com/PuerkitoBio/goquery v1.10.3
+	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/a-h/templ v0.3.960
 	github.com/charmbracelet/log v0.4.2
 	github.com/go-co-op/gocron/v2 v2.18.0
