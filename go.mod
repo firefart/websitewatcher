@@ -6,8 +6,8 @@ require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/a-h/templ v0.3.960
 	github.com/charmbracelet/log v0.4.2
-	github.com/go-co-op/gocron/v2 v2.18.2
-	github.com/go-playground/validator/v10 v10.28.0
+	github.com/go-co-op/gocron/v2 v2.19.0
+	github.com/go-playground/validator/v10 v10.29.0
 	github.com/goforj/godump v1.7.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -29,7 +29,7 @@ require (
 	cel.dev/expr v0.25.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.69.0 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.41.0 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.42.0 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
@@ -56,7 +56,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.11 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
@@ -103,7 +103,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20251212110232-089e406063ad // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20251213104323-725b4e5771cd // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -139,8 +139,8 @@ require (
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/tools v0.40.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251213004720-97cd9d5aeac2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251213004720-97cd9d5aeac2 // indirect
 	google.golang.org/grpc v1.77.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
