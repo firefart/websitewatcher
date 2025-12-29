@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/wneessen/go-mail v0.7.2
 	golang.org/x/net v0.48.0
-	modernc.org/sqlite v1.42.1
+	modernc.org/sqlite v1.42.2
 )
 
 require (
