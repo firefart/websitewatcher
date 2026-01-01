@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
-	github.com/a-h/templ v0.3.960
+	github.com/a-h/templ v0.3.977
 	github.com/charmbracelet/log v0.4.2
 	github.com/go-co-op/gocron/v2 v2.19.0
 	github.com/go-playground/validator/v10 v10.30.1
@@ -103,7 +103,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20251231045439-91d91e123837 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20251231101231-cd81c59e2ad5 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260101060517-cb5f86216077 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
