@@ -1,4 +1,4 @@
-package mail
+package mail // revive:disable:var-naming
 
 import (
 	"context"

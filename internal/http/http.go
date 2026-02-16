@@ -1,4 +1,4 @@
-package http
+package http // revive:disable:var-naming
 
 import (
 	"crypto/tls"
