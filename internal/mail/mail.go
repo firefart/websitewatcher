@@ -88,29 +88,29 @@ func (m *Mail) SendWatchError(ctx context.Context, w watch.Watch, ret *watch.Inv
 	subject := fmt.Sprintf("Invalid response for %s", w.Name)
 
 	var sb strings.Builder
-	if _, err := sb.WriteString(fmt.Sprintf("%s\n\n", html.EscapeString(ret.ErrorMessage))); err != nil {
+	if _, err := fmt.Fprintf(&sb, "%s\n\n", html.EscapeString(ret.ErrorMessage)); err != nil {
 		return err
 	}
 
-	if _, err := sb.WriteString(fmt.Sprintf("Name: %s\n", html.EscapeString(w.Name))); err != nil {
+	if _, err := fmt.Fprintf(&sb, "Name: %s\n", html.EscapeString(w.Name)); err != nil {
 		return err
 	}
-	if _, err := sb.WriteString(fmt.Sprintf("URL: %s\n", html.EscapeString(w.URL))); err != nil {
+	if _, err := fmt.Fprintf(&sb, "URL: %s\n", html.EscapeString(w.URL)); err != nil {
 		return err
 	}
-	if _, err := sb.WriteString(fmt.Sprintf("Status: %d\n", ret.StatusCode)); err != nil {
+	if _, err := fmt.Fprintf(&sb, "Status: %d\n", ret.StatusCode); err != nil {
 		return err
 	}
-	if _, err := sb.WriteString(fmt.Sprintf("Bodylen: %d\n", len(ret.Body))); err != nil {
+	if _, err := fmt.Fprintf(&sb, "Bodylen: %d\n", len(ret.Body)); err != nil {
 		return err
 	}
-	if _, err := sb.WriteString(fmt.Sprintf("Request Duration: %s\n", ret.Duration.Round(time.Millisecond))); err != nil {
+	if _, err := fmt.Fprintf(&sb, "Request Duration: %s\n", ret.Duration.Round(time.Millisecond)); err != nil {
 		return err
 	}
-	if _, err := sb.WriteString(fmt.Sprintf("Header:\n%s\n", html.EscapeString(formatHeaders(ret.Header)))); err != nil {
+	if _, err := fmt.Fprintf(&sb, "Header:\n%s\n", html.EscapeString(formatHeaders(ret.Header))); err != nil {
 		return err
 	}
-	if _, err := sb.WriteString(fmt.Sprintf("Body:\n%s\n", html.EscapeString(string(ret.Body)))); err != nil {
+	if _, err := fmt.Fprintf(&sb, "Body:\n%s\n", html.EscapeString(string(ret.Body))); err != nil {
 		return err
 	}
 
@@ -194,7 +194,7 @@ func (m *Mail) send(ctx context.Context, to string, subject, textContent, htmlCo
 func formatHeaders(header map[string][]string) string {
 	var sb strings.Builder
 	for key, value := range header {
-		sb.WriteString(fmt.Sprintf("%s: %s\n", key, strings.Join(value, ", ")))
+		fmt.Fprintf(&sb, "%s: %s\n", key, strings.Join(value, ", "))
 	}
 	return sb.String()
 }

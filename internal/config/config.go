@@ -37,7 +37,7 @@ type Configuration struct {
 type ProxyConfig struct {
 	URL      string `koanf:"url" validate:"omitempty,url"`
 	Username string `koanf:"username" validate:"required_with=Password"`
-	Password string `koanf:"password" validate:"required_with=Username"`
+	Password string `koanf:"password" validate:"required_with=Username"` // nolint:gosec
 	NoProxy  string `koanf:"no_proxy"`
 }
 
@@ -47,7 +47,7 @@ type MailConfig struct {
 	From     MailConfigFrom `koanf:"from"`
 	To       []string       `koanf:"to" validate:"required,dive,email"`
 	User     string         `koanf:"user"`
-	Password string         `koanf:"password"`
+	Password string         `koanf:"password"` // nolint: gosec
 	TLS      bool           `koanf:"tls"`
 	StartTLS bool           `koanf:"starttls"`
 	SkipTLS  bool           `koanf:"skiptls"`

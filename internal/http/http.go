@@ -52,5 +52,5 @@ func (c *Client) Do(req *http.Request, userAgent string) (*http.Response, error)
 	default:
 		req.Header.Set("User-Agent", config.DefaultUseragent)
 	}
-	return c.client.Do(req)
+	return c.client.Do(req) // nolint:gosec
 }
