@@ -438,13 +438,13 @@ func feedToString(feed *gofeed.Feed) string {
 		return ""
 	}
 	var sb strings.Builder
-	if feed.Title == "" {
+	if feed.Title != "" {
 		fmt.Fprintf(&sb, "Title: %s\n", feed.Title)
 	}
-	if feed.Description == "" {
+	if feed.Description != "" {
 		fmt.Fprintf(&sb, "Description: %s\n", feed.Description)
 	}
-	if feed.Link == "" {
+	if feed.Link != "" {
 		fmt.Fprintf(&sb, "Link: %s\n", feed.Link)
 	}
 	if feed.FeedLink != "" {

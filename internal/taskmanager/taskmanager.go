@@ -59,7 +59,7 @@ func (tm *TaskManager) RunJob(id uuid.UUID) error {
 			return job.RunNow()
 		}
 	}
-	return fmt.Errorf("could not find task %d", id)
+	return fmt.Errorf("could not find task %s", id)
 }
 
 func (tm *TaskManager) ListTasks() []gocron.Job {

@@ -50,11 +50,11 @@ func Send(ctx context.Context, httpClient *httpint.Client, wh Webhook, d *diff.D
 			Diff:            make([]webhookJSONDiff, 0, len(d.Lines)),
 			LastFetch:       meta.LastFetch,
 		}
-		for i, line := range d.Lines {
-			postData.Diff[i] = webhookJSONDiff{
+		for _, line := range d.Lines {
+			postData.Diff = append(postData.Diff, webhookJSONDiff{
 				Content: line.Content,
 				Mode:    string(line.LineMode),
-			}
+			})
 		}
 		jsonValue, err := json.Marshal(postData)
 		if err != nil {
