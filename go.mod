@@ -102,7 +102,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20251231045439-91d91e123837 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260312115527-ceb64ebeb308 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260313115237-b6af20e59f76 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -131,7 +131,7 @@ require (
 	go.uber.org/zap v1.27.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
-	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
+	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
