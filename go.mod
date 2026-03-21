@@ -15,7 +15,7 @@ require (
 	github.com/knadh/koanf/parsers/json v1.0.0
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/providers/structs v1.0.0
-	github.com/knadh/koanf/v2 v2.3.3
+	github.com/knadh/koanf/v2 v2.3.4
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pressly/goose/v3 v3.27.0
@@ -80,7 +80,7 @@ require (
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
@@ -103,7 +103,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20251231045439-91d91e123837 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260320115959-59672be01c0d // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260320225620-3b531d4e3d99 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
