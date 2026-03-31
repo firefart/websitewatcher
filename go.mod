@@ -7,7 +7,7 @@ require (
 	github.com/a-h/templ v0.3.1001
 	github.com/charmbracelet/log v1.0.0
 	github.com/go-co-op/gocron/v2 v2.19.1
-	github.com/go-playground/validator/v10 v10.30.1
+	github.com/go-playground/validator/v10 v10.30.2
 	github.com/goforj/godump v1.9.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -97,13 +97,13 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
-	github.com/paulmach/orb v0.12.0 // indirect
+	github.com/paulmach/orb v0.13.0 // indirect
 	github.com/pganalyze/pg_query_go/v6 v6.2.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20251231045439-91d91e123837 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260330104804-5c7bf65c2c61 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260331103656-6af045f30302 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -138,8 +138,8 @@ require (
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260319201613-d00831a3d3e7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260319201613-d00831a3d3e7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260330182312-d5a96adf58d8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260330182312-d5a96adf58d8 // indirect
 	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
