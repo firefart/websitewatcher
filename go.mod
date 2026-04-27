@@ -16,7 +16,7 @@ require (
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/providers/structs v1.0.0
 	github.com/knadh/koanf/v2 v2.3.4
-	github.com/mattn/go-isatty v0.0.21
+	github.com/mattn/go-isatty v0.0.22
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/stretchr/testify v1.11.1
