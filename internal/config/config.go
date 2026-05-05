@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"slices"
 	"time"
 
@@ -21,17 +22,18 @@ import (
 const DefaultUseragent = "websitewatcher / https://github.com/firefart/websitewatcher"
 
 type Configuration struct {
-	Mail                    MailConfig    `koanf:"mail"`
-	Proxy                   *ProxyConfig  `koanf:"proxy"`
-	Retry                   RetryConfig   `koanf:"retry"`
-	Useragent               string        `koanf:"useragent"`
-	Timeout                 time.Duration `koanf:"timeout"`
-	Database                string        `koanf:"database" validate:"required"`
-	NoErrorMailOnStatusCode []int         `koanf:"no_errormail_on_statuscode" validate:"dive,gte=100,lte=999"`
-	RetryOnMatch            []string      `koanf:"retry_on_match"`
-	Watches                 []WatchConfig `koanf:"watches" validate:"dive"`
-	GracefulTimeout         time.Duration `koanf:"graceful_timeout"`
-	Location                string        `koanf:"location" validate:"omitempty,timezone"`
+	Mail                    MailConfig       `koanf:"mail"`
+	Proxy                   *ProxyConfig     `koanf:"proxy"`
+	Retry                   RetryConfig      `koanf:"retry"`
+	Useragent               string           `koanf:"useragent"`
+	Timeout                 time.Duration    `koanf:"timeout"`
+	Database                string           `koanf:"database" validate:"required"`
+	NoErrorMailOnStatusCode []int            `koanf:"no_errormail_on_statuscode" validate:"dive,gte=100,lte=999"`
+	RetryOnMatch            []string         `koanf:"retry_on_match"`
+	CompiledRetryOnMatch    []*regexp.Regexp `koanf:"-"`
+	Watches                 []WatchConfig    `koanf:"watches" validate:"dive"`
+	GracefulTimeout         time.Duration    `koanf:"graceful_timeout"`
+	Location                string           `koanf:"location" validate:"omitempty,timezone"`
 }
 
 type ProxyConfig struct {
@@ -197,6 +199,26 @@ func GetConfig(f string) (Configuration, error) {
 				return Configuration{}, fmt.Errorf("invalid jq filter %s: %w", wc.JQ, err)
 			}
 		}
+
+		for _, rc := range wc.Replaces {
+			if _, err := regexp.Compile(rc.Pattern); err != nil {
+				return Configuration{}, fmt.Errorf("invalid replace pattern %q for watch %q: %w", rc.Pattern, wc.Name, err)
+			}
+		}
+
+		for _, p := range wc.RetryOnMatch {
+			if _, err := regexp.Compile(p); err != nil {
+				return Configuration{}, fmt.Errorf("invalid retry_on_match pattern %q for watch %q: %w", p, wc.Name, err)
+			}
+		}
+	}
+
+	for _, p := range config.RetryOnMatch {
+		re, err := regexp.Compile(p)
+		if err != nil {
+			return Configuration{}, fmt.Errorf("invalid global retry_on_match pattern %q: %w", p, err)
+		}
+		config.CompiledRetryOnMatch = append(config.CompiledRetryOnMatch, re)
 	}
 
 	return config, nil

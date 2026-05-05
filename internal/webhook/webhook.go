@@ -82,7 +82,7 @@ func Send(ctx context.Context, httpClient *httpint.Client, wh Webhook, d *diff.D
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("webhook returned status code %d", resp.StatusCode)
 	}
 	return nil

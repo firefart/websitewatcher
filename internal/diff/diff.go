@@ -147,9 +147,8 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not create inputFile1: %w", err)
 	}
-	defer func(name string) {
-		_ = os.Remove(name) // nolint:gosec
-	}(inputFile1.Name())
+	defer os.Remove(inputFile1.Name())
+	defer inputFile1.Close()
 	if _, err := fmt.Fprintf(inputFile1, "%s\n", text1); err != nil { // add a newline at the end so git does not complain
 		return nil, fmt.Errorf("could not write inputFile1: %w", err)
 	}
@@ -158,14 +157,13 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not create inputFile2: %w", err)
 	}
-	defer func(name string) {
-		_ = os.Remove(name) // nolint:gosec
-	}(inputFile2.Name())
+	defer os.Remove(inputFile2.Name())
+	defer inputFile2.Close()
 	if _, err := fmt.Fprintf(inputFile2, "%s\n", text2); err != nil { // add a newline at the end so git does not complain
 		return nil, fmt.Errorf("could not write inputFile2: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	cmdCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	outFile := path.Join(tmpdir, "diff.txt")
@@ -173,7 +171,7 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.CommandContext( // nolint:gosec
-		ctx,
+		cmdCtx,
 		"git",
 		"diff",
 		"--no-color",                        // disable color output as we will parse it manually

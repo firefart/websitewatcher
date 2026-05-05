@@ -43,6 +43,7 @@ type Watch struct {
 	Pattern                 string
 	Replaces                []Replace
 	RetryOnMatch            []string
+	compiledRetryOnMatch    []*regexp.Regexp
 	SkipSofterrorPatterns   bool
 	JQ                      string
 	ExtractBody             bool
@@ -57,6 +58,7 @@ type Watch struct {
 type Replace struct {
 	Pattern     string
 	ReplaceWith string
+	re          *regexp.Regexp
 }
 
 type ReturnObject struct {
@@ -109,11 +111,14 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		w.Method = http.MethodGet
 	}
 	for i, x := range c.Replaces {
-		r := Replace{
+		w.Replaces[i] = Replace{
 			Pattern:     x.Pattern,
 			ReplaceWith: x.ReplaceWith,
+			re:          regexp.MustCompile(x.Pattern), // safe: validated at config load time
 		}
-		w.Replaces[i] = r
+	}
+	for _, p := range c.RetryOnMatch {
+		w.compiledRetryOnMatch = append(w.compiledRetryOnMatch, regexp.MustCompile(p)) // safe: validated at config load time
 	}
 	for i, x := range c.Webhooks {
 		w.Webhooks[i] = webhook.Webhook{
@@ -126,14 +131,14 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 	return w
 }
 
-func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool, string, error) {
+func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool, string) {
 	if ret.StatusCode != http.StatusOK {
 		// non 200 status code, retry
-		return true, fmt.Sprintf("statuscode is %d - %s", ret.StatusCode, http.StatusText(ret.StatusCode)), nil
+		return true, fmt.Sprintf("statuscode is %d - %s", ret.StatusCode, http.StatusText(ret.StatusCode))
 	}
 
 	if len(ret.Body) == 0 {
-		return false, "zero length body", nil
+		return false, "zero length body"
 	}
 
 	if !w.SkipSofterrorPatterns {
@@ -155,33 +160,25 @@ func (w Watch) shouldRetry(ret *ReturnObject, config config.Configuration) (bool
 		}
 		for _, p := range patterns {
 			if bytes.Contains(ret.Body, []byte(p)) {
-				return true, fmt.Sprintf("matches the hardcoded pattern %q", p), nil
+				return true, fmt.Sprintf("matches the hardcoded pattern %q", p)
 			}
 		}
 	}
 
-	for _, p := range config.RetryOnMatch {
-		re, err := regexp.Compile(p)
-		if err != nil {
-			return false, "", err
-		}
+	for i, re := range config.CompiledRetryOnMatch {
 		if re.Match(ret.Body) {
-			return true, fmt.Sprintf("matches the global pattern %q", p), nil
+			return true, fmt.Sprintf("matches the global pattern %q", config.RetryOnMatch[i])
 		}
 	}
 
-	for _, p := range w.RetryOnMatch {
-		re, err := regexp.Compile(p)
-		if err != nil {
-			return false, "", err
-		}
+	for i, re := range w.compiledRetryOnMatch {
 		if re.Match(ret.Body) {
-			return true, fmt.Sprintf("matches the pattern %q", p), nil
+			return true, fmt.Sprintf("matches the pattern %q", w.RetryOnMatch[i])
 		}
 	}
 
 	// nothing else matched, good request, do not retry
-	return false, "", nil
+	return false, ""
 }
 
 // checkWithRetries runs http.CheckWatch in a loop up to x times (configurable) to retry requests on errors
@@ -231,10 +228,7 @@ func (w Watch) checkWithRetries(ctx context.Context, config config.Configuration
 			}
 		}
 		// check for additional errors like soft errors and status codes here
-		retryResult, cause, err := w.shouldRetry(ret, config)
-		if err != nil {
-			return nil, err
-		}
+		retryResult, cause := w.shouldRetry(ret, config)
 
 		if retryResult {
 			w.logger.Info("retry check", slog.String("name", w.Name), slog.String("cause", cause))
@@ -284,7 +278,7 @@ func (w Watch) doHTTP(ctx context.Context) (*ReturnObject, error) {
 
 	req, err := http.NewRequestWithContext(ctx, method, w.URL, requestBody)
 	if err != nil {
-		return nil, fmt.Errorf("could create get request for %s: %w", w.URL, err)
+		return nil, fmt.Errorf("could not create get request for %s: %w", w.URL, err)
 	}
 
 	for name, value := range w.Header {
@@ -408,11 +402,7 @@ func (w Watch) Process(ctx context.Context, config config.Configuration) (*Retur
 
 	for _, replace := range w.Replaces {
 		w.logger.Debug("replacing", slog.String("name", w.Name), slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith))
-		re, err := regexp.Compile(replace.Pattern)
-		if err != nil {
-			return ret, fmt.Errorf("could not compile replace pattern %s: %w", replace.Pattern, err)
-		}
-		ret.Body = re.ReplaceAll(ret.Body, []byte(replace.ReplaceWith))
+		ret.Body = replace.re.ReplaceAll(ret.Body, []byte(replace.ReplaceWith))
 		w.logger.Debug("after replacement", slog.String("pattern", replace.Pattern), slog.String("replacement", replace.ReplaceWith), slog.String("body", string(ret.Body)))
 	}
 
