@@ -1,9 +1,12 @@
+# syntax=docker/dockerfile:1
+
 FROM golang:alpine AS build-env
 WORKDIR /src
-COPY go.mod /src/
+ENV CGO_ENABLED=0
+COPY go.* /src/
 RUN go mod download
 COPY . .
-RUN go build -a -o websitewatcher -trimpath
+RUN go build -a -o websitewatcher -ldflags="-s -w" -trimpath
 
 FROM alpine:latest
 

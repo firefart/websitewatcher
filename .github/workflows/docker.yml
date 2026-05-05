@@ -43,9 +43,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/firefart/websitewatcher:latest
             firefart/websitewatcher:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
