@@ -31,12 +31,12 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><style>\n      body {\n        font-family: monospace;\n        background-color: #f4f4f4;\n        margin: 0;\n        padding: 0;\n      }\n\n      .diff-container {\n        font-family: monospace;\n        max-width: 800px;\n        margin: 20px auto;\n        background: #fff;\n        border: 1px solid #ddd;\n        border-radius: 5px;\n        overflow: hidden;\n        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);\n      }\n\n      div.body {\n        padding: 10px;\n        background-color: #f8f9fa;\n        border-bottom: 1px solid #ddd;\n        word-wrap: break-word;\n      }\n\n      div.diff {\n        margin: 0;\n        padding: 10px;\n        word-wrap: break-word;\n      }\n\n      .line {\n        display: block;\n        padding: 5px 10px;\n        border-left: 4px solid transparent;\n      }\n\n      .line.unchanged {\n        background-color: #f8f9fa;\n      }\n\n      .line.added {\n        background-color: #e6ffed;\n        border-left-color: #28a745;\n      }\n\n      .line.removed {\n        background-color: #ffeef0;\n        border-left-color: #d73a49;\n      }\n\n      .line.metadata {\n        background-color: #fffbe7;\n        border-left-color: #d7bf3a;\n      }\n    </style></head><body><div class=\"diff-container\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body style=\"font-family: monospace; background-color: #f4f4f4; margin: 0; padding: 0;\"><div style=\"font-family: monospace; max-width: 800px; margin: 20px auto; background: #fff; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if body != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"body\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div style=\"padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd; word-wrap: break-word;\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -48,7 +48,7 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 				var templ_7745c5c3_Var2 string
 				templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(strings.TrimSpace(l))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 74, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 17, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 				if templ_7745c5c3_Err != nil {
@@ -64,21 +64,21 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"diff\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div style=\"margin: 0; padding: 10px; word-wrap: break-word;\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, line := range d.Lines {
 			switch line.LineMode {
 			case LineModeAdded:
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"line added\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div style=\"display: block; padding: 5px 10px; border-left: 4px solid #28a745; background-color: #e6ffed;\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(line.Content)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 82, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 25, Col: 129}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -89,14 +89,14 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			case LineModeRemoved:
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"line removed\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div style=\"display: block; padding: 5px 10px; border-left: 4px solid #d73a49; background-color: #ffeef0;\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(line.Content)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 84, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 27, Col: 129}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -107,14 +107,14 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			case LineModeMetadata:
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"line metadata\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div style=\"display: block; padding: 5px 10px; border-left: 4px solid #d7bf3a; background-color: #fffbe7;\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(line.Content)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 86, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 29, Col: 129}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -125,7 +125,7 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			case LineModeUnchanged:
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"line unchanged\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div style=\"display: block; padding: 5px 10px; border-left: 4px solid transparent; background-color: #f8f9fa;\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -145,7 +145,7 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(line.Content[1:])
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 96, Col: 28}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 39, Col: 28}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -155,7 +155,7 @@ func HTMLDiff(d *Diff, body string) templ.Component {
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(line.Content)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 98, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/diff/diff.templ`, Line: 41, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
