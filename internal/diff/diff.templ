@@ -10,41 +10,59 @@ templ HTMLDiff(d *Diff, body string) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		</head>
 		<body style="font-family: monospace; background-color: #f4f4f4; margin: 0; padding: 0;">
-			<div style="font-family: monospace; max-width: 800px; margin: 20px auto; background: #fff; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-				if body != "" {
-					<div style="padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd; word-wrap: break-word;">
-						for l := range strings.Lines(body) {
-							<div>{ strings.TrimSpace(l) }</div>
-						}
-					</div>
-				}
-				<div style="margin: 0; padding: 10px; word-wrap: break-word;">
-					for _, line := range d.Lines {
-						switch line.LineMode {
-							case LineModeAdded:
-								<div style="display: block; padding: 5px 10px; border-left: 4px solid #28a745; background-color: #e6ffed;">{ line.Content }</div>
-							case LineModeRemoved:
-								<div style="display: block; padding: 5px 10px; border-left: 4px solid #d73a49; background-color: #ffeef0;">{ line.Content }</div>
-							case LineModeMetadata:
-								<div style="display: block; padding: 5px 10px; border-left: 4px solid #d7bf3a; background-color: #fffbe7;">{ line.Content }</div>
-							case LineModeUnchanged:
-								<div style="display: block; padding: 5px 10px; border-left: 4px solid transparent; background-color: #f8f9fa;">
-									// an unchanged line starts with a space to accomodate for the + and - on the other lines.
-									// Convert this first space to a non-breaking space so some email clients and html
-									// parsers will not remove the leading space
-									// w3m for example will remove the leading space (w3m -dump <file>), but not the nbsp
-									if len(line.Content) > 0 && line.Content[0] == ' ' {
-										// output the raw non breaking space and the line with the first character removed
-										@templ.Raw("&nbsp;")
-										{ line.Content[1:] }
-									} else {
-										{ line.Content }
-									}
-								</div>
-						}
-					}
-				</div>
-			</div>
+			<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#f4f4f4" style="background-color: #f4f4f4;">
+				<tr>
+					<td align="center" style="padding: 20px 0;">
+						<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="800" bgcolor="#ffffff" style="max-width: 800px; background-color: #ffffff; border: 1px solid #dddddd; border-collapse: collapse;">
+							if body != "" {
+								<tr>
+									<td colspan="2" bgcolor="#f8f9fa" style="background-color: #f8f9fa; padding: 10px; border-bottom: 1px solid #dddddd; word-wrap: break-word; font-family: monospace;">
+										for l := range strings.Lines(body) {
+											<div>{ strings.TrimSpace(l) }</div>
+										}
+									</td>
+								</tr>
+							}
+							for _, line := range d.Lines {
+								switch line.LineMode {
+									case LineModeAdded:
+										<tr>
+											<td width="4" bgcolor="#28a745" style="background-color: #28a745; width: 4px; padding: 0;"></td>
+											<td bgcolor="#e6ffed" style="background-color: #e6ffed; padding: 5px 10px; font-family: monospace;">{ line.Content }</td>
+										</tr>
+									case LineModeRemoved:
+										<tr>
+											<td width="4" bgcolor="#d73a49" style="background-color: #d73a49; width: 4px; padding: 0;"></td>
+											<td bgcolor="#ffeef0" style="background-color: #ffeef0; padding: 5px 10px; font-family: monospace;">{ line.Content }</td>
+										</tr>
+									case LineModeMetadata:
+										<tr>
+											<td width="4" bgcolor="#d7bf3a" style="background-color: #d7bf3a; width: 4px; padding: 0;"></td>
+											<td bgcolor="#fffbe7" style="background-color: #fffbe7; padding: 5px 10px; font-family: monospace;">{ line.Content }</td>
+										</tr>
+									case LineModeUnchanged:
+										<tr>
+											<td width="4" bgcolor="#f8f9fa" style="background-color: #f8f9fa; width: 4px; padding: 0;"></td>
+											<td bgcolor="#f8f9fa" style="background-color: #f8f9fa; padding: 5px 10px; font-family: monospace;">
+												// an unchanged line starts with a space to accomodate for the + and - on the other lines.
+												// Convert this first space to a non-breaking space so some email clients and html
+												// parsers will not remove the leading space
+												// w3m for example will remove the leading space (w3m -dump <file>), but not the nbsp
+												if len(line.Content) > 0 && line.Content[0] == ' ' {
+													// output the raw non breaking space and the line with the first character removed
+													@templ.Raw("&nbsp;")
+													{ line.Content[1:] }
+												} else {
+													{ line.Content }
+												}
+											</td>
+										</tr>
+								}
+							}
+						</table>
+					</td>
+				</tr>
+			</table>
 		</body>
 	</html>
 }
