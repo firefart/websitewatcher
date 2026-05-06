@@ -1,0 +1,17 @@
+services:
+  websitewatcher:
+    build: .
+    restart: unless-stopped
+    command: ["-config", "/app/config.json"]
+    configs:
+      - source: app
+        target: /app/config.json
+    volumes:
+      - data:/app/data
+
+configs:
+  app:
+    file: ./config.json
+
+volumes:
+  data:
