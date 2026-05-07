@@ -1,6 +1,9 @@
 services:
   websitewatcher:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${REGISTRY_MIRROR_URL:-}firefart/websitewatcher:latest
     restart: unless-stopped
     command: ["-config", "/app/config.json"]
     configs:
