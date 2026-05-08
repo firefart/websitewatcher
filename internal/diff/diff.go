@@ -39,6 +39,7 @@ type Metadata struct {
 	Name            string
 	URL             string
 	Description     string
+	JQ              string
 	RequestDuration time.Duration
 	StatusCode      int
 	BodyLength      int
@@ -46,12 +47,16 @@ type Metadata struct {
 }
 
 func (m Metadata) String() string {
-	text := fmt.Sprintf("Name: %s\nURL: %s", m.Name, m.URL)
+	text := strings.Builder{}
+	fmt.Fprintf(&text, "Name: %s\nURL: %s", m.Name, m.URL)
 	if m.Description != "" {
-		text = fmt.Sprintf("%s\nDescription: %s", text, m.Description)
+		fmt.Fprintf(&text, "\nDescription: %s", m.Description)
 	}
-	text = fmt.Sprintf("%s\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nLast Fetch: %s", text, m.RequestDuration, m.StatusCode, m.BodyLength, m.LastFetch.Format(time.RFC1123))
-	return text
+	if m.JQ != "" {
+		fmt.Fprintf(&text, "\nJQ Filter: %s", m.JQ)
+	}
+	fmt.Fprintf(&text, "\nRequest Duration: %s\nStatus: %d\nBodylen: %d\nLast Fetch: %s", m.RequestDuration, m.StatusCode, m.BodyLength, m.LastFetch.Format(time.RFC1123))
+	return text.String()
 }
 
 func (d Diff) Text(meta *Metadata) (string, error) {

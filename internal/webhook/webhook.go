@@ -24,6 +24,7 @@ type webhookJSON struct {
 	Name            string            `json:"name"`
 	URL             string            `json:"url"`
 	Description     string            `json:"description"`
+	JQ              string            `json:"jq"`
 	Diff            []webhookJSONDiff `json:"diff"`
 	RequestDuration time.Duration     `json:"request_duration"`
 	StatusCode      int               `json:"status_code"`
@@ -44,6 +45,7 @@ func Send(ctx context.Context, httpClient *httpint.Client, wh Webhook, d *diff.D
 			Name:            meta.Name,
 			URL:             meta.URL,
 			Description:     meta.Description,
+			JQ:              meta.JQ,
 			RequestDuration: meta.RequestDuration,
 			StatusCode:      meta.StatusCode,
 			BodyLength:      meta.BodyLength,

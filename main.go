@@ -332,6 +332,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			Name:            w.Name,
 			URL:             w.URL,
 			Description:     w.Description,
+			JQ:              w.JQ,
 			RequestDuration: watchReturn.Duration.Round(time.Millisecond),
 			StatusCode:      watchReturn.StatusCode,
 			BodyLength:      len(watchReturn.Body),
