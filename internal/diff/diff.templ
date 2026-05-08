@@ -16,6 +16,7 @@ templ HTMLDiff(d *Diff, body string) {
 					.ew  { background-color: #010409 !important; }
 					.ec  { background-color: #0d1117 !important; border-color: #30363d !important; }
 					.eh  { background-color: #161b22 !important; border-color: #30363d !important; color: #c9d1d9 !important; }
+					.ehd { background-color: transparent !important; color: #c9d1d9 !important; }
 					.la  { background-color: #2ea043 !important; }
 					.lat { background-color: #122d22 !important; color: #aff5b4 !important; }
 					.lr  { background-color: #f85149 !important; }
@@ -29,6 +30,7 @@ templ HTMLDiff(d *Diff, body string) {
 				[data-ogsc] .ew  { background-color: #010409 !important; }
 				[data-ogsc] .ec  { background-color: #0d1117 !important; border-color: #30363d !important; }
 				[data-ogsc] .eh  { background-color: #161b22 !important; border-color: #30363d !important; color: #c9d1d9 !important; }
+				[data-ogsc] .ehd { background-color: transparent !important; color: #c9d1d9 !important; }
 				[data-ogsc] .la  { background-color: #2ea043 !important; }
 				[data-ogsc] .lat { background-color: #122d22 !important; color: #aff5b4 !important; }
 				[data-ogsc] .lr  { background-color: #f85149 !important; }
@@ -48,7 +50,7 @@ templ HTMLDiff(d *Diff, body string) {
 								<tr>
 									<td class="eh" colspan="2" bgcolor="#f8f9fa" style="background-color: #f8f9fa; color: #000000; padding: 10px; border-bottom: 1px solid #dddddd; word-wrap: break-word; font-family: monospace;">
 										for l := range strings.Lines(body) {
-											<div>{ strings.TrimSpace(l) }</div>
+											<div class="ehd" style="color: #000000;">{ strings.TrimSpace(l) }</div>
 										}
 									</td>
 								</tr>
