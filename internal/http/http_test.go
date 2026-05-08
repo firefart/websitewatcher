@@ -35,7 +35,9 @@ func TestNewHTTPClient_WithProxy(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
 
 	proxyConfig := &config.ProxyConfig{
 		URL:      "http://proxy.example.com:8080",
@@ -60,7 +62,9 @@ func TestNewHTTPClient_WithProxyUnauthenticated(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
 
 	proxyConfig := &config.ProxyConfig{
 		URL: "http://proxy.example.com:8080",
@@ -221,7 +225,9 @@ func TestClient_Timeout(t *testing.T) {
 
 func captureLogOutput(fn func(*slog.Logger)) string {
 	var buf bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
 	fn(logger)
 	return buf.String()
 }
