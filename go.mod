@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/a-h/templ v0.3.1020
 	github.com/charmbracelet/log v1.0.0
-	github.com/go-co-op/gocron/v2 v2.21.1
+	github.com/go-co-op/gocron/v2 v2.21.2
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/goforj/godump v1.9.1
 	github.com/google/uuid v1.6.0
@@ -20,7 +20,7 @@ require (
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/stretchr/testify v1.11.1
-	github.com/wneessen/go-mail v0.7.2
+	github.com/wneessen/go-mail v0.7.3
 	golang.org/x/net v0.54.0
 	modernc.org/sqlite v1.50.1
 )
@@ -67,7 +67,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
-	github.com/google/cel-go v0.28.0 // indirect
+	github.com/google/cel-go v0.28.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/itchyny/timefmt-go v0.1.8 // indirect
@@ -105,7 +105,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260406204437-bbc9d102c19e // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260512104018-fd471d3f5a35 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260513113054-153a5fc5b16b // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -126,7 +126,7 @@ require (
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260428144813-1c07baab7f7b // indirect
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.135.15 // indirect
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.136.2 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
