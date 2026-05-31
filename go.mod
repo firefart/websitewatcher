@@ -15,7 +15,7 @@ require (
 	github.com/knadh/koanf/parsers/json v1.0.0
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/providers/structs v1.0.0
-	github.com/knadh/koanf/v2 v2.3.4
+	github.com/knadh/koanf/v2 v2.3.5
 	github.com/mattn/go-isatty v0.0.22
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pressly/goose/v3 v3.27.1
@@ -101,7 +101,7 @@ require (
 	github.com/ncruces/julianday v1.0.0 // indirect
 	github.com/paulmach/orb v0.13.0 // indirect
 	github.com/pganalyze/pg_query_go/v6 v6.2.2 // indirect
-	github.com/pierrec/lz4/v4 v4.1.26 // indirect
+	github.com/pierrec/lz4/v4 v4.1.27 // indirect
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260521055755-e7642935314f // indirect
 	github.com/pingcap/log v1.1.0 // indirect
