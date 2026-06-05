@@ -95,8 +95,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
-	github.com/ncruces/go-sqlite3 v0.34.3 // indirect
-	github.com/ncruces/go-sqlite3-wasm/v2 v2.6.35301 // indirect
+	github.com/ncruces/go-sqlite3 v0.34.4 // indirect
+	github.com/ncruces/go-sqlite3-wasm/v2 v2.6.35302 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/ncruces/julianday v1.0.0 // indirect
 	github.com/paulmach/orb v0.13.0 // indirect
@@ -105,7 +105,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260521055755-e7642935314f // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260604092352-032f5ac5b32a // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260605110946-5e0c63080383 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
