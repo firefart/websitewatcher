@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 
@@ -124,10 +125,8 @@ func (m *Mail) SendWatchError(ctx context.Context, w watch.Watch, ret *watch.Inv
 }
 
 func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBody string) error {
-	tos := m.config.Mail.To
-	if len(w.AdditionalTo) > 0 {
-		tos = append(tos, w.AdditionalTo...)
-	}
+	// slices.Concat allocates a new slice so we never mutate the shared config recipients
+	tos := slices.Concat(m.config.Mail.To, w.AdditionalTo)
 
 	for _, to := range tos {
 		if err := m.send(ctx, to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), "", htmlBody); err != nil {
@@ -139,10 +138,8 @@ func (m *Mail) sendHTMLEmail(ctx context.Context, w watch.Watch, subject, htmlBo
 }
 
 func (m *Mail) sendMultipartEmail(ctx context.Context, subject, textBody, htmlBody string, additionalTo []string) error {
-	tos := m.config.Mail.To
-	if len(additionalTo) > 0 {
-		tos = append(tos, additionalTo...)
-	}
+	// slices.Concat allocates a new slice so we never mutate the shared config recipients
+	tos := slices.Concat(m.config.Mail.To, additionalTo)
 
 	for _, to := range tos {
 		if err := m.send(ctx, to, fmt.Sprintf("[WEBSITEWATCHER] %s", subject), textBody, htmlBody); err != nil {

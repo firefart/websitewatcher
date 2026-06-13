@@ -28,11 +28,9 @@ func TestMigrations(t *testing.T) {
 
 	result, err := prov.Up(t.Context())
 	if err != nil {
-		var partialError *goose.PartialError
-		switch {
-		case errors.As(err, &partialError):
+		if partialError, ok := errors.AsType[*goose.PartialError](err); ok {
 			require.NoError(t, partialError.Err, "could not apply migrations")
-		default:
+		} else {
 			require.NoError(t, err, "could not apply migrations")
 		}
 		return
@@ -48,11 +46,9 @@ func TestMigrations(t *testing.T) {
 
 	result, err = prov.DownTo(t.Context(), 0)
 	if err != nil {
-		var partialError *goose.PartialError
-		switch {
-		case errors.As(err, &partialError):
+		if partialError, ok := errors.AsType[*goose.PartialError](err); ok {
 			require.NoError(t, partialError.Err, "could not roll back migrations")
-		default:
+		} else {
 			require.NoError(t, err, "could not roll back migrations")
 		}
 		return

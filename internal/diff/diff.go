@@ -140,7 +140,8 @@ func GenerateDiff(ctx context.Context, text1, text2 string) (*Diff, error) {
 
 func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	tmpdir := path.Join(os.TempDir(), fmt.Sprintf("websitewatcher_%s", rand.Text()))
-	err := os.Mkdir(tmpdir, os.ModePerm)
+	// 0700: the temp files contain the watched content, so keep them readable only by us
+	err := os.Mkdir(tmpdir, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("could not create temp dir %q: %w", tmpdir, err)
 	}
@@ -194,8 +195,7 @@ func diffGit(ctx context.Context, text1, text2 string) ([]byte, error) {
 	err = cmd.Run()
 	if err != nil {
 		// exit error 0 and 1 are good ones so ignore them
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
+		if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 			exitCode := exitErr.ExitCode()
 			if exitCode != 0 && exitCode != 1 {
 				return nil, fmt.Errorf("could not execute git diff: %w - Stderr: %s", err, stderr.String())

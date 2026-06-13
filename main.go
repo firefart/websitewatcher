@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"sync/atomic"
 	"time"
 
 	"github.com/firefart/websitewatcher/internal/config"
@@ -33,7 +34,7 @@ type app struct {
 	dumpDiffHTML bool
 	db           database.Interface
 	taskmanager  *taskmanager.TaskManager
-	errorOccured bool // only used in once mode to track if we should exit with an error code
+	errorOccured atomic.Bool // only used in once mode to track if we should exit with an error code; atomic because cron jobs run concurrently
 	timezone     *time.Location
 }
 
@@ -87,8 +88,7 @@ func main() {
 	}
 	if err != nil {
 		// check if we have a multierror
-		var merr *multierror.Error
-		if errors.As(err, &merr) {
+		if merr, ok := errors.AsType[*multierror.Error](err); ok {
 			for _, e := range merr.Errors {
 				app.logError(e)
 			}
@@ -100,13 +100,13 @@ func main() {
 	}
 
 	// ensure we exit with an error code if an error occurred in once mode
-	if runMode == runModeOnce && app.errorOccured {
+	if runMode == runModeOnce && app.errorOccured.Load() {
 		os.Exit(1) // nolint: gocritic
 	}
 }
 
 func (app *app) logError(err error) {
-	app.errorOccured = true
+	app.errorOccured.Store(true)
 	app.logger.Error("error occurred", slog.String("err", err.Error()))
 }
 
@@ -206,7 +206,7 @@ func (app *app) run(ctx context.Context, dryRun, dumpDiffHTML bool, configFile s
 			// check the context in once mode to bail out on error or ctrl+c
 			select {
 			case <-ctx.Done():
-				app.errorOccured = true
+				app.errorOccured.Store(true)
 				return errors.New("execution cancelled before all jobs were run")
 			default:
 			}
@@ -262,16 +262,14 @@ func (app *app) run(ctx context.Context, dryRun, dumpDiffHTML bool, configFile s
 func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 	watchReturn, err := w.Process(ctx, app.config)
 	if err != nil {
-		var urlErr *url.Error
-		var invalidErr *watch.InvalidResponseError
-		switch {
-		case errors.As(err, &urlErr) && urlErr.Timeout():
+		if urlErr, ok := errors.AsType[*url.Error](err); ok && urlErr.Timeout() {
 			// ignore timeout errors so outer mail will not send emails on, them
 			// we also do not update the database, so we keep the old, non timeout
 			// content in there
 			app.logger.Info("watch timed out, ignoring", slog.String("name", w.Name))
 			return nil
-		case errors.As(err, &invalidErr):
+		}
+		if invalidErr, ok := errors.AsType[*watch.InvalidResponseError](err); ok {
 			// we still have an error or soft error after all retries
 			app.logger.Error("invalid response", slog.String("name", w.Name), slog.String("error-message", invalidErr.ErrorMessage), slog.Int("error-code", invalidErr.StatusCode), slog.String("error-body", string(invalidErr.Body)), slog.Duration("duration", invalidErr.Duration))
 
@@ -306,9 +304,8 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 				}
 			}
 			return nil
-		default:
-			return fmt.Errorf("could not process watch: %w", err)
 		}
+		return fmt.Errorf("could not process watch: %w", err)
 	}
 
 	watchID, lastFetch, lastContent, err := app.db.GetLastContent(ctx, w.Name, w.URL)

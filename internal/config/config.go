@@ -150,13 +150,12 @@ func GetConfig(f string) (Configuration, error) {
 	}
 
 	if err := validate.Struct(config); err != nil {
-		var invalidValidationError *validator.InvalidValidationError
-		if errors.As(err, &invalidValidationError) {
+		if _, ok := errors.AsType[*validator.InvalidValidationError](err); ok {
 			return Configuration{}, err
 		}
 
-		var valErr validator.ValidationErrors
-		if ok := errors.As(err, &valErr); !ok {
+		valErr, ok := errors.AsType[validator.ValidationErrors](err)
+		if !ok {
 			return Configuration{}, fmt.Errorf("could not cast err to ValidationErrors: %w", err)
 		}
 		var resultErr error
