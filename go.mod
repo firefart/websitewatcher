@@ -28,7 +28,7 @@ require (
 require (
 	cel.dev/expr v0.25.2 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
-	github.com/ClickHouse/ch-go v0.72.0 // indirect
+	github.com/ClickHouse/ch-go v0.73.0 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.46.0 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
 	github.com/andybalholm/brotli v1.2.1 // indirect
@@ -105,7 +105,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260521055755-e7642935314f // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260625101746-d5729fb1bc47 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260626103852-aa350698e212 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -126,7 +126,7 @@ require (
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260428144813-1c07baab7f7b // indirect
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.141.1 // indirect
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.141.2 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/otel v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
@@ -140,7 +140,7 @@ require (
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
-	golang.org/x/tools v0.46.0 // indirect
+	golang.org/x/tools v0.47.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d // indirect
 	google.golang.org/grpc v1.81.1 // indirect
@@ -148,7 +148,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect
-	modernc.org/libc v1.73.4 // indirect
+	modernc.org/libc v1.73.5 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	mvdan.cc/gofumpt v0.10.0 // indirect
