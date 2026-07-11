@@ -17,7 +17,7 @@ require (
 	github.com/knadh/koanf/providers/structs v1.0.0
 	github.com/knadh/koanf/v2 v2.3.5
 	github.com/mattn/go-isatty v0.0.22
-	github.com/mmcdole/gofeed v1.3.0
+	github.com/mmcdole/gofeed v1.4.0
 	github.com/pressly/goose/v3 v3.27.2
 	github.com/stretchr/testify v1.11.1
 	github.com/wneessen/go-mail v0.8.1
@@ -78,7 +78,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.19.0 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
@@ -90,9 +89,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.10.0 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/mmcdole/goxpp v1.3.0 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/ncruces/go-sqlite3 v0.35.2 // indirect
@@ -105,7 +102,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260521055755-e7642935314f // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260710103825-59ca78807ec8 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260710224537-b94006d3abff // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
