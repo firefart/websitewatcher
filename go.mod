@@ -16,13 +16,13 @@ require (
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/providers/structs v1.0.0
 	github.com/knadh/koanf/v2 v2.3.5
-	github.com/mattn/go-isatty v0.0.22
+	github.com/mattn/go-isatty v0.0.23
 	github.com/mmcdole/gofeed v1.4.0
 	github.com/pressly/goose/v3 v3.27.2
 	github.com/stretchr/testify v1.11.1
 	github.com/wneessen/go-mail v0.8.1
 	golang.org/x/net v0.57.0
-	modernc.org/sqlite v1.53.0
+	modernc.org/sqlite v1.54.0
 )
 
 require (
@@ -102,7 +102,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260521055755-e7642935314f // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260715094008-f994e8da2771 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260716103720-94b834d94b60 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -123,7 +123,7 @@ require (
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260428144813-1c07baab7f7b // indirect
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.144.2 // indirect
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.144.4 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/otel v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
@@ -138,9 +138,9 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260713224248-f5fc221cf8c4 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260713224248-f5fc221cf8c4 // indirect
-	google.golang.org/grpc v1.82.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
