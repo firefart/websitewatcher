@@ -101,6 +101,7 @@ Key watch-level options:
 - `additional_to`: extra email recipients for this watch
 - `disabled`: skip this watch without removing it from config
 - `webhooks`: list of `{url, method, header}` webhook targets
+- `insecure_skip_verify`: skip TLS certificate verification for this watch's HTTP requests (certificates are verified by default)
 
 Mutually exclusive combinations rejected at startup:
 

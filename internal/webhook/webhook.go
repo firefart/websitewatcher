@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -37,7 +38,7 @@ type webhookJSONDiff struct {
 	Mode    string `json:"mode"`
 }
 
-func Send(ctx context.Context, httpClient *httpint.Client, wh Webhook, d *diff.Diff, meta *diff.Metadata) error {
+func Send(ctx context.Context, logger *slog.Logger, httpClient *httpint.Client, wh Webhook, d *diff.Diff, meta *diff.Metadata) error {
 	var data io.Reader
 	// we only need the payload on post, put or patch
 	if wh.Method == http.MethodPost || wh.Method == http.MethodPut || wh.Method == http.MethodPatch {
@@ -83,7 +84,11 @@ func Send(ctx context.Context, httpClient *httpint.Client, wh Webhook, d *diff.D
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logger.Error("error on body close", slog.String("err", err.Error()))
+		}
+	}()
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("webhook returned status code %d", resp.StatusCode)
 	}

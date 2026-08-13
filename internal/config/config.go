@@ -63,7 +63,7 @@ type MailConfigFrom struct {
 }
 
 type RetryConfig struct {
-	Count int           `koanf:"count" validate:"required"`
+	Count int           `koanf:"count" validate:"gte=1"`
 	Delay time.Duration `koanf:"delay" validate:"required"`
 }
 
@@ -90,6 +90,7 @@ type WatchConfig struct {
 	TrimWhitespace          bool              `koanf:"trim_whitespace"`
 	ParseRSS                bool              `koanf:"parse_rss"`
 	Webhooks                []WebhookConfig   `koanf:"webhooks" validate:"dive"`
+	InsecureSkipVerify      bool              `koanf:"insecure_skip_verify"`
 }
 
 type WebhookConfig struct {

@@ -19,7 +19,7 @@ func TestNewHTTPClient_WithoutProxy(t *testing.T) {
 	var buf bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&buf, nil))
 
-	client, err := NewHTTPClient(logger, "test-agent", 10*time.Second, nil)
+	client, err := NewHTTPClient(logger, "test-agent", 10*time.Second, nil, false)
 
 	require.NoError(t, err)
 	require.NotNil(t, client)
@@ -45,7 +45,7 @@ func TestNewHTTPClient_WithProxy(t *testing.T) {
 		Password: "pass",
 	}
 
-	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig)
+	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig, false)
 
 	require.NoError(t, err)
 	require.NotNil(t, client)
@@ -70,7 +70,7 @@ func TestNewHTTPClient_WithProxyUnauthenticated(t *testing.T) {
 		URL: "http://proxy.example.com:8080",
 	}
 
-	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig)
+	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig, false)
 
 	require.NoError(t, err)
 	require.NotNil(t, client)
@@ -91,7 +91,7 @@ func TestNewHTTPClient_EmptyProxyURL(t *testing.T) {
 		URL: "",
 	}
 
-	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig)
+	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig, false)
 
 	require.NoError(t, err)
 	require.NotNil(t, client)
@@ -110,7 +110,7 @@ func TestNewHTTPClient_InvalidProxy(t *testing.T) {
 		URL: "inval$#%^&*(Iid url",
 	}
 
-	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig)
+	client, err := NewHTTPClient(logger, "test-agent", 5*time.Second, proxyConfig, false)
 
 	require.Error(t, err)
 	require.Nil(t, client)
@@ -158,7 +158,7 @@ func TestClient_Do_UserAgentPrecedence(t *testing.T) {
 			defer server.Close()
 
 			logger := slog.New(slog.DiscardHandler)
-			client, err := NewHTTPClient(logger, tt.clientUserAgent, 10*time.Second, nil)
+			client, err := NewHTTPClient(logger, tt.clientUserAgent, 10*time.Second, nil, false)
 			require.NoError(t, err)
 
 			req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, server.URL, nil)
@@ -185,7 +185,7 @@ func TestClient_Do_Integration(t *testing.T) {
 	defer server.Close()
 
 	logger := slog.New(slog.DiscardHandler)
-	client, err := NewHTTPClient(logger, "test-agent", 10*time.Second, nil)
+	client, err := NewHTTPClient(logger, "test-agent", 10*time.Second, nil, false)
 	require.NoError(t, err)
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, server.URL, nil)
@@ -202,14 +202,28 @@ func TestClient_Do_Integration(t *testing.T) {
 func TestClient_TLSConfiguration(t *testing.T) {
 	t.Parallel()
 
-	logger := slog.New(slog.DiscardHandler)
-	client, err := NewHTTPClient(logger, "test-agent", 10*time.Second, nil)
-	require.NoError(t, err)
+	tests := []struct {
+		name               string
+		insecureSkipVerify bool
+	}{
+		{name: "verifies certificates by default", insecureSkipVerify: false},
+		{name: "skips verification when explicitly requested", insecureSkipVerify: true},
+	}
 
-	transport, ok := client.client.Transport.(*http.Transport)
-	require.True(t, ok)
-	require.NotNil(t, transport.TLSClientConfig)
-	require.True(t, transport.TLSClientConfig.InsecureSkipVerify)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			logger := slog.New(slog.DiscardHandler)
+			client, err := NewHTTPClient(logger, "test-agent", 10*time.Second, nil, tt.insecureSkipVerify)
+			require.NoError(t, err)
+
+			transport, ok := client.client.Transport.(*http.Transport)
+			require.True(t, ok)
+			require.NotNil(t, transport.TLSClientConfig)
+			require.Equal(t, tt.insecureSkipVerify, transport.TLSClientConfig.InsecureSkipVerify)
+		})
+	}
 }
 
 func TestClient_Timeout(t *testing.T) {
@@ -217,7 +231,7 @@ func TestClient_Timeout(t *testing.T) {
 
 	expectedTimeout := 2 * time.Second
 	logger := slog.New(slog.DiscardHandler)
-	client, err := NewHTTPClient(logger, "test-agent", expectedTimeout, nil)
+	client, err := NewHTTPClient(logger, "test-agent", expectedTimeout, nil, false)
 	require.NoError(t, err)
 
 	require.Equal(t, expectedTimeout, client.client.Timeout)
@@ -280,7 +294,7 @@ func TestLogger_ProxyConfigurationMessages(t *testing.T) {
 			t.Parallel()
 
 			logOutput := captureLogOutput(func(logger *slog.Logger) {
-				_, _ = NewHTTPClient(logger, "test", time.Second, tt.proxy)
+				_, _ = NewHTTPClient(logger, "test", time.Second, tt.proxy, false)
 			})
 
 			if tt.wantLog {

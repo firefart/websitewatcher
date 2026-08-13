@@ -178,7 +178,7 @@ func (app *app) run(ctx context.Context, dryRun, dumpDiffHTML bool, configFile s
 			continue
 		}
 
-		httpClient, err := http.NewHTTPClient(app.logger, configuration.Useragent, configuration.Timeout, configuration.Proxy)
+		httpClient, err := http.NewHTTPClient(app.logger, configuration.Useragent, configuration.Timeout, configuration.Proxy, wc.InsecureSkipVerify)
 		if err != nil {
 			return fmt.Errorf("could not create http client: %w", err)
 		}
@@ -353,6 +353,7 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			app.logger.Info("dumped html diff to file", slog.String("file", dumpFile))
 		}
 
+		var webhookErr error
 		if app.dryRun {
 			app.logger.Info("Dry Run: Website differs", slog.String("name", w.Name), slog.String("last-content", string(lastContent)), slog.String("returned-body", string(watchReturn.Body)))
 		} else {
@@ -363,27 +364,52 @@ func (app *app) processWatch(ctx context.Context, w watch.Watch) error {
 			}
 			subject := fmt.Sprintf("[%s] change detected", w.Name)
 			if err := mailer.SendDiffEmail(ctx, subject, d, &m, w.AdditionalTo); err != nil {
+				// mail is the primary notification channel: do not update the database on failure so
+				// the change is picked up and retried again on the next run
 				return fmt.Errorf("error on sending email: %w", err)
 			}
-			for _, wh := range w.Webhooks {
-				app.logger.Info("sending webhook", slog.String("name", w.Name), slog.String("url", wh.URL))
-				httpClient, err := http.NewHTTPClient(app.logger, app.config.Useragent, app.config.Timeout, app.config.Proxy)
-				if err != nil {
-					return fmt.Errorf("could not create http client for webhook: %w", err)
-				}
-				if err := webhook.Send(ctx, httpClient, wh, d, &m); err != nil {
-					return fmt.Errorf("could not send webhook: %w", err)
-				}
-			}
+			// the diff email already went out, so a failing webhook must not block the
+			// database update below - otherwise the same content change would be detected
+			// (and the already delivered email resent) on every subsequent run until the
+			// webhook succeeds. Webhook errors are still collected and reported.
+			webhookErr = app.sendWebhooks(ctx, w, d, &m)
 		}
-	} else {
-		app.logger.Info("no change detected", slog.String("name", w.Name))
+
+		// update database entry now that the change has been (attempted to be) reported
+		if err := app.db.UpdateLastContent(ctx, watchID, watchReturn.Body); err != nil {
+			return fmt.Errorf("could not update last content: %w", err)
+		}
+
+		if webhookErr != nil {
+			return fmt.Errorf("could not send webhooks: %w", webhookErr)
+		}
+
+		return nil
 	}
 
-	// update database entry if we did not have any errors
+	app.logger.Info("no change detected", slog.String("name", w.Name))
+
 	if err := app.db.UpdateLastContent(ctx, watchID, watchReturn.Body); err != nil {
 		return fmt.Errorf("could not update last content: %w", err)
 	}
 
 	return nil
+}
+
+// sendWebhooks sends the diff to all configured webhooks for a watch. All webhooks are attempted
+// even if one fails, and the errors are combined into a single returned error.
+func (app *app) sendWebhooks(ctx context.Context, w watch.Watch, d *diff.Diff, m *diff.Metadata) error {
+	var result error
+	for _, wh := range w.Webhooks {
+		app.logger.Info("sending webhook", slog.String("name", w.Name), slog.String("url", wh.URL))
+		httpClient, err := http.NewHTTPClient(app.logger, app.config.Useragent, app.config.Timeout, app.config.Proxy, w.InsecureSkipVerify)
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("could not create http client for webhook %s: %w", wh.URL, err))
+			continue
+		}
+		if err := webhook.Send(ctx, app.logger, httpClient, wh, d, m); err != nil {
+			result = multierror.Append(result, fmt.Errorf("could not send webhook %s: %w", wh.URL, err))
+		}
+	}
+	return result
 }

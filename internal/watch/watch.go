@@ -53,6 +53,7 @@ type Watch struct {
 	Webhooks                []webhook.Webhook
 	HTML2Text               bool
 	ParseRSS                bool
+	InsecureSkipVerify      bool
 }
 
 type Replace struct {
@@ -106,6 +107,7 @@ func New(c config.WatchConfig, logger *slog.Logger, httpClient *httpint.Client) 
 		Webhooks:                make([]webhook.Webhook, len(c.Webhooks)),
 		HTML2Text:               c.HTML2Text,
 		ParseRSS:                c.ParseRSS,
+		InsecureSkipVerify:      c.InsecureSkipVerify,
 	}
 	if w.Method == "" {
 		w.Method = http.MethodGet

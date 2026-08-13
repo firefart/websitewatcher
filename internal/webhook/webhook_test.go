@@ -14,10 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var logger = slog.New(slog.DiscardHandler)
+
 func newTestClient(t *testing.T) *httpint.Client {
 	t.Helper()
-	logger := slog.New(slog.DiscardHandler)
-	client, err := httpint.NewHTTPClient(logger, "test-agent", 10*time.Second, nil)
+	client, err := httpint.NewHTTPClient(logger, "test-agent", 10*time.Second, nil, false)
 	require.NoError(t, err)
 	return client
 }
@@ -59,7 +60,7 @@ func TestSend_GET(t *testing.T) {
 	client := newTestClient(t)
 	wh := Webhook{URL: server.URL, Method: http.MethodGet}
 
-	err := Send(t.Context(), client, wh, testDiff(), testMeta(server.URL))
+	err := Send(t.Context(), logger, client, wh, testDiff(), testMeta(server.URL))
 	require.NoError(t, err)
 	require.Equal(t, http.MethodGet, gotMethod)
 	require.Empty(t, gotBody)
@@ -82,7 +83,7 @@ func TestSend_POST_JSONPayload(t *testing.T) {
 	d := testDiff()
 	meta := testMeta(server.URL)
 
-	err := Send(t.Context(), client, wh, d, meta)
+	err := Send(t.Context(), logger, client, wh, d, meta)
 	require.NoError(t, err)
 	require.Equal(t, "application/json", gotContentType)
 
@@ -110,7 +111,7 @@ func TestSend_PUT_JSONPayload(t *testing.T) {
 	client := newTestClient(t)
 	wh := Webhook{URL: server.URL, Method: http.MethodPut}
 
-	err := Send(t.Context(), client, wh, testDiff(), testMeta(server.URL))
+	err := Send(t.Context(), logger, client, wh, testDiff(), testMeta(server.URL))
 	require.NoError(t, err)
 	require.Equal(t, http.MethodPut, gotMethod)
 }
@@ -128,7 +129,7 @@ func TestSend_DELETE_NoBody(t *testing.T) {
 	client := newTestClient(t)
 	wh := Webhook{URL: server.URL, Method: http.MethodDelete}
 
-	err := Send(t.Context(), client, wh, testDiff(), testMeta(server.URL))
+	err := Send(t.Context(), logger, client, wh, testDiff(), testMeta(server.URL))
 	require.NoError(t, err)
 	require.Empty(t, gotBody)
 }
@@ -150,7 +151,7 @@ func TestSend_Accepts2xx(t *testing.T) {
 			client := newTestClient(t)
 			wh := Webhook{URL: server.URL, Method: http.MethodGet}
 
-			err := Send(t.Context(), client, wh, testDiff(), testMeta(server.URL))
+			err := Send(t.Context(), logger, client, wh, testDiff(), testMeta(server.URL))
 			require.NoError(t, err)
 		})
 	}
@@ -173,7 +174,7 @@ func TestSend_ErrorOnNon2xx(t *testing.T) {
 			client := newTestClient(t)
 			wh := Webhook{URL: server.URL, Method: http.MethodGet}
 
-			err := Send(t.Context(), client, wh, testDiff(), testMeta(server.URL))
+			err := Send(t.Context(), logger, client, wh, testDiff(), testMeta(server.URL))
 			require.Error(t, err)
 			require.ErrorContains(t, err, "webhook returned status code")
 		})
@@ -202,7 +203,7 @@ func TestSend_CustomHeaders(t *testing.T) {
 		},
 	}
 
-	err := Send(t.Context(), client, wh, testDiff(), testMeta(server.URL))
+	err := Send(t.Context(), logger, client, wh, testDiff(), testMeta(server.URL))
 	require.NoError(t, err)
 	require.Equal(t, "Bearer token123", gotAuthorization)
 	require.Equal(t, "custom-value", gotCustomHeader)

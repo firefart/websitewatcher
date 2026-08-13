@@ -46,7 +46,7 @@ func TestCheck(t *testing.T) {
 			defer server.Close()
 
 			logger := slog.New(slog.DiscardHandler)
-			client, err := http.NewHTTPClient(logger, tc.UserAgent, 1*time.Second, nil)
+			client, err := http.NewHTTPClient(logger, tc.UserAgent, 1*time.Second, nil, false)
 			if err != nil {
 				t.Fatalf("NewHTTPClient() got err=%s, want nil", err)
 			}
@@ -69,6 +69,41 @@ func TestCheck(t *testing.T) {
 			contentString := string(ret.Body)
 			if contentString != tc.WantContent {
 				t.Errorf("CheckWatch() got content %s, want %s", contentString, tc.WantContent)
+			}
+		})
+	}
+}
+
+func TestNew_InsecureSkipVerify(t *testing.T) {
+	t.Parallel()
+
+	logger := slog.New(slog.DiscardHandler)
+	client, err := http.NewHTTPClient(logger, "test-agent", time.Second, nil, false)
+	if err != nil {
+		t.Fatalf("NewHTTPClient() got err=%s, want nil", err)
+	}
+
+	tests := map[string]bool{
+		"insecure skip verify disabled": false,
+		"insecure skip verify enabled":  true,
+	}
+
+	for name, want := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			w := New(
+				config.WatchConfig{
+					Name:               "Test",
+					URL:                "https://example.com",
+					InsecureSkipVerify: want,
+				},
+				logger,
+				client,
+			)
+
+			if w.InsecureSkipVerify != want {
+				t.Errorf("New() InsecureSkipVerify = %v, want %v", w.InsecureSkipVerify, want)
 			}
 		})
 	}

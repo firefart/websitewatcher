@@ -16,14 +16,15 @@ type Client struct {
 	client    *http.Client
 }
 
-func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig) (*Client, error) {
+func NewHTTPClient(logger *slog.Logger, userAgent string, timeout time.Duration, proxyConfig *config.ProxyConfig, insecureSkipVerify bool) (*Client, error) {
 	// use default transport so proxy is respected
 	tr, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
 		return nil, errors.New("failed to cast default transport to http.Transport")
 	}
 	tr = tr.Clone()
-	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // nolint:gosec
+	// certificates are verified by default; insecureSkipVerify is an explicit per-watch opt-out
+	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify} // nolint:gosec
 	if proxyConfig != nil && proxyConfig.URL != "" {
 		authenticated := proxyConfig.Username != "" && proxyConfig.Password != ""
 		logger.Debug("using proxy", slog.String("url", proxyConfig.URL), slog.Bool("authenticated", authenticated))

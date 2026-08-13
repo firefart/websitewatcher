@@ -87,6 +87,7 @@
       },
       "disabled": true,
       "pattern": "test = (.+)",
+      "insecure_skip_verify": true,
       "retry_on_match": [
         "error on calling",
         "error executing .+ in memory"
