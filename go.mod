@@ -19,7 +19,7 @@ require (
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mmcdole/gofeed v1.4.2
 	github.com/pressly/goose/v3 v3.27.3
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.1
 	github.com/wneessen/go-mail v0.8.1
 	golang.org/x/net v0.58.0
 	modernc.org/sqlite v1.57.0
@@ -103,7 +103,6 @@ require (
 	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b // indirect
 	github.com/pingcap/log v1.1.0 // indirect
 	github.com/pingcap/tidb/pkg/parser v0.0.0-20260820100658-17b780783925 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
