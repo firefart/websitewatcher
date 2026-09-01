@@ -269,8 +269,8 @@ github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b h1:5qoDlNwsxDoWU
 github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b/go.mod h1:jimwlLpI/XtwQdlZML15HS+j4rirvwZM0GLY07wwgOo=
 github.com/pingcap/log v1.1.0 h1:ELiPxACz7vdo1qAvvaWJg1NrYFoY6gqAh/+Uo6aXdD8=
 github.com/pingcap/log v1.1.0/go.mod h1:DWQW5jICDR7UJh4HtxXSM20Churx4CQL0fwL/SoOSA4=
-github.com/pingcap/tidb/pkg/parser v0.0.0-20260831141023-db35d4706664 h1:XEy/jAZbLkiy0oPtxhfssbfO7+muoCbKuQ7KBvKlQSw=
-github.com/pingcap/tidb/pkg/parser v0.0.0-20260831141023-db35d4706664/go.mod h1:LhMzwDJeiwB/9+PJK0O1ppJJpodIQz5A87v5oDOWMJw=
+github.com/pingcap/tidb/pkg/parser v0.0.0-20260901152814-c6054025ed4c h1:fPEcntaEGldAwdABqCvuO+3vp6sDks+wjMjTtpFpXLc=
+github.com/pingcap/tidb/pkg/parser v0.0.0-20260901152814-c6054025ed4c/go.mod h1:LhMzwDJeiwB/9+PJK0O1ppJJpodIQz5A87v5oDOWMJw=
 github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c h1:+mdjkGKdHQG3305AYmdv1U2eRNDiU2ErMBj1gwrq8eQ=
 github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c/go.mod h1:7rwL4CYBLnjLxUqIJNnCWiEdr3bn6IUYi15bNlnbCCU=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -324,8 +324,8 @@ github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60 h1:
 github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60/go.mod h1:08inkKyguB6CGGssc/JzhmQWwBgFQBgjlYFjxjRh7nU=
 github.com/vertica/vertica-sql-go v1.3.8 h1:FomjkM3cam9yE6zSic31flNWPLdsZbYGK9ihlLtbF1Y=
 github.com/vertica/vertica-sql-go v1.3.8/go.mod h1:c4OZ8lq1Ztc18w8a0nG+dzQh69BzJRcKN2LZOnYbERI=
-github.com/wasilibs/go-pgquery v0.0.0-20260818004747-c59cae23afec h1:1KHOCxWRf82CDEVUwzmMvFten1CGOw/h42KMRFq1hPg=
-github.com/wasilibs/go-pgquery v0.0.0-20260818004747-c59cae23afec/go.mod h1:ZSyYLCRbk2xPqu7lgfrDSSHm+g/7Rxk6JK4KE2cxJ3s=
+github.com/wasilibs/go-pgquery v0.0.0-20260901011208-ba189f3f52f5 h1:MpaJ23l9Q6dDwesamctK6eeLex7I6B1Io5VVFWHd2to=
+github.com/wasilibs/go-pgquery v0.0.0-20260901011208-ba189f3f52f5/go.mod h1:ZSyYLCRbk2xPqu7lgfrDSSHm+g/7Rxk6JK4KE2cxJ3s=
 github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb h1:gQ+ZV4wJke/EBKYciZ2MshEouEHFuinB85dY3f5s1q8=
 github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb/go.mod h1:jMeV4Vpbi8osrE/pKUxRZkVaA0EX7NZN0A9/oRzgpgY=
 github.com/wneessen/go-mail v0.8.1 h1:tVcncj02/QySVFw3zr/kXOzZcuFQqBNT6K+Rbgm/pcM=
