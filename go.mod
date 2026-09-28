@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/wneessen/go-mail v0.8.1
 	golang.org/x/net v0.59.0
-	modernc.org/sqlite v1.59.0
+	modernc.org/sqlite v1.60.0
 )
 
 require (
@@ -64,7 +64,7 @@ require (
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.8.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
-	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/locales v0.14.2 // indirect
 	github.com/go-playground/universal-translator v0.18.2 // indirect
 	github.com/go-sql-driver/mysql v1.10.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20260926012342-8936d7bdcb13 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20260928150819-4b2221cddfd8 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -129,7 +129,7 @@ require (
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v1.2.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.152.0 // indirect
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.152.1 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
 	go.opentelemetry.io/otel/trace v1.46.0 // indirect
