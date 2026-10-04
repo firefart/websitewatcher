@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/PuerkitoBio/goquery v1.13.0
-	github.com/a-h/templ v0.3.1020
+	github.com/a-h/templ v0.3.1070
 	github.com/charmbracelet/log v1.0.0
 	github.com/go-co-op/gocron/v2 v2.22.0
 	github.com/go-playground/validator/v10 v10.30.5
