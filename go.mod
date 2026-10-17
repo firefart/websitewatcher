@@ -8,14 +8,14 @@ require (
 	github.com/charmbracelet/log v1.0.0
 	github.com/go-co-op/gocron/v2 v2.22.0
 	github.com/go-playground/validator/v10 v10.30.5
-	github.com/goforj/godump v1.9.1
+	github.com/goforj/godump v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/itchyny/gojq v0.12.19
 	github.com/knadh/koanf/parsers/json v1.0.1
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/providers/structs v1.0.1
-	github.com/knadh/koanf/v2 v2.3.8
+	github.com/knadh/koanf/v2 v2.4.0
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mmcdole/gofeed v1.5.0
 	github.com/pressly/goose/v3 v3.29.0
@@ -60,7 +60,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.16 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.8.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
@@ -99,7 +99,7 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/ncruces/go-sqlite3 v0.35.6 // indirect
-	github.com/ncruces/go-sqlite3-wasm/v6 v6.3.35400 // indirect
+	github.com/ncruces/go-sqlite3-wasm/v6 v6.3.35401 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/ncruces/julianday v1.0.0 // indirect
 	github.com/paulmach/orb v0.13.0 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20261016131723-34d5c2b75b4f // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20261017012522-f40ad1d845cb // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
