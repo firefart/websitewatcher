@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/wneessen/go-mail v0.8.1
 	golang.org/x/net v0.61.0
-	modernc.org/sqlite v1.60.1
+	modernc.org/sqlite v1.61.0
 )
 
 require (
@@ -32,7 +32,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.15.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.13.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.10.1 // indirect
-	github.com/ClickHouse/ch-go v0.74.0 // indirect
+	github.com/ClickHouse/ch-go v0.75.0 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.49.0 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
 	github.com/andybalholm/brotli v1.2.6 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20261020135050-88d75cb03355 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20261021101029-13544e9b1472 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -124,7 +124,7 @@ require (
 	github.com/sqlc-dev/sqlc v1.31.1 // indirect
 	github.com/tetratelabs/wazero v1.12.0 // indirect
 	github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60 // indirect
-	github.com/vertica/vertica-sql-go v1.3.8 // indirect
+	github.com/vertica/vertica-sql-go v1.3.9 // indirect
 	github.com/wasilibs/go-pgquery v0.0.0-20261020014038-c50e9f18754b // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v1.2.0 // indirect
