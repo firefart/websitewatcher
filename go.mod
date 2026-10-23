@@ -108,9 +108,9 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20261021101029-13544e9b1472 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20261023111343-ab30f363d490 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
-	github.com/prometheus/procfs v0.22.0 // indirect
+	github.com/prometheus/procfs v0.23.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/riza-io/grpc-go v0.2.0 // indirect
@@ -128,7 +128,7 @@ require (
 	github.com/wasilibs/go-pgquery v0.0.0-20261020014038-c50e9f18754b // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v1.2.0 // indirect
-	github.com/yandex-cloud/go-genproto v0.129.0 // indirect
+	github.com/yandex-cloud/go-genproto v0.131.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/ydb-platform/ydb-go-sdk-auth-environ v0.5.3 // indirect
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.155.1 // indirect
