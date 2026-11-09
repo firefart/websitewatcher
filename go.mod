@@ -7,7 +7,7 @@ require (
 	github.com/a-h/templ v0.3.1100
 	github.com/charmbracelet/log v1.0.0
 	github.com/go-co-op/gocron/v2 v2.23.0
-	github.com/go-playground/validator/v10 v10.30.5
+	github.com/go-playground/validator/v10 v10.30.6
 	github.com/goforj/godump v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
