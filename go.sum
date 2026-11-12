@@ -271,8 +271,8 @@ github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b h1:5qoDlNwsxDoWU
 github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b/go.mod h1:jimwlLpI/XtwQdlZML15HS+j4rirvwZM0GLY07wwgOo=
 github.com/pingcap/log v1.1.0 h1:ELiPxACz7vdo1qAvvaWJg1NrYFoY6gqAh/+Uo6aXdD8=
 github.com/pingcap/log v1.1.0/go.mod h1:DWQW5jICDR7UJh4HtxXSM20Churx4CQL0fwL/SoOSA4=
-github.com/pingcap/tidb/pkg/parser v0.0.0-20261112104223-f01fb0ab6d42 h1:fIGhZcfJc8+P/5gE69Me/ZNEvUIwGqxpB9bbX2aQRdY=
-github.com/pingcap/tidb/pkg/parser v0.0.0-20261112104223-f01fb0ab6d42/go.mod h1:XEb47aWhoyxiATE2QINEetOfdbwsauNVGBKReBloGAU=
+github.com/pingcap/tidb/pkg/parser v0.0.0-20261112174506-c3adc8df4eb5 h1:cESj+N004hRVBlIiEOb857G/IJQARFwu8b6FUFMXxuM=
+github.com/pingcap/tidb/pkg/parser v0.0.0-20261112174506-c3adc8df4eb5/go.mod h1:XEb47aWhoyxiATE2QINEetOfdbwsauNVGBKReBloGAU=
 github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c h1:+mdjkGKdHQG3305AYmdv1U2eRNDiU2ErMBj1gwrq8eQ=
 github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c/go.mod h1:7rwL4CYBLnjLxUqIJNnCWiEdr3bn6IUYi15bNlnbCCU=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -382,8 +382,8 @@ golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/crypto v0.59.0 h1:xS2jhqYbzNrpvkWP2YTDf4TJwBy3ykR03i8vFDxEc7c=
 golang.org/x/crypto v0.59.0/go.mod h1:veDyUwATGs3c+vN3VfTbzViMGXeTBk3WyhBOkn+F/4U=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
-golang.org/x/exp v0.0.0-20261112160707-e95cf140231d h1:YGnTHliLVZi5alOPp2qu0ggfMT1g+Dp13ZVpReekWYM=
-golang.org/x/exp v0.0.0-20261112160707-e95cf140231d/go.mod h1:J3U+E8RzytcGvwz+uJuAP4zULJ2TkAQBnmPZMexpdXs=
+golang.org/x/exp v0.0.0-20261112173441-d10d3b464990 h1:Ki27Rkann+mW+hv34e1eegTr8npmBX7sTq/1TV1eW8Y=
+golang.org/x/exp v0.0.0-20261112173441-d10d3b464990/go.mod h1:J3U+E8RzytcGvwz+uJuAP4zULJ2TkAQBnmPZMexpdXs=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
 golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3/go.mod h1:6SW0HCj/g11FgYtHlgUYUwCkIfeOF89ocIRzGO/8vkc=
