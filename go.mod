@@ -79,7 +79,7 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.13.0 // indirect
-	github.com/jackc/puddle/v2 v2.2.3 // indirect
+	github.com/jackc/puddle/v2 v2.2.4 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
@@ -106,9 +106,9 @@ require (
 	github.com/pganalyze/pg_query_go/v6 v6.2.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.33 // indirect
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
-	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b // indirect
+	github.com/pingcap/failpoint v0.0.0-20261116082356-6de31e1f756d // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20261115143812-1858a2c52937 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20261116160627-573231acda6b // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/prometheus/procfs v0.23.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -128,7 +128,7 @@ require (
 	github.com/wasilibs/go-pgquery v0.0.0-20261106060434-4301e51f8dbf // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v1.3.1 // indirect
-	github.com/yandex-cloud/go-genproto v0.138.0 // indirect
+	github.com/yandex-cloud/go-genproto v0.139.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/ydb-platform/ydb-go-sdk-auth-environ v0.5.3 // indirect
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.157.0 // indirect
@@ -148,8 +148,8 @@ require (
 	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/tools v0.52.1-0.20261106145633-d407941a339a // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20261110000943-09e21b237f2c // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261110000943-09e21b237f2c // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20261116203732-fd2c7689a808 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261116203732-fd2c7689a808 // indirect
 	google.golang.org/grpc v1.85.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
@@ -157,7 +157,7 @@ require (
 	howett.net/plist v1.0.1 // indirect
 	modernc.org/libc v1.81.2 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.12.1 // indirect
+	modernc.org/memory v1.13.0 // indirect
 	mvdan.cc/gofumpt v0.12.0 // indirect
 )
 
