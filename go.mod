@@ -98,17 +98,17 @@ require (
 	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
-	github.com/ncruces/go-sqlite3 v0.37.0 // indirect
+	github.com/ncruces/go-sqlite3 v0.38.0 // indirect
 	github.com/ncruces/go-sqlite3-wasm/v6 v6.7.35401 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/ncruces/julianday v1.0.0 // indirect
 	github.com/paulmach/orb v0.14.0 // indirect
 	github.com/pganalyze/pg_query_go/v6 v6.2.5 // indirect
-	github.com/pierrec/lz4/v4 v4.1.33 // indirect
+	github.com/pierrec/lz4/v4 v4.1.34 // indirect
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20261116082356-6de31e1f756d // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20261120111239-d3a10d865e6c // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20261121173101-bf712cf67f6f // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/prometheus/procfs v0.23.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -142,7 +142,7 @@ require (
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.59.0 // indirect
-	golang.org/x/exp v0.0.0-20261120182113-8801fbdfac81 // indirect
+	golang.org/x/exp v0.0.0-20261121134650-e1094eeca1b5 // indirect
 	golang.org/x/mod v0.43.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
@@ -155,7 +155,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect
-	modernc.org/libc v1.82.6 // indirect
+	modernc.org/libc v1.82.9 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.13.0 // indirect
 	mvdan.cc/gofumpt v0.12.0 // indirect
