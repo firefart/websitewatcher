@@ -54,7 +54,8 @@ require (
 	github.com/cubicdaiya/gonp v1.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/elastic/go-sysinfo v1.15.5 // indirect
+	github.com/ebitengine/purego v0.11.3 // indirect
+	github.com/elastic/go-sysinfo v1.16.0 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
@@ -108,7 +109,7 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20250523034308-74f78ae071ee // indirect
 	github.com/pingcap/failpoint v0.0.0-20261116082356-6de31e1f756d // indirect
 	github.com/pingcap/log v1.1.0 // indirect
-	github.com/pingcap/tidb/pkg/parser v0.0.0-20261123215015-377c9e608b82 // indirect
+	github.com/pingcap/tidb/pkg/parser v0.0.0-20261124151925-0103aff49f98 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/prometheus/procfs v0.23.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -125,13 +126,13 @@ require (
 	github.com/tetratelabs/wazero v1.12.0 // indirect
 	github.com/tursodatabase/libsql-client-go v0.0.0-20260528064733-9d5d30a29a60 // indirect
 	github.com/vertica/vertica-sql-go v1.3.9 // indirect
-	github.com/wasilibs/go-pgquery v0.0.0-20261117022153-47142ee672c1 // indirect
+	github.com/wasilibs/go-pgquery v0.0.0-20261124022233-3939604ca45d // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/xo/terminfo v1.3.1 // indirect
 	github.com/yandex-cloud/go-genproto v0.140.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 // indirect
 	github.com/ydb-platform/ydb-go-sdk-auth-environ v0.5.3 // indirect
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.157.1 // indirect
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.157.4 // indirect
 	github.com/ydb-platform/ydb-go-yc v0.12.5 // indirect
 	github.com/ydb-platform/ydb-go-yc-metadata v0.6.2 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
@@ -142,7 +143,7 @@ require (
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.59.0 // indirect
-	golang.org/x/exp v0.0.0-20261121134650-e1094eeca1b5 // indirect
+	golang.org/x/exp v0.0.0-20261124000051-d6646c509b6d // indirect
 	golang.org/x/mod v0.43.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
