@@ -252,8 +252,8 @@ github.com/muesli/termenv v0.16.0 h1:S5AlUN9dENB57rsbnkPyfdGuWIlkmzJjbFf0Tf5FWUc
 github.com/muesli/termenv v0.16.0/go.mod h1:ZRfOIKPFDYQoDFF4Olj7/QJbW60Ol/kL1pU3VfY/Cnk=
 github.com/natefinch/atomic v1.0.1 h1:ZPYKxkqQOx3KZ+RsbnP/YsgvxWQPGxjC0oBt2AhwV0A=
 github.com/natefinch/atomic v1.0.1/go.mod h1:N/D/ELrljoqDyT3rZrsUmtsuzvHkeB/wWjHV22AZRbM=
-github.com/ncruces/go-sqlite3 v0.38.0 h1:FSy3sxWTaGPzTZgE9mkM+bo6b4Kj0iTvsDjJz2IfB84=
-github.com/ncruces/go-sqlite3 v0.38.0/go.mod h1:qPQrrHbHYP7FQsgp9rAD0xr14DCDOXZwk8jeU6Y+dUg=
+github.com/ncruces/go-sqlite3 v0.38.1 h1:4qgfFVe0QeJnfIjaPPnwB6bPN7aP+6Nbzh460r7NhYQ=
+github.com/ncruces/go-sqlite3 v0.38.1/go.mod h1:qPQrrHbHYP7FQsgp9rAD0xr14DCDOXZwk8jeU6Y+dUg=
 github.com/ncruces/go-sqlite3-wasm/v6 v6.7.35401 h1:BlrYMg6wi+S0oxZ8IeGMHXi2nfjK+06KLQ3w85bqxOM=
 github.com/ncruces/go-sqlite3-wasm/v6 v6.7.35401/go.mod h1:K/Z0eKUURoWW9cJ9rHeMGDF0G4pr0A6WizdC+Ohzj54=
 github.com/ncruces/go-strftime v1.1.0 h1:vtPmPWMkb539RGV9WpWT9EwJGvrOCKvMNI4obWL47Hk=
@@ -344,8 +344,8 @@ github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9 h1:Wc
 github.com/ydb-platform/ydb-go-genproto v0.0.0-20260810123728-f0c151ab31b9/go.mod h1:Er+FePu1dNUieD+XTMDduGpQuCPssK5Q4BjF+IIXJ3I=
 github.com/ydb-platform/ydb-go-sdk-auth-environ v0.5.3 h1:A48PcmIETWwbEMIGwndv52uME6J1eJ28MBgF7HVR74o=
 github.com/ydb-platform/ydb-go-sdk-auth-environ v0.5.3/go.mod h1:oRGF+67GWLbtNzqGygsPIUsjXmsRXD1KS5m3o5ppm2k=
-github.com/ydb-platform/ydb-go-sdk/v3 v3.157.5 h1:dk/RLf7sjppaSQusfh/M+E4XpNkYHjeRPL3U7eQ1zVY=
-github.com/ydb-platform/ydb-go-sdk/v3 v3.157.5/go.mod h1:dJXJ1u00IqO8Vsph8fWmYj8b1E7jyphnvJPqA69emBY=
+github.com/ydb-platform/ydb-go-sdk/v3 v3.158.0 h1:0nqo0KxyCFHxLyWyw30hQX8wmfIjw8v61TjeCsmFVaQ=
+github.com/ydb-platform/ydb-go-sdk/v3 v3.158.0/go.mod h1:dJXJ1u00IqO8Vsph8fWmYj8b1E7jyphnvJPqA69emBY=
 github.com/ydb-platform/ydb-go-yc v0.12.5 h1:qYIeU1N6a92FaDA0+/vR55l5IzRF50MeLZwUWwvy2xQ=
 github.com/ydb-platform/ydb-go-yc v0.12.5/go.mod h1:DlSltVQKEdXJotaAYwoHzMGDF9EJw5S3hg3LXe/5yYw=
 github.com/ydb-platform/ydb-go-yc-metadata v0.6.2 h1:CZFawwHjLcjsxcl/g0dGIXbI2r41okPGLCydF4qTHcc=
